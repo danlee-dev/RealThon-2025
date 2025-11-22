@@ -7,25 +7,8 @@ import Input from '@/components/Input';
 import Combobox from '@/components/Combobox';
 import { authApi, profileApi, portfolioApi } from '@/lib/auth-client';
 import { User, Portfolio } from '@/types';
+import { JOB_POSITIONS, JOB_LABEL_TO_ROLE, JOB_ROLE_TO_LABEL } from '@/constants/jobs';
 import styles from './page.module.css';
-
-// Job positions list (same as onboarding)
-const JOB_POSITIONS = [
-    'Frontend Developer',
-    'Backend Developer',
-    'Full Stack Developer',
-    'Mobile Developer',
-    'Cloud Engineer',
-    'Data Scientist',
-    'Machine Learning Engineer',
-    'Product Manager',
-    'Product Designer',
-    'QA Engineer',
-    'Security Engineer',
-    'Database Administrator',
-    'Blockchain Developer',
-    'Game Developer',
-];
 
 export default function ProfilePage() {
     const router = useRouter();
@@ -59,9 +42,13 @@ export default function ProfilePage() {
             const profileResponse = await profileApi.getProfile();
             if (profileResponse.success && profileResponse.data) {
                 setUser(profileResponse.data);
+                // Convert role to display label
+                const displayJobTitle = profileResponse.data.jobTitle 
+                    ? JOB_ROLE_TO_LABEL[profileResponse.data.jobTitle] 
+                    : '';
                 setFormData({
                     name: profileResponse.data.name || '',
-                    jobTitle: profileResponse.data.jobTitle || '',
+                    jobTitle: displayJobTitle || '',
                 });
             }
 
@@ -85,7 +72,13 @@ export default function ProfilePage() {
         setSaving(true);
 
         try {
-            const response = await profileApi.updateProfile(formData);
+            // Map display label to role
+            const role = JOB_LABEL_TO_ROLE[formData.jobTitle];
+            
+            const response = await profileApi.updateProfile({
+                name: formData.name,
+                jobTitle: role,
+            });
 
             if (response.success && response.data) {
                 setUser(response.data);
@@ -173,7 +166,9 @@ export default function ProfilePage() {
                                 {user?.name || '사용자'}
                             </h1>
                             <p className="text-muted-foreground">
-                                {user?.jobTitle || '직무 미설정'}
+                                {user?.jobTitle 
+                                    ? JOB_ROLE_TO_LABEL[user.jobTitle] 
+                                    : '직무 미설정'}
                             </p>
                         </div>
                     </div>
