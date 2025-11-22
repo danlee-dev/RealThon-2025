@@ -414,6 +414,7 @@ def get_analysis_results(video_id: str, db: Session = Depends(get_db)):
     # 타임라인에서 emotion_distribution 계산
     emotion_dist = {}
     primary_emo = None
+    timeline_data = None
     if timeline:
         try:
             timeline_data = json.loads(timeline.timeline_json)
@@ -454,5 +455,6 @@ def get_analysis_results(video_id: str, db: Session = Depends(get_db)):
             } for f in feedbacks
         ],
         "transcript": transcript.text if transcript else None,
+        "timeline": timeline_data,  # 타임라인 JSON 직접 반환
         "timeline_available": timeline is not None
     }

@@ -214,6 +214,14 @@ POST /api/interviews/videos/{video_id}/feedback     # 피드백 생성
 ```bash
 GET /api/video/results/{video_id}  # 통합 결과 조회
 ```
+응답에 포함되는 내용:
+- `video`: 비디오 메타데이터
+- `metrics`: 비언어 지표 (center_gaze_ratio, smile_ratio, nod_count, wpm, filler_count, primary_emotion, emotion_distribution)
+- `feedbacks`: 피드백 목록
+- `transcript`: STT 전사 결과
+- `timeline`: 타임라인 JSON 배열 (각 프레임별 gaze, smile, emotion, pitch, yaw 등)
+- `timeline_available`: 타임라인 존재 여부
+
 또는 개별 조회:
 ```bash
 GET /api/interviews/videos/{video_id}                    # 영상 정보
