@@ -38,7 +38,7 @@ const config: Config = {
           dark: '#5D3DD9',
         },
         sidebar: {
-          DEFAULT: '#000000',
+          DEFAULT: '#1A2440',
         },
         'light-grey': '#F5F6FA',
         orange: {

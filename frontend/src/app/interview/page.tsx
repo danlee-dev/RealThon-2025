@@ -28,7 +28,7 @@ export default function InterviewPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   return (
-    <div className="flex h-screen bg-black">
+    <div className="flex h-screen bg-sidebar">
       {/* Sidebar */}
       <Sidebar isCollapsed={isSidebarCollapsed} onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
 
@@ -76,13 +76,13 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean, onToggle: ()
   ];
 
   return (
-    <div className={`bg-black text-white flex flex-col transition-all duration-300 relative ${isCollapsed ? 'w-20' : 'w-60'}`}>
+    <div className={`bg-sidebar text-white flex flex-col transition-all duration-300 relative ${isCollapsed ? 'w-20' : 'w-60'}`}>
       {/* Toggle Button */}
       <button
         onClick={onToggle}
         className={`absolute top-1/2 -translate-y-1/2 z-20 w-8 h-16 flex items-center justify-center transition-all duration-300 ${
           isCollapsed
-            ? '-right-4 bg-black text-primary rounded-r-full'
+            ? '-right-4 bg-sidebar text-primary rounded-r-full'
             : '-right-4 bg-white text-gray-700 rounded-l-full shadow-lg'
         }`}
       >
