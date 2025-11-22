@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import json
 import numpy as np
 
@@ -70,15 +70,30 @@ def nod_count(timeline: List[Dict[str, Any]], pitch_thresh_deg: float = 8.0) -> 
 
 def emotion_distribution(timeline: List[Dict[str, Any]]) -> Dict[str, float]:
     """
-    Placeholder: emotion not yet computed, return empty dict.
-    Later, if timeline has 'emotion', compute ratios here.
+    Calculate emotion distribution from timeline.
+    If blendshapes-based emotion is available, use it.
     """
     valid = [x for x in timeline if x.get("valid")]
     emo = [x.get("emotion") for x in valid if x.get("emotion")]
+    
     if not emo:
         return {}
+    
     counts = {}
     for e in emo:
         counts[e] = counts.get(e, 0) + 1
+    
     total = len(emo)
-    return {k: v / total for k, v in counts.items()}
+    distribution = {k: v / total for k, v in counts.items()}
+    
+    return distribution
+
+
+def get_primary_emotion(timeline: List[Dict[str, Any]]) -> Optional[str]:
+    """
+    Get the most frequent emotion from timeline.
+    """
+    dist = emotion_distribution(timeline)
+    if not dist:
+        return None
+    return max(dist.items(), key=lambda x: x[1])[0]

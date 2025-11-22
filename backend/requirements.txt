@@ -34,3 +34,6 @@ soundfile
 fer==22.5.1
 tensorflow-macos
 tensorflow-metal
+
+# LLM API
+google-generativeai

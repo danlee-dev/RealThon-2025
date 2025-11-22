@@ -1,11 +1,13 @@
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Dict
 import json
 from dataclasses import dataclass, asdict, is_dataclass
 
 import cv2
 import numpy as np
 import mediapipe as mp
+from mediapipe.tasks import python
+from mediapipe.tasks.python import vision
 
 # ---- MediaPipe face landmark indices (verified) ----
 # Mouth corners / lips
@@ -23,11 +25,11 @@ L_EYE_OUTER = 263
 # Iris landmarks (FaceMesh refine_landmarks=True)
 LEFT_IRIS = [474, 475, 476, 477]
 RIGHT_IRIS = [469, 470, 471, 472]
-# Sources for indices: mouth/eyes/iris mapping :contentReference[oaicite:0]{index=0}
+# Sources for indices: mouth/eyes/iris mapping
 
 # Head pose PnP reference points (commonly used)
 POSE_IDXS = [1, 152, R_EYE_OUTER, L_EYE_OUTER, MOUTH_LEFT, MOUTH_RIGHT]
-# 1 nose tip, 152 chin, 33/263 eye outer corners, 61/291 mouth corners :contentReference[oaicite:1]{index=1}
+# 1 nose tip, 152 chin, 33/263 eye outer corners, 61/291 mouth corners
 
 @dataclass
 class FrameResult:
@@ -38,15 +40,49 @@ class FrameResult:
     yaw: Optional[float]
     pitch: Optional[float]
     roll: Optional[float]
+    emotion: Optional[str]
+    blendshapes: Optional[Dict[str, float]]
 
 class VisionAnalyzer:
     """
-    FaceMesh-based frame analyzer:
+    Enhanced MediaPipe FaceLandmarker with blendshapes:
     - gaze (LEFT/RIGHT/CENTER) via iris position
-    - smile score via mouth width normalized by inter-ocular distance
+    - smile score via blendshapes + geometric features
     - head pose (yaw/pitch/roll) via solvePnP
+    - emotion detection via blendshapes
     """
-    def __init__(self):
+    def __init__(self, model_path: Optional[Path] = None, use_blendshapes: bool = True):
+        self.use_blendshapes = use_blendshapes
+        
+        if use_blendshapes and model_path and model_path.exists():
+            # Use new FaceLandmarker with blendshapes
+            try:
+                BaseOptions = mp.tasks.BaseOptions
+                FaceLandmarker = mp.tasks.vision.FaceLandmarker
+                FaceLandmarkerOptions = mp.tasks.vision.FaceLandmarkerOptions
+                VisionRunningMode = mp.tasks.vision.RunningMode
+                
+                options = FaceLandmarkerOptions(
+                    base_options=BaseOptions(model_asset_path=str(model_path)),
+                    running_mode=VisionRunningMode.IMAGE,
+                    output_face_blendshapes=True,
+                    num_faces=1
+                )
+                self.landmarker = FaceLandmarker.create_from_options(options)
+                self.use_new_api = True
+                print("✅ Using MediaPipe FaceLandmarker with blendshapes")
+            except Exception as e:
+                print(f"⚠️ Failed to load blendshapes model: {e}")
+                print("Falling back to legacy FaceMesh")
+                self.use_new_api = False
+                self._init_legacy()
+        else:
+            # Fallback to legacy FaceMesh
+            self.use_new_api = False
+            self._init_legacy()
+    
+    def _init_legacy(self):
+        """Initialize legacy FaceMesh"""
         self.mp_face = mp.solutions.face_mesh
         self.face = self.mp_face.FaceMesh(
             static_image_mode=True,
@@ -62,11 +98,75 @@ class VisionAnalyzer:
     def analyze_frame(self, t: float, frame_bgr) -> FrameResult:
         h, w = frame_bgr.shape[:2]
         rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-        out = self.face.process(rgb)
+        
+        if self.use_new_api:
+            return self._analyze_with_blendshapes(t, rgb, w, h)
+        else:
+            return self._analyze_legacy(t, rgb, w, h)
+    
+    def _analyze_with_blendshapes(self, t: float, rgb_frame, w: int, h: int) -> FrameResult:
+        """Analyze using new FaceLandmarker API with blendshapes"""
+        mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb_frame)
+        result = self.landmarker.detect(mp_image)
+        
+        if not result.face_landmarks:
+            return FrameResult(
+                t=t, valid=False, gaze=None, smile=None,
+                yaw=None, pitch=None, roll=None, emotion=None, blendshapes=None
+            )
+        
+        # Extract landmarks
+        landmarks = result.face_landmarks[0]
+        pts = np.array([(lm.x*w, lm.y*h, lm.z*w) for lm in landmarks], dtype=np.float32)
+        
+        # Extract blendshapes
+        blendshapes_dict = {}
+        emotion = None
+        smile_score = None
+        
+        if result.face_blendshapes:
+            for category in result.face_blendshapes[0]:
+                if category.category_name != "_neutral":
+                    blendshapes_dict[category.category_name] = float(category.score)
+            
+            # Use blendshapes for smile
+            smile_score = blendshapes_dict.get("mouthSmileLeft", 0) + blendshapes_dict.get("mouthSmileRight", 0)
+            smile_score = float(smile_score / 2.0)
+            
+            # Detect emotion from blendshapes
+            emotion = self._detect_emotion_from_blendshapes(blendshapes_dict)
+        
+        # Fallback to geometric smile if no blendshapes
+        if smile_score is None:
+            smile_score = self.estimate_smile(pts)
+        
+        # Head pose
+        yaw, pitch, roll = self.estimate_head_pose(pts, w, h)
+        
+        # Gaze
+        gaze = self.estimate_gaze(pts, yaw)
+        
+        return FrameResult(
+            t=t,
+            valid=True,
+            gaze=gaze,
+            smile=smile_score,
+            yaw=yaw,
+            pitch=pitch,
+            roll=roll,
+            emotion=emotion,
+            blendshapes=blendshapes_dict if blendshapes_dict else None
+        )
+    
+    def _analyze_legacy(self, t: float, rgb_frame, w: int, h: int) -> FrameResult:
+        """Analyze using legacy FaceMesh"""
+        out = self.face.process(rgb_frame)
 
         if not out.multi_face_landmarks:
-            return FrameResult(t=t, valid=False, gaze=None, smile=None,
-                            yaw=None, pitch=None, roll=None)
+            return FrameResult(
+                t=t, valid=False, gaze=None, smile=None,
+                yaw=None, pitch=None, roll=None, emotion=None, blendshapes=None
+            )
 
         pts = self._landmarks_to_np(out.multi_face_landmarks[0].landmark, w, h)
 
@@ -81,8 +181,48 @@ class VisionAnalyzer:
             smile=smile,
             yaw=yaw,
             pitch=pitch,
-            roll=roll
+            roll=roll,
+            emotion=None,
+            blendshapes=None
         )
+    
+    def _detect_emotion_from_blendshapes(self, blendshapes: Dict[str, float]) -> str:
+        """
+        Detect primary emotion from blendshapes.
+        Returns: 'happy', 'neutral', 'surprised', 'focused', etc.
+        """
+        # Smile indicators
+        smile_l = blendshapes.get("mouthSmileLeft", 0)
+        smile_r = blendshapes.get("mouthSmileRight", 0)
+        smile_avg = (smile_l + smile_r) / 2.0
+        
+        # Eye indicators
+        eye_wide_l = blendshapes.get("eyeWideLeft", 0)
+        eye_wide_r = blendshapes.get("eyeWideRight", 0)
+        eye_wide = (eye_wide_l + eye_wide_r) / 2.0
+        
+        # Brow indicators
+        brow_inner_up = blendshapes.get("browInnerUp", 0)
+        brow_outer_up_l = blendshapes.get("browOuterUpLeft", 0)
+        brow_outer_up_r = blendshapes.get("browOuterUpRight", 0)
+        brow_up = max(brow_inner_up, brow_outer_up_l, brow_outer_up_r)
+        
+        # Mouth indicators
+        mouth_frown_l = blendshapes.get("mouthFrownLeft", 0)
+        mouth_frown_r = blendshapes.get("mouthFrownRight", 0)
+        frown = (mouth_frown_l + mouth_frown_r) / 2.0
+        
+        # Simple rule-based emotion
+        if smile_avg > 0.3:
+            return "happy"
+        elif eye_wide > 0.5 and brow_up > 0.4:
+            return "surprised"
+        elif frown > 0.3:
+            return "concerned"
+        elif smile_avg > 0.1:
+            return "pleasant"
+        else:
+            return "neutral"
 
 
     # ---------- Gaze ----------
@@ -228,12 +368,38 @@ class VisionAnalyzer:
         return yaw_deg, pitch_deg, roll_deg
 
 
-def build_timeline_from_frames(frames):
-    analyzer = VisionAnalyzer()
+def build_timeline_from_frames(frames, model_path: Optional[Path] = None):
+    """
+    Build timeline from extracted frames.
+    
+    Args:
+        frames: List of (timestamp, frame_path) tuples
+        model_path: Optional path to face_landmarker_v2_with_blendshapes.task model
+                   If provided and exists, uses blendshapes for better emotion detection
+    """
+    # Check for model in multiple locations
+    if model_path is None:
+        possible_paths = [
+            Path("MediaPipe/face_landmarker_v2_with_blendshapes.task"),
+            Path("./MediaPipe/face_landmarker_v2_with_blendshapes.task"),
+            Path("models/face_landmarker_v2_with_blendshapes.task"),
+        ]
+        for p in possible_paths:
+            if p.exists():
+                model_path = p
+                break
+    
+    use_blendshapes = model_path is not None and model_path.exists() if model_path else False
+    
+    analyzer = VisionAnalyzer(model_path=model_path, use_blendshapes=use_blendshapes)
     timeline = []
 
     for t, frame_path in frames:
         frame = cv2.imread(str(frame_path))
+        if frame is None:
+            print(f"⚠️ Failed to read frame: {frame_path}")
+            continue
+            
         res = analyzer.analyze_frame(t, frame)
 
         if is_dataclass(res):
