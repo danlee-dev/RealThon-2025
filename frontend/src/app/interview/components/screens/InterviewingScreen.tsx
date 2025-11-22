@@ -11,9 +11,10 @@ interface InterviewingScreenProps {
     onEnd: (videoId?: string) => void;
     questions: InterviewQuestion[];
     sessionId: string;
+    isSignLanguageMode?: boolean;
 }
 
-export default function InterviewingScreen({ onEnd, questions: initialQuestions, sessionId }: InterviewingScreenProps) {
+export default function InterviewingScreen({ onEnd, questions: initialQuestions, sessionId, isSignLanguageMode = false }: InterviewingScreenProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioRecorderRef = useRef<MediaRecorder | null>(null);
@@ -258,8 +259,8 @@ export default function InterviewingScreen({ onEnd, questions: initialQuestions,
                                                 className="px-4 py-2 bg-primary text-white hover:bg-brand-purple transition-colors flex items-center gap-2 shadow-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                                 style={{ borderRadius: '0.375rem' }}
                                             >
-                                                <Mic className="w-4 h-4" />
-                                                <span>{isSubmittingAnswer ? '제출 중...' : '녹음 시작'}</span>
+                                                {isSignLanguageMode ? <Video className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                                                <span>{isSubmittingAnswer ? '제출 중...' : (isSignLanguageMode ? '녹화 시작' : '녹음 시작')}</span>
                                             </button>
                                         ) : (
                                             <button
@@ -268,7 +269,7 @@ export default function InterviewingScreen({ onEnd, questions: initialQuestions,
                                                 style={{ borderRadius: '0.375rem' }}
                                             >
                                                 <div className="w-2 h-2 bg-white rounded-full"></div>
-                                                <span>중지</span>
+                                                <span>{isSignLanguageMode ? '녹화 중지' : '녹음 중지'}</span>
                                             </button>
                                         )}
                                     </div>

@@ -66,9 +66,9 @@ export default function Sidebar({
                 <SidebarItem
                     icon={Settings}
                     label="Settings"
-                    active={pathname === '/settings'}
+                    active={pathname === '/setup'}
                     isCollapsed={isCollapsed}
-                    onClick={() => router.push('/settings')}
+                    onClick={() => router.push('/setup')}
                 />
 
                 <button
@@ -87,7 +87,7 @@ export default function Sidebar({
                     {!isCollapsed && <span>접기</span>}
                 </button>
             </div>
-        </div>
+        </div >
     );
 }
 

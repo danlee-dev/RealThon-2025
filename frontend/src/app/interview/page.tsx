@@ -123,6 +123,7 @@ export default function InterviewPage() {
               onEnd={handleEndInterview}
               questions={questions}
               sessionId={sessionId || ''}
+              isSignLanguageMode={isSignLanguageMode}
             />
           )}
           {currentStage === InterviewStage.ANALYZING && (
