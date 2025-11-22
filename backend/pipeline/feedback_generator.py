@@ -53,9 +53,9 @@ def generate_feedback_with_gemini(metrics: Dict, transcript: str = "") -> List[s
             genai.configure(api_key=api_key)
             
             # Gemini 2.0 Flash 모델 사용 (가장 빠르고 효율적)
-            # 사용 가능한 모델: gemini-2.0-flash-exp, gemini-1.5-flash, gemini-1.5-pro
+            # 사용 가능한 모델: gemini-2.0-flash, gemini-1.5-flash, gemini-1.5-pro
             try:
-                model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                model = genai.GenerativeModel('gemini-2.0-flash')
             except Exception:
                 # Fallback to stable version
                 model = genai.GenerativeModel('gemini-1.5-flash')
@@ -469,7 +469,7 @@ def generate_alert_feedback_with_gemini(segment: Dict) -> Optional[str]:
             genai.configure(api_key=api_key)
             
             try:
-                model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                model = genai.GenerativeModel('gemini-2.0-flash')
             except Exception:
                 model = genai.GenerativeModel('gemini-1.5-flash')
             

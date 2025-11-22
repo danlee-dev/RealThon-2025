@@ -99,17 +99,28 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 - `DELETE /api/portfolios/{portfolio_id}` - 포트폴리오 삭제
 
 ### Job Postings
-- `POST /api/job-postings/?user_id={user_id}` - 공고 생성
+- `POST /api/job-postings/?user_id={user_id}` - 공고 생성 (수동 입력)
+- `POST /api/job-postings/crawl?user_id={user_id}` - **직무 공고 URL 크롤링 및 저장** ⭐️
+  - Body: `{ "url": "https://www.wanted.co.kr/wd/12345" }`
+  - 지원 플랫폼: Wanted, 사람인, 잡코리아, 인크루트, LinkedIn, Indeed
+  - 자동으로 회사명, 직무명, 공고 내용을 추출하여 DB에 저장
+  - **Gemini AI로 구조화된 JSON 파싱**: 크롤링한 내용을 자동으로 구조화하여 다음 형식으로 저장
+    - DB의 `parsed_skills` 필드에 JSON 문자열로 저장 (구조화된 데이터 보존)
+    - 구조화된 필드: `company`, `position`, `experience_years`, `employment_type`, `required_skills`, `preferred_skills`, `responsibilities`, `qualifications`, `preferred_qualifications`
 - `GET /api/job-postings/{job_posting_id}` - 공고 조회
 - `GET /api/job-postings/user/{user_id}` - 사용자별 공고 목록
 - `DELETE /api/job-postings/{job_posting_id}` - 공고 삭제
 
 ### Interviews (세션 및 질문 관리)
 - `POST /api/interviews/sessions?user_id={user_id}` - 면접 세션 생성
+  - **필수 입력**: `job_posting_id` (직무 공고 ID)
+  - 세션 생성 시 **초기 면접 질문 3개가 자동으로 생성**되어 저장됩니다. (약점, 포트폴리오 검증, 직무 관련 질문)
+  - 입력받은 공고 내용을 반영하여 질문이 생성됩니다.
 - `GET /api/interviews/sessions/{session_id}` - 세션 조회
 - `GET /api/interviews/sessions/user/{user_id}` - 사용자별 세션 목록
 - `PATCH /api/interviews/sessions/{session_id}/complete` - 세션 완료 처리
-- `POST /api/interviews/sessions/{session_id}/questions` - 면접 질문 생성
+- `POST /api/interviews/sessions/{session_id}/questions/generate` - 면접 질문 수동 재생성 (초기 질문 3개)
+- `POST /api/interviews/sessions/{session_id}/questions` - 면접 질문 추가
 - `GET /api/interviews/sessions/{session_id}/questions` - 세션 질문 목록 조회
 
 ### Video Analysis (비디오 분석 - 통합 파이프라인) ⭐️
@@ -405,7 +416,7 @@ GET /api/video/results/{video_id}
   // 🎯 의미: 구체적이고 실천 가능한 면접 코칭 피드백
   // 💡 구성: 관찰 → 해석 → 개선 제안 (1~3가지 구체적 솔루션)
   
-  // === 타임라인 기반 알림 (Alerts) ===
+  // === 타임라인 기반 알림 (Alerts) 존재하는 경우에만 반환 ===
   "alerts": [
     {
       "start_t": 0.21,         // 구간 시작 시간 (초)
