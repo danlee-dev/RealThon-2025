@@ -1,0 +1,36 @@
+{
+  "position": "Frontend Developer",
+  "core_skills": {
+    "languages": ["JavaScript", "TypeScript", "HTML", "CSS"],
+    "frameworks": ["React", "Vue.js", "Next.js", "Angular"],
+    "state_management": ["Redux", "Zustand", "Recoil", "MobX"],
+    "styling": ["Tailwind CSS", "Styled-components", "SCSS", "CSS-in-JS"],
+    "build_tools": ["Webpack", "Vite", "Turbopack", "esbuild"]
+  },
+  "essential_competencies": {
+    "technical": [
+      "반응형 웹 디자인",
+      "웹 접근성 (WCAG)",
+      "브라우저 호환성",
+      "성능 최적화 (Core Web Vitals)",
+      "SEO 기본 지식",
+      "RESTful API 연동",
+      "GraphQL (선택)",
+      "Git/GitHub 사용"
+    ],
+    "soft_skills": [
+      "디자이너와의 협업 능력",
+      "UI/UX 이해도",
+      "문제 해결 능력",
+      "커뮤니케이션",
+      "트렌드 학습 능력"
+    ]
+  },
+  "preferred_experience": [
+    "프로젝트 배포 경험",
+    "테스트 코드 작성 (Jest, React Testing Library)",
+    "CI/CD 파이프라인 구축",
+    "모바일 반응형 개발",
+    "크로스 브라우징 이슈 해결"
+  ]
+}

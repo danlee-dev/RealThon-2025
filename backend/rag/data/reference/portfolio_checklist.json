@@ -1,0 +1,724 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-11-22",
+    "description": "포트폴리오 평가 체크리스트 - 역량별 보유 여부 확인 및 점수 산정",
+    "usage": "포트폴리오를 분석하여 각 역량의 보유 여부를 체크하고, 부족한 역량 파악"
+  },
+  "scoring_system": {
+    "description": "역량별 점수 체계",
+    "levels": {
+      "critical": {
+        "weight": 10,
+        "description": "필수 역량, 미보유 시 해당 레벨 부적합"
+      },
+      "high": {
+        "weight": 7,
+        "description": "중요 역량, 대부분 보유 필요"
+      },
+      "medium": {
+        "weight": 5,
+        "description": "권장 역량"
+      },
+      "low": {
+        "weight": 3,
+        "description": "가산점 역량"
+      }
+    },
+    "evaluation_criteria": {
+      "excellent": "해당 레벨 필수 역량 90% 이상 + 가산 역량 50% 이상",
+      "good": "해당 레벨 필수 역량 80% 이상 + 가산 역량 30% 이상",
+      "fair": "해당 레벨 필수 역량 70% 이상",
+      "insufficient": "해당 레벨 필수 역량 70% 미만"
+    }
+  },
+  "checklist_templates": {
+    "FE_JUNIOR": {
+      "id": "CHECKLIST_FE_JUNIOR",
+      "level": "LEVEL_JUNIOR",
+      "role": "ROLE_FE",
+      "must_have_checklist": [
+        {
+          "competency_id": "FE_JR_TECH_001",
+          "item": "HTML5/CSS3 시맨틱 마크업",
+          "verification_points": [
+            "포트폴리오에 시맨틱 태그 사용 (header, nav, main, article, section, footer)",
+            "적절한 heading 계층 구조 (h1~h6)",
+            "form 요소의 올바른 사용"
+          ],
+          "keywords_to_find": ["시맨틱", "HTML5", "CSS3", "마크업"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "FE_JR_TECH_002",
+          "item": "JavaScript ES6+ 기본 문법",
+          "verification_points": [
+            "const/let 사용",
+            "화살표 함수 활용",
+            "Promise 또는 async/await 사용",
+            "구조 분해 할당, 스프레드 연산자 사용"
+          ],
+          "keywords_to_find": ["JavaScript", "ES6", "Promise", "async/await", "화살표함수"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "FE_JR_TECH_003",
+          "item": "React/Vue 컴포넌트 기반 개발",
+          "verification_points": [
+            "컴포넌트 단위로 UI 구성",
+            "props를 통한 데이터 전달",
+            "state 관리",
+            "이벤트 핸들링"
+          ],
+          "keywords_to_find": ["React", "Vue", "컴포넌트", "props", "state"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "FE_JR_TECH_004",
+          "item": "Git 버전 관리",
+          "verification_points": [
+            "GitHub 저장소 존재",
+            "의미 있는 커밋 메시지",
+            "브랜치 사용 경험",
+            "README 작성"
+          ],
+          "keywords_to_find": ["Git", "GitHub", "버전관리"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "FE_JR_TECH_005",
+          "item": "Flexbox/Grid 레이아웃",
+          "verification_points": [
+            "Flexbox를 활용한 레이아웃",
+            "Grid를 활용한 레이아웃",
+            "적절한 레이아웃 기법 선택"
+          ],
+          "keywords_to_find": ["Flexbox", "Grid", "레이아웃"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "FE_JR_TECH_006",
+          "item": "반응형 웹 디자인",
+          "verification_points": [
+            "미디어 쿼리 사용",
+            "모바일 대응",
+            "다양한 화면 크기 고려"
+          ],
+          "keywords_to_find": ["반응형", "미디어쿼리", "모바일"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "FE_JR_EXP_001",
+          "item": "CRUD 기능 구현",
+          "verification_points": [
+            "생성/읽기/수정/삭제 기능 존재",
+            "API 연동",
+            "데이터 CRUD 처리"
+          ],
+          "keywords_to_find": ["CRUD", "API", "fetch", "axios"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "FE_JR_EXP_002",
+          "item": "API 호출 및 데이터 렌더링",
+          "verification_points": [
+            "fetch 또는 axios를 사용한 API 호출",
+            "응답 데이터를 화면에 표시",
+            "로딩/에러 상태 처리"
+          ],
+          "keywords_to_find": ["API", "fetch", "axios", "데이터"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "FE_JR_EXP_003",
+          "item": "폼 처리 및 유효성 검증",
+          "verification_points": [
+            "사용자 입력 받기",
+            "입력 값 검증",
+            "에러 메시지 표시"
+          ],
+          "keywords_to_find": ["폼", "validation", "유효성검증"],
+          "importance": "high",
+          "score": 7
+        }
+      ],
+      "nice_to_have_checklist": [
+        {
+          "competency_id": "FE_JR_NICE_001",
+          "item": "TypeScript 사용",
+          "verification_points": [
+            "TypeScript로 작성된 프로젝트",
+            "타입 정의 사용"
+          ],
+          "keywords_to_find": ["TypeScript", "타입"],
+          "importance": "medium",
+          "score": 5
+        },
+        {
+          "competency_id": "FE_JR_NICE_002",
+          "item": "CSS 전처리기 또는 Tailwind",
+          "verification_points": [
+            "Sass/Less 사용",
+            "또는 Tailwind CSS 사용"
+          ],
+          "keywords_to_find": ["Sass", "Less", "Tailwind"],
+          "importance": "low",
+          "score": 3
+        },
+        {
+          "competency_id": "FE_JR_NICE_003",
+          "item": "상태 관리 라이브러리",
+          "verification_points": [
+            "Redux, Zustand, Recoil 등 사용"
+          ],
+          "keywords_to_find": ["Redux", "Zustand", "Recoil", "상태관리"],
+          "importance": "low",
+          "score": 3
+        },
+        {
+          "competency_id": "FE_JR_NICE_EXP_001",
+          "item": "GitHub 공개 프로젝트",
+          "verification_points": [
+            "공개 저장소 존재",
+            "README 작성",
+            "커밋 히스토리 확인 가능"
+          ],
+          "keywords_to_find": ["GitHub", "오픈소스"],
+          "importance": "medium",
+          "score": 5
+        },
+        {
+          "competency_id": "FE_JR_NICE_EXP_002",
+          "item": "기술 블로그 운영",
+          "verification_points": [
+            "기술 블로그 링크 존재",
+            "학습 내용 정리"
+          ],
+          "keywords_to_find": ["블로그", "기술글"],
+          "importance": "low",
+          "score": 3
+        }
+      ]
+    },
+    "FE_MID": {
+      "id": "CHECKLIST_FE_MID",
+      "level": "LEVEL_MID",
+      "role": "ROLE_FE",
+      "must_have_checklist": [
+        {
+          "competency_id": "FE_MID_TECH_001",
+          "item": "프레임워크 깊이 있는 이해",
+          "verification_points": [
+            "고급 React 패턴 사용 (HOC, Render Props, Custom Hooks)",
+            "성능 최적화 기법 적용 (React.memo, useMemo, useCallback)",
+            "컴포넌트 생명주기 이해"
+          ],
+          "keywords_to_find": ["React", "최적화", "성능", "hooks", "패턴"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "FE_MID_TECH_002",
+          "item": "TypeScript 실무 활용",
+          "verification_points": [
+            "제네릭 사용",
+            "유틸리티 타입 활용 (Partial, Pick, Omit 등)",
+            "복잡한 타입 정의"
+          ],
+          "keywords_to_find": ["TypeScript", "제네릭", "타입추론"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "FE_MID_TECH_003",
+          "item": "상태 관리 아키텍처",
+          "verification_points": [
+            "전역 상태 관리 시스템 구축",
+            "상태 정규화",
+            "적절한 상태 관리 라이브러리 선택"
+          ],
+          "keywords_to_find": ["상태관리", "Redux", "Zustand", "Recoil", "아키텍처"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "FE_MID_TECH_004",
+          "item": "번들러 최적화",
+          "verification_points": [
+            "Webpack 또는 Vite 설정 커스터마이징",
+            "번들 사이즈 최적화",
+            "Code Splitting 적용"
+          ],
+          "keywords_to_find": ["Webpack", "Vite", "번들", "최적화"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "FE_MID_TECH_005",
+          "item": "웹 성능 최적화",
+          "verification_points": [
+            "Lighthouse 점수 개선 경험",
+            "Lazy Loading 구현",
+            "이미지 최적화",
+            "Code Splitting"
+          ],
+          "keywords_to_find": ["성능최적화", "Lighthouse", "레이지로딩", "코드스플리팅"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "FE_MID_TECH_007",
+          "item": "테스트 코드 작성",
+          "verification_points": [
+            "Unit 테스트 존재",
+            "테스트 커버리지",
+            "Jest, Testing Library 사용"
+          ],
+          "keywords_to_find": ["테스트", "Jest", "Testing Library"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "FE_MID_EXP_001",
+          "item": "복잡한 상태 관리 경험",
+          "verification_points": [
+            "여러 컴포넌트 간 상태 동기화",
+            "복잡한 비즈니스 로직 구현"
+          ],
+          "keywords_to_find": ["상태관리", "복잡도"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "FE_MID_EXP_002",
+          "item": "재사용 가능한 컴포넌트 라이브러리",
+          "verification_points": [
+            "공통 UI 컴포넌트 구축",
+            "컴포넌트 문서화",
+            "Storybook 사용"
+          ],
+          "keywords_to_find": ["컴포넌트", "재사용", "라이브러리", "Storybook"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "FE_MID_EXP_003",
+          "item": "성능 개선 프로젝트",
+          "verification_points": [
+            "성능 지표 측정 (before/after)",
+            "구체적인 개선 방법 설명",
+            "비즈니스 임팩트"
+          ],
+          "keywords_to_find": ["성능개선", "최적화", "Lighthouse", "지표"],
+          "importance": "critical",
+          "score": 10
+        }
+      ],
+      "nice_to_have_checklist": [
+        {
+          "competency_id": "FE_MID_NICE_001",
+          "item": "Next.js/Nuxt.js 경험",
+          "verification_points": [
+            "SSR/SSG 구현",
+            "메타 프레임워크 활용"
+          ],
+          "keywords_to_find": ["Next.js", "Nuxt.js", "SSR", "SSG"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "FE_MID_NICE_002",
+          "item": "마이크로 프론트엔드",
+          "verification_points": [
+            "MFE 아키텍처 구현 경험",
+            "Module Federation 등"
+          ],
+          "keywords_to_find": ["마이크로프론트엔드", "MFE"],
+          "importance": "medium",
+          "score": 5
+        },
+        {
+          "competency_id": "FE_MID_NICE_003",
+          "item": "모노레포 관리",
+          "verification_points": [
+            "Turborepo, Nx, Lerna 사용"
+          ],
+          "keywords_to_find": ["모노레포", "Turborepo", "Nx"],
+          "importance": "medium",
+          "score": 5
+        },
+        {
+          "competency_id": "FE_MID_NICE_EXP_001",
+          "item": "오픈소스 기여",
+          "verification_points": [
+            "PR 머지 경험",
+            "이슈 해결",
+            "메인테이너 활동"
+          ],
+          "keywords_to_find": ["오픈소스", "컨트리뷰션"],
+          "importance": "medium",
+          "score": 5
+        },
+        {
+          "competency_id": "FE_MID_NICE_EXP_002",
+          "item": "기술 블로그 운영",
+          "verification_points": [
+            "정기적 포스팅",
+            "깊이 있는 기술 글"
+          ],
+          "keywords_to_find": ["블로그", "기술글"],
+          "importance": "low",
+          "score": 3
+        }
+      ]
+    },
+    "BE_JUNIOR": {
+      "id": "CHECKLIST_BE_JUNIOR",
+      "level": "LEVEL_JUNIOR",
+      "role": "ROLE_BE",
+      "must_have_checklist": [
+        {
+          "competency_id": "BE_JR_TECH_001",
+          "item": "주 언어 숙달",
+          "verification_points": [
+            "Java, Python, Node.js, Go 중 하나 사용",
+            "언어 기본 문법 숙지",
+            "코드 품질"
+          ],
+          "keywords_to_find": ["Java", "Python", "Node.js", "Go"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "BE_JR_TECH_002",
+          "item": "프레임워크 사용",
+          "verification_points": [
+            "Spring Boot, Express, Django, FastAPI 등 사용",
+            "MVC 패턴 이해"
+          ],
+          "keywords_to_find": ["Spring", "Express", "Django", "FastAPI"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "BE_JR_TECH_003",
+          "item": "SQL 기본 쿼리",
+          "verification_points": [
+            "SELECT, JOIN 쿼리 작성",
+            "INSERT, UPDATE, DELETE 사용"
+          ],
+          "keywords_to_find": ["SQL", "쿼리", "데이터베이스"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "BE_JR_TECH_004",
+          "item": "관계형 DB 사용",
+          "verification_points": [
+            "MySQL, PostgreSQL 사용 경험",
+            "DB 연결 및 쿼리 실행"
+          ],
+          "keywords_to_find": ["MySQL", "PostgreSQL", "RDB"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "BE_JR_TECH_005",
+          "item": "RESTful API 설계",
+          "verification_points": [
+            "적절한 HTTP 메서드 사용",
+            "리소스 기반 엔드포인트 설계",
+            "상태 코드 사용"
+          ],
+          "keywords_to_find": ["REST", "API", "HTTP"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "BE_JR_EXP_001",
+          "item": "CRUD API 구현",
+          "verification_points": [
+            "기본 CRUD 엔드포인트 존재",
+            "DB 연동",
+            "에러 핸들링"
+          ],
+          "keywords_to_find": ["CRUD", "API", "엔드포인트"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "BE_JR_EXP_002",
+          "item": "DB 스키마 설계",
+          "verification_points": [
+            "ERD 작성",
+            "테이블 관계 정의",
+            "외래키 사용"
+          ],
+          "keywords_to_find": ["ERD", "스키마", "테이블"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "BE_JR_EXP_003",
+          "item": "ORM 사용",
+          "verification_points": [
+            "JPA, Sequelize, SQLAlchemy 등 사용",
+            "엔티티 매핑"
+          ],
+          "keywords_to_find": ["ORM", "JPA", "Sequelize"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "BE_JR_EXP_004",
+          "item": "인증/인가 구현",
+          "verification_points": [
+            "JWT 또는 세션 인증",
+            "권한 체크"
+          ],
+          "keywords_to_find": ["인증", "JWT", "세션"],
+          "importance": "high",
+          "score": 7
+        }
+      ],
+      "nice_to_have_checklist": [
+        {
+          "competency_id": "BE_JR_NICE_001",
+          "item": "NoSQL 사용",
+          "verification_points": [
+            "MongoDB, Redis 사용 경험"
+          ],
+          "keywords_to_find": ["NoSQL", "MongoDB", "Redis"],
+          "importance": "medium",
+          "score": 5
+        },
+        {
+          "competency_id": "BE_JR_NICE_002",
+          "item": "Docker 사용",
+          "verification_points": [
+            "Dockerfile 작성",
+            "컨테이너 실행"
+          ],
+          "keywords_to_find": ["Docker", "컨테이너"],
+          "importance": "low",
+          "score": 3
+        },
+        {
+          "competency_id": "BE_JR_NICE_003",
+          "item": "클라우드 경험",
+          "verification_points": [
+            "AWS, GCP 등 사용",
+            "배포 경험"
+          ],
+          "keywords_to_find": ["AWS", "GCP", "클라우드"],
+          "importance": "low",
+          "score": 3
+        }
+      ]
+    },
+    "BE_MID": {
+      "id": "CHECKLIST_BE_MID",
+      "level": "LEVEL_MID",
+      "role": "ROLE_BE",
+      "must_have_checklist": [
+        {
+          "competency_id": "BE_MID_TECH_002",
+          "item": "DB 설계 및 정규화",
+          "verification_points": [
+            "정규화 개념 이해 (1NF~3NF)",
+            "복잡한 스키마 설계",
+            "인덱스 설계"
+          ],
+          "keywords_to_find": ["정규화", "스키마", "인덱스"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "BE_MID_TECH_003",
+          "item": "쿼리 최적화",
+          "verification_points": [
+            "실행 계획 분석",
+            "인덱스 활용",
+            "N+1 문제 해결"
+          ],
+          "keywords_to_find": ["쿼리최적화", "실행계획", "인덱스"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "BE_MID_TECH_004",
+          "item": "트랜잭션 관리",
+          "verification_points": [
+            "트랜잭션 격리 수준 이해",
+            "ACID 속성 이해"
+          ],
+          "keywords_to_find": ["트랜잭션", "격리수준", "ACID"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "BE_MID_TECH_005",
+          "item": "동시성 제어",
+          "verification_points": [
+            "락 메커니즘 이해",
+            "Optimistic/Pessimistic Lock 사용"
+          ],
+          "keywords_to_find": ["동시성", "락", "Lock"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "BE_MID_TECH_006",
+          "item": "캐싱 전략",
+          "verification_points": [
+            "Redis 사용",
+            "캐시 패턴 적용",
+            "캐시 무효화 전략"
+          ],
+          "keywords_to_find": ["캐싱", "Redis", "Cache"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "BE_MID_TECH_007",
+          "item": "메시지 큐",
+          "verification_points": [
+            "Kafka, RabbitMQ 등 사용",
+            "비동기 처리"
+          ],
+          "keywords_to_find": ["Kafka", "RabbitMQ", "메시지큐"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "BE_MID_TECH_009",
+          "item": "Docker 운영",
+          "verification_points": [
+            "컨테이너 빌드 및 배포",
+            "Docker Compose 사용"
+          ],
+          "keywords_to_find": ["Docker", "컨테이너"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "BE_MID_EXP_001",
+          "item": "성능 최적화 경험",
+          "verification_points": [
+            "병목 지점 파악",
+            "성능 개선 수치",
+            "부하 테스트"
+          ],
+          "keywords_to_find": ["성능최적화", "병목", "부하테스트"],
+          "importance": "critical",
+          "score": 10
+        },
+        {
+          "competency_id": "BE_MID_EXP_006",
+          "item": "장애 대응 경험",
+          "verification_points": [
+            "장애 원인 분석",
+            "재발 방지 조치",
+            "포스트모텀 작성"
+          ],
+          "keywords_to_find": ["장애", "트러블슈팅", "포스트모텀"],
+          "importance": "high",
+          "score": 7
+        }
+      ],
+      "nice_to_have_checklist": [
+        {
+          "competency_id": "BE_MID_NICE_001",
+          "item": "MSA 경험",
+          "verification_points": [
+            "마이크로서비스 설계",
+            "서비스 분리",
+            "API Gateway"
+          ],
+          "keywords_to_find": ["MSA", "마이크로서비스"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "BE_MID_NICE_002",
+          "item": "DDD 적용",
+          "verification_points": [
+            "도메인 주도 설계 경험"
+          ],
+          "keywords_to_find": ["DDD", "도메인"],
+          "importance": "medium",
+          "score": 5
+        },
+        {
+          "competency_id": "BE_MID_NICE_003",
+          "item": "Kubernetes 운영",
+          "verification_points": [
+            "K8s 클러스터 관리",
+            "배포 자동화"
+          ],
+          "keywords_to_find": ["Kubernetes", "K8s"],
+          "importance": "high",
+          "score": 7
+        },
+        {
+          "competency_id": "BE_MID_NICE_004",
+          "item": "GraphQL",
+          "verification_points": [
+            "GraphQL API 구현"
+          ],
+          "keywords_to_find": ["GraphQL"],
+          "importance": "medium",
+          "score": 5
+        }
+      ]
+    }
+  },
+  "analysis_instructions": {
+    "description": "포트폴리오 분석 시 체크해야 할 항목들",
+    "steps": [
+      {
+        "step": 1,
+        "action": "연차 및 직무 파악",
+        "details": "포트폴리오에서 경력 연차와 지원 직무를 확인"
+      },
+      {
+        "step": 2,
+        "action": "해당 레벨의 체크리스트 로드",
+        "details": "파악한 연차와 직무에 맞는 체크리스트 선택"
+      },
+      {
+        "step": 3,
+        "action": "필수 역량 체크",
+        "details": "must_have_checklist의 각 항목을 verification_points와 keywords_to_find를 기준으로 포트폴리오에서 확인"
+      },
+      {
+        "step": 4,
+        "action": "가산 역량 체크",
+        "details": "nice_to_have_checklist의 각 항목을 동일하게 확인"
+      },
+      {
+        "step": 5,
+        "action": "점수 계산",
+        "details": "보유한 역량의 점수를 합산하여 총점 및 백분율 계산"
+      },
+      {
+        "step": 6,
+        "action": "부족한 역량 파악",
+        "details": "체크되지 않은 항목 리스트업, 특히 critical 중요도 항목 강조"
+      },
+      {
+        "step": 7,
+        "action": "면접 질문 매핑",
+        "details": "부족한 역량의 competency_id를 사용하여 interview_questions.json에서 해당 질문 추출"
+      }
+    ]
+  }
+}
