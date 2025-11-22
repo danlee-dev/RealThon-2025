@@ -315,6 +315,127 @@ export const interviewApi = {
             method: 'GET',
         });
     },
+
+    submitAnswer: async (
+        sessionId: string,
+        questionId: string,
+        audioBlob: Blob
+    ): Promise<ApiResponse<{ next_question?: InterviewQuestion; is_final?: boolean }>> => {
+        try {
+            const token = TokenStorage.getAccessToken();
+            const formData = new FormData();
+            formData.append('audio', audioBlob, `answer-${questionId}.webm`);
+            formData.append('question_id', questionId);
+            formData.append('timestamp', new Date().toISOString());
+
+            const response = await fetch(`${API_URL}/api/interviews/sessions/${sessionId}/answers`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                return {
+                    success: false,
+                    error: errorData.detail || 'Answer submission failed',
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Network error',
+            };
+        }
+    },
+
+    addQuestion: async (
+        sessionId: string,
+        questionText: string,
+        questionType: string = 'follow-up',
+        order: number
+    ): Promise<ApiResponse<InterviewQuestion>> => {
+        return apiCall<InterviewQuestion>(`/api/interviews/sessions/${sessionId}/questions`, {
+            method: 'POST',
+            body: JSON.stringify({
+                text: questionText,
+                type: questionType,
+                order,
+            }),
+        });
+    },
+
+    completeSession: async (sessionId: string): Promise<ApiResponse<void>> => {
+        return apiCall<void>(`/api/interviews/sessions/${sessionId}/complete`, {
+            method: 'PATCH',
+        });
+    },
+};
+
+// Video Analysis API
+export const videoApi = {
+    checkStatus: async (): Promise<ApiResponse<{ status: string; version: string }>> => {
+        return apiCall<{ status: string; version: string }>('/api/video/status', {
+            method: 'GET',
+        });
+    },
+
+    uploadVideo: async (sessionId: string, videoBlob: Blob): Promise<ApiResponse<{ video_id: string }>> => {
+        try {
+            const token = TokenStorage.getAccessToken();
+            const formData = new FormData();
+            formData.append('video', videoBlob, 'interview-video.webm');
+            formData.append('session_id', sessionId);
+            formData.append('timestamp', new Date().toISOString());
+
+            const response = await fetch(`${API_URL}/api/video/upload`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                return {
+                    success: false,
+                    error: errorData.detail || 'Video upload failed',
+                };
+            }
+
+            const data = await response.json();
+            return {
+                success: true,
+                data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Network error',
+            };
+        }
+    },
+
+    analyzeVideo: async (videoId: string): Promise<ApiResponse<{ status: string; message: string }>> => {
+        return apiCall<{ status: string; message: string }>(`/api/video/analyze/${videoId}`, {
+            method: 'POST',
+        });
+    },
+
+    getResults: async (videoId: string): Promise<ApiResponse<any>> => {
+        return apiCall<any>(`/api/video/results/${videoId}`, {
+            method: 'GET',
+        });
+    },
 };
 
 // Capability API (real backend integration)
