@@ -15,23 +15,25 @@ interface SidebarProps {
     onToggle: () => void;
     isSignLanguageMode: boolean;
     onSignLanguageToggle: () => void;
+    activeItem?: string;
 }
 
 export default function Sidebar({
     isCollapsed,
     onToggle,
     isSignLanguageMode,
-    onSignLanguageToggle
+    onSignLanguageToggle,
+    activeItem = 'Interview'
 }: SidebarProps) {
     const mainMenuItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', active: false },
-        { icon: VideoIcon, label: 'Interview', active: true },
-        { icon: Lightbulb, label: 'Insight', active: false },
-        { icon: Users, label: 'Talent', active: false },
+        { icon: LayoutDashboard, label: 'Dashboard' },
+        { icon: VideoIcon, label: 'Interview' },
+        { icon: Lightbulb, label: 'Insight' },
+        { icon: Users, label: 'Talent' },
     ];
 
     const generalItems = [
-        { icon: SettingsIcon, label: 'Setting', active: false },
+        { icon: SettingsIcon, label: 'Setting' },
     ];
 
     return (
@@ -48,7 +50,12 @@ export default function Sidebar({
             <div className={`${isCollapsed ? 'px-2' : 'px-4'} mt-4`}>
                 {!isCollapsed && <div className="text-xs text-gray-500 mb-3 px-3">Main Menu</div>}
                 {mainMenuItems.map((item) => (
-                    <SidebarItem key={item.label} {...item} isCollapsed={isCollapsed} />
+                    <SidebarItem 
+                        key={item.label} 
+                        {...item} 
+                        active={item.label === activeItem}
+                        isCollapsed={isCollapsed} 
+                    />
                 ))}
             </div>
 
@@ -82,7 +89,12 @@ export default function Sidebar({
                 </button>
 
                 {generalItems.map((item) => (
-                    <SidebarItem key={item.label} {...item} isCollapsed={isCollapsed} />
+                    <SidebarItem 
+                        key={item.label} 
+                        {...item} 
+                        active={item.label === activeItem}
+                        isCollapsed={isCollapsed} 
+                    />
                 ))}
             </div>
 
