@@ -2,19 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import {
-    LayoutDashboard,
-    Video as VideoIcon,
-    Lightbulb,
-    Users,
-    SettingsIcon,
-    LogOut,
-    ChevronRight,
     Bell,
     TrendingUp,
     Target,
     CheckCircle2
 } from 'lucide-react';
 import { ResponsiveRadar } from '@nivo/radar';
+import Sidebar from '../interview/components/layout/Sidebar';
 import { capabilityApi } from '@/lib/auth-client';
 import { Capability, ImprovementSuggestion } from '@/types';
 
@@ -80,89 +74,7 @@ export default function GraphPage() {
     );
 }
 
-function Sidebar({ isCollapsed, onToggle }: {
-    isCollapsed: boolean,
-    onToggle: () => void
-}) {
-    const mainMenuItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', active: false },
-        { icon: VideoIcon, label: 'Interview', active: false },
-        { icon: Lightbulb, label: 'Insight', active: true },
-        { icon: Users, label: 'Talent', active: false },
-    ];
 
-    const generalItems = [
-        { icon: SettingsIcon, label: 'Setting', active: false },
-    ];
-
-    return (
-        <div className={`bg-sidebar text-white flex flex-col transition-all duration-300 relative ${isCollapsed ? 'w-20' : 'w-60'}`}>
-            {/* Toggle Button */}
-            <button
-                onClick={onToggle}
-                className={`absolute top-1/2 -translate-y-1/2 z-20 w-8 h-16 flex items-center justify-center transition-all duration-300 ${isCollapsed
-                        ? '-right-4 bg-sidebar text-primary rounded-r-full'
-                        : '-right-4 bg-white text-gray-700 rounded-l-full shadow-lg'
-                    }`}
-            >
-                <ChevronRight className={`w-5 h-5 transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
-            </button>
-
-            {/* Logo */}
-            <div className={`p-6 flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
-                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                    <svg width="40" height="40" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M35 15C45.4934 15 54 23.7304 54 34.5C54 38.8009 52.6419 42.7757 50.3438 46H19.6562C17.3581 42.7757 16 38.8009 16 34.5C16 23.7304 24.5066 15 35 15Z" fill="#FF4D12"/>
-                        <ellipse cx="35" cy="25" rx="12" ry="10" fill="#FFDA8F"/>
-                        <circle cx="35" cy="35" r="3" fill="#1F2937"/>
-                        <path d="M20 46C20 46 25 50 35 50C45 50 50 46 50 46" stroke="#FF8C00" strokeWidth="3" strokeLinecap="round"/>
-                        <rect x="15" y="48" width="40" height="7" rx="2" fill="#1F2937"/>
-                    </svg>
-                </div>
-                {!isCollapsed && <span className="text-xl font-extrabold text-white">내일면접</span>}
-            </div>
-
-            {/* Main Menu */}
-            <div className={`${isCollapsed ? 'px-2' : 'px-4'} mt-4`}>
-                {!isCollapsed && <div className="text-xs text-gray-500 mb-3 px-3">Main Menu</div>}
-                {mainMenuItems.map((item) => (
-                    <SidebarItem key={item.label} {...item} isCollapsed={isCollapsed} />
-                ))}
-            </div>
-
-            {/* General */}
-            <div className={`${isCollapsed ? 'px-2' : 'px-4'} mt-6`}>
-                {!isCollapsed && <div className="text-xs text-gray-500 mb-3 px-3">General</div>}
-                {generalItems.map((item) => (
-                    <SidebarItem key={item.label} {...item} isCollapsed={isCollapsed} />
-                ))}
-            </div>
-
-            {/* Log Out */}
-            <div className={`mt-auto ${isCollapsed ? 'p-2' : 'p-4'}`}>
-                <button className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/5`}>
-                    <LogOut className="w-5 h-5" />
-                    {!isCollapsed && <span>Log Out</span>}
-                </button>
-            </div>
-        </div>
-    );
-}
-
-function SidebarItem({ icon: Icon, label, active, isCollapsed }: { icon: any, label: string, active: boolean, isCollapsed: boolean }) {
-    return (
-        <button
-            className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-xl mb-1 transition-all ${active
-                    ? 'bg-primary text-white shadow-lg'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-            title={isCollapsed ? label : ''}
-        >
-            <Icon className="w-5 h-5 flex-shrink-0" />
-            {!isCollapsed && <span>{label}</span>}
-        </button>
-    );
-}
 
 function Header() {
     return (

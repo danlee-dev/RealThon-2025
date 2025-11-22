@@ -14,7 +14,6 @@ import { InterviewQuestion, User } from '@/types';
 
 export default function InterviewPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isSignLanguageMode, setIsSignLanguageMode] = useState(false);
   const [currentStage, setCurrentStage] = useState<InterviewStage>(InterviewStage.WAITING);
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
@@ -99,8 +98,6 @@ export default function InterviewPage() {
       <Sidebar
         isCollapsed={isSidebarCollapsed}
         onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-        isSignLanguageMode={isSignLanguageMode}
-        onSignLanguageToggle={() => setIsSignLanguageMode(!isSignLanguageMode)}
       />
 
       {/* Main Content */}

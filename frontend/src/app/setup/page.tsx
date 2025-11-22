@@ -12,7 +12,6 @@ export default function SetupPage() {
     
     // State
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-    const [isSignLanguageMode, setIsSignLanguageMode] = useState(false);
     const [stream, setStream] = useState<MediaStream | null>(null);
     const [cameraReady, setCameraReady] = useState(false);
     const [micReady, setMicReady] = useState(false);
@@ -75,9 +74,6 @@ export default function SetupPage() {
             <Sidebar
                 isCollapsed={isSidebarCollapsed}
                 onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                isSignLanguageMode={isSignLanguageMode}
-                onSignLanguageToggle={() => setIsSignLanguageMode(!isSignLanguageMode)}
-                activeItem="Setting"
             />
 
             {/* Main Content */}
