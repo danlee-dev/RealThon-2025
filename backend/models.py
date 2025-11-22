@@ -16,6 +16,10 @@ class User(Base):
     email = Column(String, nullable=False, unique=True, index=True)
     password_hash = Column(String, nullable=False)
     name = Column(String, nullable=False)
+    role = Column(String)  # 'ROLE_FE' | 'ROLE_BE' | 'ROLE_AI'
+    level = Column(String)  # 'LEVEL_JUNIOR' | 'LEVEL_MID' | 'LEVEL_SENIOR'
+    github_username = Column(String)  # GitHub username
+    github_token = Column(String)  # GitHub personal access token (optional)
     created_at = Column(String, nullable=False, default=lambda: datetime.utcnow().isoformat())
 
     # Relationships
