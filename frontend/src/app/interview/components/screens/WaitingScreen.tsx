@@ -145,6 +145,7 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
                             </>
                         )}
                     </button>
+
                 </div>
             </div>
         </motion.div>

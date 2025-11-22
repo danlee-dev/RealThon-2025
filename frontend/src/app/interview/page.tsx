@@ -10,14 +10,16 @@ import AnalyzingScreen from './components/screens/AnalyzingScreen';
 import CompleteScreen from './components/screens/CompleteScreen';
 import { InterviewStage, AnalysisResults } from './types';
 import { interviewApi, jobPostingApi } from '@/lib/auth-client';
+import { InterviewQuestion } from '@/types';
 
 export default function InterviewPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSignLanguageMode, setIsSignLanguageMode] = useState(false);
   const [currentStage, setCurrentStage] = useState<InterviewStage>(InterviewStage.WAITING);
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
-  const [questions, setQuestions] = useState<string[]>([]);
+  const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [videoId, setVideoId] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
 
   const handleStartInterview = async (jobPostingUrl?: string) => {
@@ -67,8 +69,7 @@ export default function InterviewPage() {
       }
 
       const loadedQuestions = questionsResponse.data
-        .sort((a, b) => a.order - b.order)
-        .map(q => q.text);
+        .sort((a, b) => a.order - b.order);
 
       setQuestions(loadedQuestions);
       console.log('[DEBUG] Questions loaded:', loadedQuestions.length);
@@ -81,8 +82,11 @@ export default function InterviewPage() {
     }
   };
 
-  const handleEndInterview = () => {
-    console.log('[DEBUG] Ending interview, changing stage to ANALYZING');
+  const handleEndInterview = (uploadedVideoId?: string) => {
+    console.log('[DEBUG] Ending interview, changing stage to ANALYZING. Video ID:', uploadedVideoId);
+    if (uploadedVideoId) {
+      setVideoId(uploadedVideoId);
+    }
     setCurrentStage(InterviewStage.ANALYZING);
   };
 
@@ -125,10 +129,19 @@ export default function InterviewPage() {
             />
           )}
           {currentStage === InterviewStage.ANALYZING && (
-            <AnalyzingScreen key="analyzing" onComplete={handleAnalysisComplete} />
+            <AnalyzingScreen
+              key="analyzing"
+              onComplete={handleAnalysisComplete}
+              videoId={videoId || undefined}
+              sessionId={sessionId || undefined}
+            />
           )}
           {currentStage === InterviewStage.COMPLETE && analysisResults && (
-            <CompleteScreen key="complete" analysisResults={analysisResults} />
+            <CompleteScreen
+              key="complete"
+              analysisResults={analysisResults}
+              questionText={questions.find(q => q.id === analysisResults.detailedResult?.video.question_id)?.text}
+            />
           )}
         </AnimatePresence>
       </div>

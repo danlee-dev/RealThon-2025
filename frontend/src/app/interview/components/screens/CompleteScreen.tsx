@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { ResponsiveRadar } from '@nivo/radar';
 import { ResponsivePie } from '@nivo/pie';
-import { AnalysisResults } from '../../types';
+import { AnalysisResults, DetailedAnalysisResult, AnalysisFeedback } from '../../types';
 import { getVideoFromIndexedDB } from '@/lib/indexedDB';
 
 type ReactPlayerInstance = {
@@ -36,6 +36,7 @@ interface Message {
 
 interface CompleteScreenProps {
     analysisResults: AnalysisResults;
+    questionText?: string;
 }
 
 interface TimestampRange {
@@ -43,7 +44,7 @@ interface TimestampRange {
     end: number;
 }
 
-export default function CompleteScreen({ analysisResults }: CompleteScreenProps) {
+export default function CompleteScreen({ analysisResults, questionText }: CompleteScreenProps) {
     const playerRef = useRef<HTMLVideoElement>(null);
     const [activeTimestamp, setActiveTimestamp] = useState<TimestampRange | null>(null);
 
@@ -96,7 +97,11 @@ export default function CompleteScreen({ analysisResults }: CompleteScreenProps)
                     videoScore={analysisResults.videoScore}
                     workmapScore={analysisResults.workmapScore}
                 />
-                <ChatSection onTimestampClick={handleTimestampClick} />
+                <ChatSection
+                    onTimestampClick={handleTimestampClick}
+                    detailedResult={analysisResults.detailedResult}
+                    questionText={questionText}
+                />
             </motion.div>
         </motion.div>
     );
@@ -428,51 +433,127 @@ function ScoreCard({ title, score, color }: { title: string; score: number; colo
 
 interface ChatSectionProps {
     onTimestampClick: (timestamp: TimestampRange) => void;
+    detailedResult?: DetailedAnalysisResult;
+    questionText?: string;
 }
 
-function ChatSection({ onTimestampClick }: ChatSectionProps) {
-    const messages: Message[] = [
-        {
-            id: 1,
-            sender: 'Richard Gomez',
-            avatar: 'RG',
-            message: 'Hello everyone, Good Morning :)',
-            time: '08:42 AM',
+function ChatSection({ onTimestampClick, detailedResult, questionText }: ChatSectionProps) {
+    const [messages, setMessages] = useState<Message[]>([]);
+
+    useEffect(() => {
+        if (!detailedResult) {
+            // Fallback mock data if no detailed result
+            setMessages([
+                {
+                    id: 1,
+                    sender: 'Interviewer',
+                    avatar: 'AI',
+                    message: 'Hello, let\'s review your interview.',
+                    time: '09:00 AM',
+                    isMe: false,
+                },
+                {
+                    id: 2,
+                    type: 'system',
+                    message: 'Analysis Complete',
+                }
+            ]);
+            return;
+        }
+
+        const newMessages: Message[] = [];
+        let idCounter = 1;
+
+        // Safety check for video object
+        const videoDate = detailedResult.video?.created_at
+            ? new Date(detailedResult.video.created_at)
+            : new Date();
+        const timeStr = !isNaN(videoDate.getTime())
+            ? videoDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '00:00';
+
+        // 1. Initial Greeting
+        newMessages.push({
+            id: idCounter++,
+            sender: 'Interviewer',
+            avatar: 'AI',
+            message: '면접 수고하셨습니다. 답변에 대한 분석 결과를 알려드릴게요.',
+            time: timeStr,
             isMe: false,
-        },
-        {
-            id: 2,
-            sender: 'You',
-            message: 'Hi Richard, Goodmorning too. Let\'s start this interview yourself!',
-            time: '08:43 AM',
-            isMe: true,
-        },
-        {
-            id: 3,
-            type: 'system',
-            message: 'We announce that you accepted this call',
-        },
-        {
-            id: 4,
-            sender: 'Richard Gomez',
-            avatar: 'RG',
-            message: 'Why you choose this company? Please refer to 00:15~00:32 in your answer.',
-            time: '08:45 AM',
-            isMe: false,
-        },
-        {
-            id: 5,
-            sender: 'You',
-            message: 'I discussed my background at 00:45~01:12 and my motivation at 01:15~01:45.',
-            time: '08:46 AM',
-            isMe: true,
-        },
-    ];
+        });
+
+        // 2. Question (if available)
+        if (questionText) {
+            newMessages.push({
+                id: idCounter++,
+                sender: 'Interviewer',
+                avatar: 'AI',
+                message: questionText,
+                time: timeStr,
+                isMe: false,
+            });
+        }
+
+        // 3. User Transcript
+        if (detailedResult.transcript) {
+            newMessages.push({
+                id: idCounter++,
+                sender: 'You',
+                message: detailedResult.transcript,
+                time: timeStr,
+                isMe: true,
+            });
+        }
+
+        // 4. Feedbacks
+        if (detailedResult.feedbacks && Array.isArray(detailedResult.feedbacks)) {
+            detailedResult.feedbacks.forEach(feedback => {
+                if (feedback.message) {
+                    newMessages.push({
+                        id: idCounter++,
+                        sender: 'Interviewer',
+                        avatar: 'AI',
+                        message: `[${feedback.title}] ${feedback.message}`,
+                        time: timeStr,
+                        isMe: false,
+                    });
+                }
+            });
+        }
+
+        // 5. Alerts (as system messages or interviewer messages)
+        if (detailedResult.alerts && Array.isArray(detailedResult.alerts)) {
+            detailedResult.alerts.forEach(alert => {
+                const startStr = formatTime(alert.start_t);
+                const endStr = formatTime(alert.end_t);
+                newMessages.push({
+                    id: idCounter++,
+                    sender: 'Interviewer',
+                    avatar: 'AI',
+                    message: `${alert.message} (${startStr}~${endStr})`,
+                    time: timeStr,
+                    isMe: false,
+                });
+            });
+        }
+
+        setMessages(newMessages);
+
+    }, [detailedResult, questionText]);
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
 
     // Parse timestamps from message text
     const parseTimestamps = (text: string, onTimestampClick: (timestamp: TimestampRange) => void) => {
+        if (!text) return text;
+
         // Regex to match timestamps in format MM:SS~MM:SS or HH:MM:SS~HH:MM:SS
-        const timestampRegex = /(\d{1,2}:\d{2}(?::\d{2})?)~(\d{1,2}:\d{2}(?::\d{2})?)/g;
+        // Also supports (MM:SS~MM:SS) with parentheses
+        const timestampRegex = /(\(?(\d{1,2}:\d{2}(?::\d{2})?)~(\d{1,2}:\d{2}(?::\d{2})?)\)?)/g;
 
         const convertToSeconds = (timeStr: string): number => {
             const parts = timeStr.split(':').map(Number);
@@ -497,23 +578,26 @@ function ChatSection({ onTimestampClick }: ChatSectionProps) {
                 parts.push(text.substring(lastIndex, match.index));
             }
 
-            const startTime = convertToSeconds(match[1]);
-            const endTime = convertToSeconds(match[2]);
-            const timestampText = match[0];
+            const fullMatch = match[0];
+            const startTimeStr = match[2];
+            const endTimeStr = match[3];
+
+            const startTime = convertToSeconds(startTimeStr);
+            const endTime = convertToSeconds(endTimeStr);
 
             // Add clickable timestamp
             parts.push(
                 <button
                     key={`timestamp-${keyCounter++}`}
                     onClick={() => onTimestampClick({ start: startTime, end: endTime })}
-                    className="text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors"
+                    className="text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors mx-1"
                     style={{ cursor: 'pointer' }}
                 >
-                    {timestampText}
+                    {fullMatch}
                 </button>
             );
 
-            lastIndex = match.index + match[0].length;
+            lastIndex = match.index + fullMatch.length;
         }
 
         // Add remaining text
@@ -542,19 +626,23 @@ function ChatSection({ onTimestampClick }: ChatSectionProps) {
                     return (
                         <div key={msg.id} className={`flex gap-3 ${msg.isMe ? 'flex-row-reverse' : ''}`}>
                             {!msg.isMe && (
-                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold flex-shrink-0">
-                                    {msg.avatar}
+                                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-sm font-semibold flex-shrink-0 overflow-hidden">
+                                    {msg.avatar === 'AI' ? (
+                                        <div className="w-full h-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-xs">AI</div>
+                                    ) : (
+                                        msg.avatar
+                                    )}
                                 </div>
                             )}
                             <div className={`flex-1 ${msg.isMe ? 'flex flex-col items-end' : ''}`}>
                                 {!msg.isMe && (
                                     <p className="text-sm font-medium text-gray-900 mb-1">{msg.sender}</p>
                                 )}
-                                <div className={`inline-block px-4 py-2 rounded-2xl ${msg.isMe
+                                <div className={`inline-block px-4 py-2 rounded-2xl max-w-[90%] ${msg.isMe
                                     ? 'bg-blue-900 text-white rounded-tr-none'
                                     : 'bg-gray-100 text-gray-900 rounded-tl-none'
                                     }`}>
-                                    <p className="text-sm">{parseTimestamps(msg.message, onTimestampClick)}</p>
+                                    <p className="text-sm whitespace-pre-wrap">{parseTimestamps(msg.message, onTimestampClick)}</p>
                                 </div>
                                 <p className="text-xs text-gray-400 mt-1">{msg.time}</p>
                             </div>

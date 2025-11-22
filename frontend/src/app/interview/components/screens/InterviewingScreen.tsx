@@ -4,14 +4,16 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, Volume2, PhoneOff, Video, Settings, X } from 'lucide-react';
 import { saveVideoToIndexedDB } from '@/lib/indexedDB';
+import { videoApi, interviewApi } from '@/lib/auth-client';
+import { InterviewQuestion } from '@/types';
 
 interface InterviewingScreenProps {
-    onEnd: () => void;
-    questions: string[];
+    onEnd: (videoId?: string) => void;
+    questions: InterviewQuestion[];
     sessionId: string;
 }
 
-export default function InterviewingScreen({ onEnd, questions, sessionId }: InterviewingScreenProps) {
+export default function InterviewingScreen({ onEnd, questions: initialQuestions, sessionId }: InterviewingScreenProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioRecorderRef = useRef<MediaRecorder | null>(null);
@@ -22,14 +24,15 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
     const [isAudioRecording, setIsAudioRecording] = useState(false);
     const [isVideoRecording, setIsVideoRecording] = useState(false);
     const [showProgress, setShowProgress] = useState(true);
-    const effectiveQuestions = (questions && questions.length > 0) ? questions : [
-        '자기소개를 해주세요.',
-        '이 회사에 지원한 동기는 무엇인가요?',
-        '본인의 강점과 약점을 말씀해주세요.',
-        '5년 후 자신의 모습은 어떨 것 같나요?'
-    ];
+
+    // Dynamic question management
+    const MAX_QUESTIONS = 10;
+    const [questions, setQuestions] = useState<InterviewQuestion[]>(initialQuestions);
+    const [questionIds, setQuestionIds] = useState<string[]>([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-    const [audioRecordings, setAudioRecordings] = useState<Blob[][]>([]);
+    const [isSubmittingAnswer, setIsSubmittingAnswer] = useState(false);
+    const [videoId, setVideoId] = useState<string | null>(null);
+    const isEndingRef = useRef(false);
 
     useEffect(() => {
         const startCamera = async () => {
@@ -59,7 +62,17 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
                 videoRecorder.onstop = async () => {
                     console.log('[DEBUG] Video recording stopped, preparing to upload');
                     const videoBlob = new Blob(videoChunksRef.current, { type: 'video/webm' });
-                    await uploadVideo(videoBlob);
+                    const uploadedVideoId = await uploadVideo(videoBlob);
+
+                    if (uploadedVideoId) {
+                        setVideoId(uploadedVideoId);
+                    }
+
+                    // Only trigger onEnd if we are intentionally ending the interview
+                    if (isEndingRef.current) {
+                        console.log('[DEBUG] Interview ending, triggering onEnd with videoId:', uploadedVideoId);
+                        onEnd(uploadedVideoId || undefined);
+                    }
                 };
 
                 videoRecorderRef.current = videoRecorder;
@@ -85,53 +98,24 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
     }, []);
 
     // Upload video to backend
-    const uploadVideo = async (videoBlob: Blob) => {
+    const uploadVideo = async (videoBlob: Blob): Promise<string | null> => {
         try {
             // Save to IndexedDB first for local playback
             await saveVideoToIndexedDB(videoBlob);
             console.log('[DEBUG] Video saved to IndexedDB');
 
-            const formData = new FormData();
-            formData.append('video', videoBlob, 'interview-video.webm');
-            formData.append('timestamp', new Date().toISOString());
+            const response = await videoApi.uploadVideo(sessionId, videoBlob);
 
-            // Hardcoded backend endpoint
-            const response = await fetch('https://api.example.com/interview/upload-video', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (response.ok) {
-                console.log('[DEBUG] Video uploaded successfully');
+            if (response.success && response.data) {
+                console.log('[DEBUG] Video uploaded successfully, video_id:', response.data.video_id);
+                return response.data.video_id;
             } else {
-                console.error('[DEBUG] Video upload failed:', response.statusText);
+                console.error('[DEBUG] Video upload failed:', response.error);
+                return null;
             }
         } catch (error) {
             console.error('[DEBUG] Video upload error:', error);
-        }
-    };
-
-    // Upload audio to backend
-    const uploadAudio = async (audioBlob: Blob, questionIndex: number) => {
-        try {
-            const formData = new FormData();
-            formData.append('audio', audioBlob, `question-${questionIndex + 1}.webm`);
-            formData.append('questionIndex', questionIndex.toString());
-            formData.append('timestamp', new Date().toISOString());
-
-            // Hardcoded backend endpoint
-            const response = await fetch('https://api.example.com/interview/upload-audio', {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (response.ok) {
-                console.log(`[DEBUG] Audio for question ${questionIndex + 1} uploaded successfully`);
-            } else {
-                console.error(`[DEBUG] Audio upload failed for question ${questionIndex + 1}:`, response.statusText);
-            }
-        } catch (error) {
-            console.error(`[DEBUG] Audio upload error for question ${questionIndex + 1}:`, error);
+            return null;
         }
     };
 
@@ -154,17 +138,11 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
         };
 
         audioRecorder.onstop = async () => {
-            setAudioRecordings(prev => {
-                const newRecordings = [...prev];
-                newRecordings[currentQuestionIndex] = chunks;
-                return newRecordings;
-            });
+            console.log(`[DEBUG] Question ${currentQuestionIndex + 1} audio recorded`);
 
-            console.log(`[DEBUG] Question ${currentQuestionIndex + 1} audio saved`);
-
-            // Upload the audio file
+            // Submit audio and get next question
             const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-            await uploadAudio(audioBlob, currentQuestionIndex);
+            await submitAnswer(audioBlob);
         };
 
         audioRecorderRef.current = audioRecorder;
@@ -173,33 +151,65 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
         console.log(`[DEBUG] Recording answer for question ${currentQuestionIndex + 1}`);
     };
 
+    const handleInterviewComplete = async () => {
+        console.log('[DEBUG] Handling interview completion');
+        isEndingRef.current = true;
+
+        if (videoRecorderRef.current && videoRecorderRef.current.state === 'recording') {
+            videoRecorderRef.current.stop();
+        } else {
+            console.log('[DEBUG] Video recorder not active, ending immediately');
+            onEnd(videoId || undefined);
+        }
+    };
+
+    const submitAnswer = async (audioBlob: Blob) => {
+        setIsSubmittingAnswer(true);
+        try {
+            const currentQuestion = questions[currentQuestionIndex];
+            // Fallback for initial questions if they don't have IDs (shouldn't happen with correct API usage)
+            const questionId = currentQuestion?.id || `temp-${currentQuestionIndex}`;
+
+            console.log(`[DEBUG] Submitting answer for question ${currentQuestionIndex + 1} (ID: ${questionId})`);
+
+            const response = await interviewApi.submitAnswer(sessionId, questionId, audioBlob);
+
+            if (response.success && response.data) {
+                const { next_question, is_final } = response.data;
+
+                if (next_question && questions.length < MAX_QUESTIONS) {
+                    console.log('[DEBUG] Received next question:', next_question);
+                    setQuestions(prev => [...prev, next_question]);
+                    setCurrentQuestionIndex(prev => prev + 1);
+                } else {
+                    console.log('[DEBUG] No more questions or limit reached, ending interview');
+                    await handleInterviewComplete();
+                }
+            } else {
+                console.error('Failed to submit answer:', response.error);
+                // If submission fails, we might want to let user retry or just move on?
+                // For now, let's try to move to next if possible or end.
+                // But we don't have a next question if the API failed.
+                // Maybe just end?
+                alert('답변 제출에 실패했습니다. 다시 시도하거나 면접을 종료해주세요.');
+            }
+        } catch (error) {
+            console.error('Error submitting answer:', error);
+            alert('오류가 발생했습니다.');
+        } finally {
+        }
+    };
+
     const stopAudioRecording = async () => {
         if (audioRecorderRef.current && isAudioRecording) {
             audioRecorderRef.current.stop();
             setIsAudioRecording(false);
-
-            // 마지막 질문이면 비디오 녹화 종료 및 면접 종료
-            if (currentQuestionIndex === questions.length - 1) {
-                console.log('[DEBUG] Last question completed, stopping video and ending interview');
-
-                // Stop video recording
-                if (videoRecorderRef.current && isVideoRecording) {
-                    videoRecorderRef.current.stop();
-                    setIsVideoRecording(false);
-                }
-
-                // Wait a bit for video upload to complete before transitioning
-                setTimeout(() => {
-                    onEnd();
-                }, 1000);
-            } else {
-                setCurrentQuestionIndex(prev => prev + 1);
-            }
+            // The onstop handler calls submitAnswer
         }
     };
 
     // 질문이 없는 경우 처리
-    if (effectiveQuestions.length === 0) {
+    if (!questions || questions.length === 0) {
         return (
             <motion.div
                 className="flex-1 flex items-center justify-center"
@@ -208,17 +218,13 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
                 exit={{ opacity: 0 }}
             >
                 <div className="text-center">
-                    <p className="text-gray-600">질문을 불러오는 중 오류가 발생했습니다.</p>
-                    <button
-                        onClick={onEnd}
-                        className="mt-4 px-6 py-2 bg-primary text-white rounded-xl hover:bg-brand-purple transition-colors"
-                    >
-                        돌아가기
-                    </button>
+                    <p className="text-gray-600">질문을 불러오는 중입니다...</p>
                 </div>
             </motion.div>
         );
     }
+
+    const currentQuestion = questions[currentQuestionIndex];
 
     return (
         <motion.div
@@ -233,26 +239,27 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
                 <div className="flex-[2] flex flex-col gap-4 min-h-0">
                     <div className="bg-white rounded-3xl p-6 shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden" style={{ border: '1px solid #E5E5EC' }}>
                         {/* Question and Recording Controls */}
-                        {effectiveQuestions.length > 0 && (
+                        {currentQuestion && (
                             <div className="mb-3 p-4 bg-gradient-to-r from-primary/10 to-brand-purple-light/10 border-l-4 border-primary flex-shrink-0" style={{ borderRadius: '0.375rem' }}>
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-3">
                                         <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded whitespace-nowrap">
-                                            질문 {currentQuestionIndex + 1} / {questions.length}
+                                            질문 {currentQuestionIndex + 1} / {questions.length < MAX_QUESTIONS ? '?' : MAX_QUESTIONS}
                                         </span>
                                         <p className="text-gray-900 font-medium text-sm">
-                                            {effectiveQuestions[currentQuestionIndex]}
+                                            {currentQuestion.text}
                                         </p>
                                     </div>
                                     <div className="flex-shrink-0">
                                         {!isAudioRecording ? (
                                             <button
                                                 onClick={startAudioRecording}
-                                                className="px-4 py-2 bg-primary text-white hover:bg-brand-purple transition-colors flex items-center gap-2 shadow-lg text-sm"
+                                                disabled={isSubmittingAnswer}
+                                                className="px-4 py-2 bg-primary text-white hover:bg-brand-purple transition-colors flex items-center gap-2 shadow-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                                 style={{ borderRadius: '0.375rem' }}
                                             >
                                                 <Mic className="w-4 h-4" />
-                                                <span>녹음 시작</span>
+                                                <span>{isSubmittingAnswer ? '제출 중...' : '녹음 시작'}</span>
                                             </button>
                                         ) : (
                                             <button
@@ -362,12 +369,12 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
                         <div className="space-y-2 w-48">
                             <div className="flex justify-between text-xs">
                                 <span className="text-gray-600">현재 질문</span>
-                                <span className="font-semibold">{currentQuestionIndex + 1} / {effectiveQuestions.length}</span>
+                                <span className="font-semibold">{currentQuestionIndex + 1} / {questions.length < MAX_QUESTIONS ? '?' : MAX_QUESTIONS}</span>
                             </div>
                             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-primary rounded-full transition-all"
-                                    style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+                                    style={{ width: `${((currentQuestionIndex + 1) / MAX_QUESTIONS) * 100}%` }}
                                 ></div>
                             </div>
                         </div>
