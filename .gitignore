@@ -28,3 +28,4 @@ __pycache__/
 # Logs
 *.log
 temp_img/
+third_party/
