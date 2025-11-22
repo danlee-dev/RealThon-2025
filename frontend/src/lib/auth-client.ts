@@ -44,13 +44,19 @@ async function apiCall<T>(
             headers['Authorization'] = `Bearer ${token}`;
         }
 
+        console.log(`[apiCall] ${options.method || 'GET'} ${endpoint}`);
+        console.log('[apiCall] Request body:', options.body);
+
         const response = await fetch(`${API_URL}${endpoint}`, {
             ...options,
             headers,
         });
 
+        console.log(`[apiCall] Response status: ${response.status}`);
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
+            console.error('[apiCall] Error response:', errorData);
             return {
                 success: false,
                 error: errorData.detail || `Request failed with status ${response.status}`,
@@ -66,11 +72,13 @@ async function apiCall<T>(
         }
 
         const data = await response.json();
+        console.log('[apiCall] Success:', data);
         return {
             success: true,
             data,
         };
     } catch (error) {
+        console.error('[apiCall] Exception:', error);
         return {
             success: false,
             error: error instanceof Error ? error.message : 'Network error',
@@ -256,14 +264,60 @@ export const portfolioApi = {
     },
 };
 
+
+// Job Posting API
+export const jobPostingApi = {
+    submitJobPosting: async (url: string): Promise<ApiResponse<{ id: string }>> => {
+        // First, get the current user to obtain user_id
+        const userResponse = await apiCall<User>('/api/users/me', {
+            method: 'GET',
+        });
+
+        if (!userResponse.success || !userResponse.data) {
+            return {
+                success: false,
+                error: 'Failed to get user information',
+            };
+        }
+
+        const userId = userResponse.data.id;
+
+        // Submit job posting URL for crawling
+        return apiCall<{ id: string }>(`/api/job-postings/crawl?user_id=${userId}`, {
+            method: 'POST',
+            body: JSON.stringify({
+                url: url
+            }),
+        });
+    },
+};
+
 // Interview API
 export const interviewApi = {
     createSession: async (jobPostingId?: string): Promise<ApiResponse<InterviewSession>> => {
-        return apiCall<InterviewSession>('/api/interviews/sessions', {
+        // Get the current user to obtain user_id
+        const userResponse = await apiCall<User>('/api/users/me', {
+            method: 'GET',
+        });
+
+        if (!userResponse.success || !userResponse.data) {
+            return {
+                success: false,
+                error: 'Failed to get user information',
+            };
+        }
+
+        const userId = userResponse.data.id;
+
+        // Create interview session with optional job_posting_id
+        const body: any = {};
+        if (jobPostingId) {
+            body.job_posting_id = jobPostingId;
+        }
+
+        return apiCall<InterviewSession>(`/api/interviews/sessions?user_id=${userId}`, {
             method: 'POST',
-            body: JSON.stringify({
-                job_posting_id: jobPostingId || null
-            }),
+            body: JSON.stringify(body),
         });
     },
 

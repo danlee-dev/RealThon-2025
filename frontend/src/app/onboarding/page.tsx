@@ -6,24 +6,8 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Combobox from '@/components/Combobox';
 import { profileApi, portfolioApi } from '@/lib/auth-client';
-
-// Simplified job positions (reduced count, no labels).
-const JOB_POSITIONS = [
-    'Frontend Developer',
-    'Backend Developer',
-    'Full Stack Developer',
-    'Mobile Developer',
-    'Cloud Engineer',
-    'Data Scientist',
-    'Machine Learning Engineer',
-    'Product Manager',
-    'Product Designer',
-    'QA Engineer',
-    'Security Engineer',
-    'Database Administrator',
-    'Blockchain Developer',
-    'Game Developer',
-];
+import { JOB_POSITIONS, JOB_LABEL_TO_ROLE } from '@/constants/jobs';
+import styles from './page.module.css';
 
 interface PortfolioLink {
     url: string;
@@ -118,10 +102,13 @@ export default function OnboardingPage() {
                 .filter(link => link.url.trim())
                 .map(link => link.url.trim());
 
-            // TODO: Portfolio URLs will need to be saved separately
+            // Map display name to role
+            const role = JOB_LABEL_TO_ROLE[formData.jobTitle];
+
+            // TODO: Portfolio URLs will need to be saved separately or User type needs to be updated
             const response = await profileApi.updateProfile({
                 name: formData.name,
-                role: formData.jobTitle, // Map jobTitle to role field
+                jobTitle: role,
             });
 
             if (response.success) {

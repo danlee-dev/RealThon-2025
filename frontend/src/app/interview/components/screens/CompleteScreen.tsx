@@ -1,7 +1,8 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import ReactPlayer from 'react-player';
 import {
     Mic,
     Volume2,
@@ -10,17 +11,49 @@ import {
     Settings,
     HelpCircle,
     Paperclip,
-    Smile
+    Smile,
+    Play,
+    Pause
 } from 'lucide-react';
 import { ResponsiveRadar } from '@nivo/radar';
 import { ResponsivePie } from '@nivo/pie';
 import { AnalysisResults } from '../../types';
+import { getVideoFromIndexedDB } from '@/lib/indexedDB';
+
+type ReactPlayerInstance = {
+    seekTo: (seconds: number, type?: 'seconds' | 'fraction') => void;
+};
+
+interface Message {
+    id: number;
+    sender?: string;
+    avatar?: string;
+    message: string;
+    time?: string;
+    isMe?: boolean;
+    type?: 'system' | 'user';
+}
 
 interface CompleteScreenProps {
     analysisResults: AnalysisResults;
 }
 
+interface TimestampRange {
+    start: number;
+    end: number;
+}
+
 export default function CompleteScreen({ analysisResults }: CompleteScreenProps) {
+    const playerRef = useRef<HTMLVideoElement>(null);
+    const [activeTimestamp, setActiveTimestamp] = useState<TimestampRange | null>(null);
+
+    const handleTimestampClick = (timestamp: TimestampRange) => {
+        setActiveTimestamp(timestamp);
+        if (playerRef.current) {
+            playerRef.current.currentTime = timestamp.start;
+        }
+    };
+
     return (
         <motion.div
             className="flex-1 flex gap-6 p-6 overflow-auto"
@@ -28,7 +61,7 @@ export default function CompleteScreen({ analysisResults }: CompleteScreenProps)
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.15 }}
         >
             {/* Left Column - Video & Charts */}
             <motion.div
@@ -38,7 +71,7 @@ export default function CompleteScreen({ analysisResults }: CompleteScreenProps)
                 transition={{ delay: 0.2, duration: 0.4 }}
             >
                 {/* Video Section */}
-                <VideoSection />
+                <VideoSection playerRef={playerRef} activeTimestamp={activeTimestamp} />
 
                 {/* Charts Section */}
                 <motion.div
@@ -63,76 +96,211 @@ export default function CompleteScreen({ analysisResults }: CompleteScreenProps)
                     videoScore={analysisResults.videoScore}
                     workmapScore={analysisResults.workmapScore}
                 />
-                <ChatSection />
+                <ChatSection onTimestampClick={handleTimestampClick} />
             </motion.div>
         </motion.div>
     );
 }
 
-function VideoSection() {
-    const videoRef = useRef<HTMLVideoElement>(null);
+interface VideoSectionProps {
+    playerRef: React.RefObject<HTMLVideoElement>;
+    activeTimestamp: TimestampRange | null;
+}
+
+function VideoSection({ playerRef, activeTimestamp }: VideoSectionProps) {
+    const [videoUrl, setVideoUrl] = useState<string | null>(null);
+    const [playing, setPlaying] = useState(false);
+    const [volume, setVolume] = useState(0.75);
+    const [muted, setMuted] = useState(false);
+    const [played, setPlayed] = useState(0);
+    const [duration, setDuration] = useState(0);
+    const [seeking, setSeeking] = useState(false);
+    const [showControls, setShowControls] = useState(true);
+    const [isHoveringProgress, setIsHoveringProgress] = useState(false);
+    const hideControlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        // Load video from IndexedDB
+        const loadVideo = async () => {
+            try {
+                const blob = await getVideoFromIndexedDB();
+                if (blob) {
+                    const url = URL.createObjectURL(blob);
+                    setVideoUrl(url);
+                    console.log('[CompleteScreen] Video loaded from IndexedDB');
+                } else {
+                    console.log('[CompleteScreen] No video found in IndexedDB');
+                }
+            } catch (error) {
+                console.error('[CompleteScreen] Error loading video:', error);
+            }
+        };
+
+        loadVideo();
+
+        // Cleanup
+        return () => {
+            if (videoUrl) {
+                URL.revokeObjectURL(videoUrl);
+            }
+        };
+    }, []);
+
+    const handleMouseMove = () => {
+        setShowControls(true);
+        if (hideControlsTimeoutRef.current) {
+            clearTimeout(hideControlsTimeoutRef.current);
+        }
+        hideControlsTimeoutRef.current = setTimeout(() => {
+            if (playing) {
+                setShowControls(false);
+            }
+        }, 3000);
+    };
+
+    const handleSeekChange = (e: React.MouseEvent<HTMLDivElement>) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const newPlayed = x / rect.width;
+        setPlayed(newPlayed);
+        if (playerRef.current) {
+            playerRef.current.currentTime = newPlayed * duration;
+        }
+    };
+
+    const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
+        if (!seeking) {
+            setPlayed(e.currentTarget.currentTime / e.currentTarget.duration);
+        }
+    };
+
+    const formatTime = (seconds: number) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Calculate timestamp range position on progress bar
+    const getTimestampPosition = () => {
+        if (!activeTimestamp || duration === 0) return null;
+        return {
+            left: `${(activeTimestamp.start / duration) * 100}%`,
+            width: `${((activeTimestamp.end - activeTimestamp.start) / duration) * 100}%`,
+        };
+    };
+
+    const toggleMute = () => {
+        setMuted(!muted);
+    };
+
 
     return (
         <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-gray-600">Interview Complete</span>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        <span className="text-sm text-primary">Analysis Finished</span>
-                    </div>
-                </div>
-            </div>
-
             {/* Video Area */}
-            <div className="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video">
-                {/* Main Video - Avatar Background */}
-                <img
-                    src="/avatar.png"
-                    alt="Interview Avatar"
-                    className="absolute inset-0 w-full h-full object-cover"
+            <div
+                className="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video group"
+                onMouseMove={handleMouseMove}
+                onMouseLeave={() => playing && setShowControls(false)}
+            >
+                {videoUrl ? (
+                    <ReactPlayer
+                        ref={playerRef}
+                        src={videoUrl}
+                        playing={playing}
+                        volume={muted ? 0 : volume}
+                        width="100%"
+                        height="100%"
+                        onTimeUpdate={handleTimeUpdate}
+                        onDurationChange={(e) => setDuration(e.currentTarget.duration)}
+                        style={{ objectFit: 'cover' }}
+                    />
+                ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-white">
+                        <div className="flex flex-col items-center gap-3">
+                            <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
+                            <p className="text-sm font-medium">영상을 불러오는 중...</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Overlay gradient for better control visibility */}
+                <div
+                    className={`absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'
+                        }`}
                 />
 
-                {/* Volume Slider */}
-                <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
-                    <div className="bg-gray-800/80 backdrop-blur-sm rounded-full p-3 shadow-lg">
-                        <Volume2 className="w-5 h-5 text-white" />
-                    </div>
-                </div>
+                {/* Bottom Controls */}
+                <motion.div
+                    className="absolute bottom-0 left-0 right-0 p-6 z-20"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: showControls ? 1 : 0, y: showControls ? 0 : 20 }}
+                    transition={{ duration: 0.3 }}
+                >
+                    <div className="flex items-center gap-4">
+                        {/* Play/Pause */}
+                        <button
+                            onClick={() => setPlaying(!playing)}
+                            className="w-11 h-11 bg-white/95 hover:bg-white backdrop-blur-md rounded-full flex items-center justify-center text-gray-900 shadow-lg hover:scale-105 active:scale-95 transition-all"
+                        >
+                            {playing ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                        </button>
 
-                {/* Controls */}
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
-                    <button className="w-12 h-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white">
-                        <Mic className="w-5 h-5" />
-                    </button>
-                    <button className="w-12 h-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white">
-                        <Volume2 className="w-5 h-5" />
-                    </button>
-                    <button className="w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white">
-                        <PhoneOff className="w-6 h-6" />
-                    </button>
-                    <button className="w-12 h-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white">
-                        <Video className="w-5 h-5" />
-                    </button>
-                    <button className="w-12 h-12 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white">
-                        <Settings className="w-5 h-5" />
-                    </button>
-                </div>
+                        {/* Time Display */}
+                        <div className="flex items-center gap-2 text-white font-semibold text-sm bg-black/50 backdrop-blur-sm px-4 py-2 rounded-full">
+                            <span>{formatTime(played * duration)}</span>
+                            <span className="text-white/50">/</span>
+                            <span className="text-white/90">{formatTime(duration)}</span>
+                        </div>
+
+                        <div className="flex-1" />
+
+                        {/* Volume Control */}
+                        <button
+                            onClick={toggleMute}
+                            className="w-11 h-11 bg-white/20 hover:bg-white/30 backdrop-blur-md rounded-full flex items-center justify-center text-white shadow-lg hover:scale-105 active:scale-95 transition-all"
+                        >
+                            {muted || volume === 0 ? (
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                                </svg>
+                            ) : (
+                                <Volume2 className="w-5 h-5" />
+                            )}
+                        </button>
+                    </div>
+                </motion.div>
             </div>
 
-            {/* Caption */}
-            <div className="mt-4 flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                <div className="flex gap-0.5 mt-1">
-                    {[...Array(5)].map((_, i) => (
-                        <div key={i} className="w-1 h-4 bg-primary rounded-full" style={{ opacity: 0.3 }}></div>
-                    ))}
+            {/* Progress Bar - Enhanced */}
+            <div className="mt-3 px-1">
+                <div
+                    className="relative h-2 bg-gray-200 rounded-full cursor-pointer overflow-visible group hover:h-2.5 transition-all"
+                    onClick={handleSeekChange}
+                    onMouseEnter={() => setIsHoveringProgress(true)}
+                    onMouseLeave={() => setIsHoveringProgress(false)}
+                >
+                    {/* Active Timestamp Range Highlight */}
+                    {activeTimestamp && getTimestampPosition() && (
+                        <div
+                            className="absolute top-0 h-full bg-amber-500/60 rounded-full z-10 border-2 border-amber-400"
+                            style={getTimestampPosition()!}
+                        />
+                    )}
+
+                    {/* Played Progress */}
+                    <div
+                        className="absolute top-0 left-0 h-full bg-gradient-to-r from-violet-600 to-purple-600 rounded-full transition-all z-20"
+                        style={{ width: `${played * 100}%` }}
+                    />
+
+                    {/* Progress thumb */}
+                    <div
+                        className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg border-2 border-violet-600 transition-all z-30 ${isHoveringProgress ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+                            }`}
+                        style={{ left: `calc(${played * 100}% - 8px)` }}
+                    />
                 </div>
-                <p className="text-sm text-gray-700">
-                    <span className="font-medium">Interview Completed:</span> Thank you for participating in this interview. Your responses have been analyzed.
-                </p>
             </div>
         </div>
     );
@@ -158,7 +326,7 @@ function AIVideoScoreChart({ data }: { data: { skill: string; value: number }[] 
                     dotSize={8}
                     dotColor={{ theme: 'background' }}
                     dotBorderWidth={2}
-                    colors={['#7C5CFC']}
+                    colors={['#7c3aed']}
                     fillOpacity={0.25}
                     blendMode="multiply"
                     animate={true}
@@ -171,10 +339,10 @@ function AIVideoScoreChart({ data }: { data: { skill: string; value: number }[] 
 
 function WorkmapScoreChart() {
     const scores = [
-        { label: 'Presentation', value: 90, color: '#7C5CFC' },
-        { label: 'Opportunistic', value: 60, color: '#FF8D68' },
-        { label: 'Business Acumen', value: 85, color: '#7C5CFC' },
-        { label: 'Closing Technique', value: 40, color: '#FF8D68' },
+        { label: 'Presentation', value: 90, color: '#7c3aed' },
+        { label: 'Opportunistic', value: 60, color: '#dc2626' },
+        { label: 'Business Acumen', value: 85, color: '#7c3aed' },
+        { label: 'Closing Technique', value: 40, color: '#dc2626' },
     ];
 
     return (
@@ -209,17 +377,20 @@ function WorkmapScoreChart() {
 
 function ScoreCards({ videoScore, workmapScore }: { videoScore: number; workmapScore: number }) {
     return (
-        <div className="grid grid-cols-2 gap-4">
-            <ScoreCard
-                title="AI Video Score"
-                score={videoScore}
-                color="#7C5CFC"
-            />
-            <ScoreCard
-                title="Workmap Score"
-                score={workmapScore}
-                color="#FF8D68"
-            />
+        <div className="bg-white rounded-2xl p-3 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
+            <h3 className="font-semibold text-gray-900 mb-3 text-sm">스코어</h3>
+            <div className="grid grid-cols-2 gap-3">
+                <ScoreCard
+                    title="AI Video Score"
+                    score={videoScore}
+                    color="#7c3aed"
+                />
+                <ScoreCard
+                    title="Workmap Score"
+                    score={workmapScore}
+                    color="#ea580c"
+                />
+            </div>
         </div>
     );
 }
@@ -231,12 +402,12 @@ function ScoreCard({ title, score, color }: { title: string; score: number; colo
     ];
 
     return (
-        <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ backgroundColor: '#f3f4f6', border: '1px solid #E5E5EC' }}>
-            <div className="h-32 relative">
+        <div className="bg-white rounded-lg p-3 flex flex-col items-center" style={{ border: '1px solid #E5E5EC' }}>
+            <div className="h-16 w-16 relative">
                 <ResponsivePie
                     data={data}
-                    margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                    innerRadius={0.7}
+                    margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+                    innerRadius={0.75}
                     padAngle={0}
                     cornerRadius={0}
                     colors={[color, '#F0F0F0']}
@@ -246,17 +417,21 @@ function ScoreCard({ title, score, color }: { title: string; score: number; colo
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                        <div className="text-2xl font-bold" style={{ color }}>{score}%</div>
+                        <div className="text-xs font-bold" style={{ color }}>{score}%</div>
                     </div>
                 </div>
             </div>
-            <p className="text-sm text-gray-700 text-center mt-2">{title}</p>
+            <p className="text-xs text-gray-700 text-center mt-1.5">{title}</p>
         </div>
     );
 }
 
-function ChatSection() {
-    const messages = [
+interface ChatSectionProps {
+    onTimestampClick: (timestamp: TimestampRange) => void;
+}
+
+function ChatSection({ onTimestampClick }: ChatSectionProps) {
+    const messages: Message[] = [
         {
             id: 1,
             sender: 'Richard Gomez',
@@ -281,27 +456,79 @@ function ChatSection() {
             id: 4,
             sender: 'Richard Gomez',
             avatar: 'RG',
-            message: 'Why you choose this company?',
+            message: 'Why you choose this company? Please refer to 00:15~00:32 in your answer.',
             time: '08:45 AM',
             isMe: false,
         },
+        {
+            id: 5,
+            sender: 'You',
+            message: 'I discussed my background at 00:45~01:12 and my motivation at 01:15~01:45.',
+            time: '08:46 AM',
+            isMe: true,
+        },
     ];
+
+    // Parse timestamps from message text
+    const parseTimestamps = (text: string, onTimestampClick: (timestamp: TimestampRange) => void) => {
+        // Regex to match timestamps in format MM:SS~MM:SS or HH:MM:SS~HH:MM:SS
+        const timestampRegex = /(\d{1,2}:\d{2}(?::\d{2})?)~(\d{1,2}:\d{2}(?::\d{2})?)/g;
+
+        const convertToSeconds = (timeStr: string): number => {
+            const parts = timeStr.split(':').map(Number);
+            if (parts.length === 2) {
+                // MM:SS
+                return parts[0] * 60 + parts[1];
+            } else if (parts.length === 3) {
+                // HH:MM:SS
+                return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            }
+            return 0;
+        };
+
+        const parts: (string | JSX.Element)[] = [];
+        let lastIndex = 0;
+        let match;
+        let keyCounter = 0;
+
+        while ((match = timestampRegex.exec(text)) !== null) {
+            // Add text before the timestamp
+            if (match.index > lastIndex) {
+                parts.push(text.substring(lastIndex, match.index));
+            }
+
+            const startTime = convertToSeconds(match[1]);
+            const endTime = convertToSeconds(match[2]);
+            const timestampText = match[0];
+
+            // Add clickable timestamp
+            parts.push(
+                <button
+                    key={`timestamp-${keyCounter++}`}
+                    onClick={() => onTimestampClick({ start: startTime, end: endTime })}
+                    className="text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors"
+                    style={{ cursor: 'pointer' }}
+                >
+                    {timestampText}
+                </button>
+            );
+
+            lastIndex = match.index + match[0].length;
+        }
+
+        // Add remaining text
+        if (lastIndex < text.length) {
+            parts.push(text.substring(lastIndex));
+        }
+
+        return parts.length > 0 ? parts : text;
+    };
 
     return (
         <div className="bg-white rounded-3xl shadow-sm flex-1 flex flex-col overflow-hidden" style={{ border: '1px solid #E5E5EC' }}>
-            {/* Tabs */}
-            <div className="flex border-b border-gray-100">
-                <button className="flex-1 py-4 text-sm font-medium text-white bg-primary rounded-tl-3xl">
-                    Chat
-                </button>
-                <button className="flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700">
-                    Participant
-                </button>
-            </div>
-
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {messages.map((msg: any) => {
+                {messages.map((msg) => {
                     if (msg.type === 'system') {
                         return (
                             <div key={msg.id} className="flex justify-center">
@@ -324,10 +551,10 @@ function ChatSection() {
                                     <p className="text-sm font-medium text-gray-900 mb-1">{msg.sender}</p>
                                 )}
                                 <div className={`inline-block px-4 py-2 rounded-2xl ${msg.isMe
-                                    ? 'bg-primary text-white rounded-tr-none'
+                                    ? 'bg-blue-900 text-white rounded-tr-none'
                                     : 'bg-gray-100 text-gray-900 rounded-tl-none'
                                     }`}>
-                                    <p className="text-sm">{msg.message}</p>
+                                    <p className="text-sm">{parseTimestamps(msg.message, onTimestampClick)}</p>
                                 </div>
                                 <p className="text-xs text-gray-400 mt-1">{msg.time}</p>
                             </div>

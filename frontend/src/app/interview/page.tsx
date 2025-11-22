@@ -9,7 +9,7 @@ import InterviewingScreen from './components/screens/InterviewingScreen';
 import AnalyzingScreen from './components/screens/AnalyzingScreen';
 import CompleteScreen from './components/screens/CompleteScreen';
 import { InterviewStage, AnalysisResults } from './types';
-import { interviewApi } from '@/lib/auth-client';
+import { interviewApi, jobPostingApi } from '@/lib/auth-client';
 
 export default function InterviewPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -20,12 +20,31 @@ export default function InterviewPage() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
 
-  const handleStartInterview = async () => {
+  const handleStartInterview = async (jobPostingUrl?: string) => {
     console.log('[DEBUG] Starting interview, creating session and loading questions');
     setIsLoadingQuestions(true);
 
     try {
-      const sessionResponse = await interviewApi.createSession();
+      let jobPostingId: string | undefined = undefined;
+
+      // Submit job posting URL if provided
+      if (jobPostingUrl && jobPostingUrl.trim()) {
+        console.log('[DEBUG] Submitting job posting URL:', jobPostingUrl);
+        const jobPostingResponse = await jobPostingApi.submitJobPosting(jobPostingUrl);
+
+        if (!jobPostingResponse.success || !jobPostingResponse.data) {
+          console.error('[ERROR] Failed to submit job posting URL:', jobPostingResponse.error);
+          alert('공고 URL 제출에 실패했습니다. 기본 질문으로 진행합니다.');
+          // Continue without job posting ID
+        } else {
+          jobPostingId = jobPostingResponse.data.id;
+          console.log('[DEBUG] Job posting ID received:', jobPostingId);
+        }
+      } else {
+        console.log('[DEBUG] No job posting URL provided, using default questions');
+      }
+
+      const sessionResponse = await interviewApi.createSession(jobPostingId);
 
       if (!sessionResponse.success || !sessionResponse.data) {
         console.error('[ERROR] Failed to create interview session:', sessionResponse.error);

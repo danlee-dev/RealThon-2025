@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, Video, Play } from 'lucide-react';
+import Input from '@/components/Input';
 
 interface WaitingScreenProps {
-    onStart: () => void;
+    onStart: (jobPostingUrl?: string) => void;
     isLoading?: boolean;
 }
 
@@ -13,6 +14,7 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
     const videoRef = useRef<HTMLVideoElement>(null);
     const [cameraReady, setCameraReady] = useState(false);
     const [micReady, setMicReady] = useState(false);
+    const [jobPostingUrl, setJobPostingUrl] = useState('');
 
     useEffect(() => {
         const startCamera = async () => {
@@ -44,7 +46,7 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
 
     const handleStartClick = () => {
         console.log('[WaitingScreen] 면접 시작 버튼 클릭됨');
-        onStart();
+        onStart(jobPostingUrl.trim() || undefined);
     };
 
     return (
@@ -54,6 +56,7 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
         >
             <div className="max-w-3xl w-full my-auto">
                 <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
@@ -68,7 +71,7 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
                         layoutId="user-camera"
                         className="relative bg-gray-900 rounded-2xl overflow-hidden mb-4"
                         style={{ aspectRatio: '16/9' }}
-                        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                        transition={{ type: "spring", stiffness: 120, damping: 30 }}
                     >
                         <video
                             ref={videoRef}
@@ -107,6 +110,20 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
                             <p className="text-xs text-gray-600 mb-0.5">평가 방식</p>
                             <p className="text-base font-semibold text-gray-900">AI 분석</p>
                         </div>
+                    </div>
+
+                    {/* Job Posting URL Input */}
+                    <div className="mb-4">
+                        <Input
+                            label="취업 공고 URL (선택사항)"
+                            placeholder="https://example.com/job-posting (입력하면 맞춤형 질문)"
+                            value={jobPostingUrl}
+                            onChange={(e) => setJobPostingUrl(e.target.value)}
+                            type="url"
+                        />
+                        <p className="text-xs text-gray-500 mt-1.5 ml-1">
+                            공고 URL 없이도 시작 가능합니다. URL 입력 시 맞춤형 질문을 받습니다.
+                        </p>
                     </div>
 
                     {/* Start Button */}
