@@ -115,22 +115,21 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
                     {/* Job Posting URL Input */}
                     <div className="mb-4">
                         <Input
-                            label="취업 공고 URL"
-                            placeholder="https://example.com/job-posting"
+                            label="취업 공고 URL (선택사항)"
+                            placeholder="https://example.com/job-posting (입력하면 맞춤형 질문)"
                             value={jobPostingUrl}
                             onChange={(e) => setJobPostingUrl(e.target.value)}
                             type="url"
-                            required
                         />
                         <p className="text-xs text-gray-500 mt-1.5 ml-1">
-                            공고 URL을 입력하여 맞춤형 면접 질문을 받으세요.
+                            공고 URL 없이도 시작 가능합니다. URL 입력 시 맞춤형 질문을 받습니다.
                         </p>
                     </div>
 
                     {/* Start Button */}
                     <button
                         onClick={handleStartClick}
-                        disabled={!cameraReady || !micReady || !jobPostingUrl.trim() || isLoading}
+                        disabled={!cameraReady || !micReady || isLoading}
                         type="button"
                         className="w-full py-3 bg-primary hover:bg-brand-purple text-white rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >

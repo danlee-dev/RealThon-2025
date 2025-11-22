@@ -110,10 +110,16 @@ function Sidebar({ isCollapsed, onToggle }: {
 
             {/* Logo */}
             <div className={`p-6 flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center flex-shrink-0">
-                    <VideoIcon className="w-5 h-5" />
+                <div className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                    <svg width="40" height="40" viewBox="0 0 70 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M35 15C45.4934 15 54 23.7304 54 34.5C54 38.8009 52.6419 42.7757 50.3438 46H19.6562C17.3581 42.7757 16 38.8009 16 34.5C16 23.7304 24.5066 15 35 15Z" fill="#FF4D12"/>
+                        <ellipse cx="35" cy="25" rx="12" ry="10" fill="#FFDA8F"/>
+                        <circle cx="35" cy="35" r="3" fill="#1F2937"/>
+                        <path d="M20 46C20 46 25 50 35 50C45 50 50 46 50 46" stroke="#FF8C00" strokeWidth="3" strokeLinecap="round"/>
+                        <rect x="15" y="48" width="40" height="7" rx="2" fill="#1F2937"/>
+                    </svg>
                 </div>
-                {!isCollapsed && <span className="text-lg font-semibold">InterviewAI</span>}
+                {!isCollapsed && <span className="text-xl font-extrabold text-white">내일면접</span>}
             </div>
 
             {/* Main Menu */}

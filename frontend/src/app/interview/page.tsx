@@ -25,26 +25,24 @@ export default function InterviewPage() {
     setIsLoadingQuestions(true);
 
     try {
-      // Job posting URL is required
-      if (!jobPostingUrl) {
-        alert('취업 공고 URL을 입력해주세요.');
-        setIsLoadingQuestions(false);
-        return;
+      let jobPostingId: string | undefined = undefined;
+
+      // Submit job posting URL if provided
+      if (jobPostingUrl && jobPostingUrl.trim()) {
+        console.log('[DEBUG] Submitting job posting URL:', jobPostingUrl);
+        const jobPostingResponse = await jobPostingApi.submitJobPosting(jobPostingUrl);
+
+        if (!jobPostingResponse.success || !jobPostingResponse.data) {
+          console.error('[ERROR] Failed to submit job posting URL:', jobPostingResponse.error);
+          alert('공고 URL 제출에 실패했습니다. 기본 질문으로 진행합니다.');
+          // Continue without job posting ID
+        } else {
+          jobPostingId = jobPostingResponse.data.id;
+          console.log('[DEBUG] Job posting ID received:', jobPostingId);
+        }
+      } else {
+        console.log('[DEBUG] No job posting URL provided, using default questions');
       }
-
-      // Submit job posting URL to get the ID
-      console.log('[DEBUG] Submitting job posting URL:', jobPostingUrl);
-      const jobPostingResponse = await jobPostingApi.submitJobPosting(jobPostingUrl);
-
-      if (!jobPostingResponse.success || !jobPostingResponse.data) {
-        console.error('[ERROR] Failed to submit job posting URL:', jobPostingResponse.error);
-        alert('공고 URL 제출에 실패했습니다. 다시 시도해주세요.');
-        setIsLoadingQuestions(false);
-        return;
-      }
-
-      const jobPostingId = jobPostingResponse.data.id;
-      console.log('[DEBUG] Job posting ID received:', jobPostingId);
 
       const sessionResponse = await interviewApi.createSession(jobPostingId);
 
