@@ -1,7 +1,7 @@
 """
-Gemini API 연동 서비스
+LLM 기반 역량 분석 서비스
 
-Google Gemini API를 사용한 텍스트 분석 및 역량 평가
+Google Gemini API를 사용한 CV 및 GitHub 데이터 분석
 """
 
 import os
@@ -16,8 +16,8 @@ load_dotenv()
 # GEMINI_API_KEY는 이제 동적으로 로드하여 사용합니다.
 
 
-class GeminiService:
-    """Gemini API 서비스 클래스"""
+class LLMAnalyzer:
+    """LLM 기반 역량 분석 클래스 (Gemini API 사용)"""
 
     def __init__(self, model_name: str = None):
         """
@@ -259,7 +259,13 @@ class GeminiService:
         must_have_list = [skill["skill"] for skill in must_have_skills]
         nice_to_have_list = [skill["skill"] for skill in nice_to_have_skills]
 
-        role_name = "Frontend Developer" if role == "ROLE_FE" else "Backend Developer"
+        # 역할 이름 매핑
+        role_map = {
+            "ROLE_FE": "Frontend Developer",
+            "ROLE_BE": "Backend Developer",
+            "ROLE_AI": "AI/ML Developer"
+        }
+        role_name = role_map.get(role, "Developer")
 
         prompt = f"""
 당신은 개발자 역량을 평가하는 전문가입니다.
@@ -319,7 +325,13 @@ class GeminiService:
         must_have_list = [skill["skill"] for skill in must_have_skills]
         nice_to_have_list = [skill["skill"] for skill in nice_to_have_skills]
 
-        role_name = "Frontend Developer" if role == "ROLE_FE" else "Backend Developer"
+        # 역할 이름 매핑
+        role_map = {
+            "ROLE_FE": "Frontend Developer",
+            "ROLE_BE": "Backend Developer",
+            "ROLE_AI": "AI/ML Developer"
+        }
+        role_name = role_map.get(role, "Developer")
 
         prompt = f"""
 당신은 개발자 역량을 평가하는 전문가입니다.

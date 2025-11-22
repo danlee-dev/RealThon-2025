@@ -32,7 +32,7 @@ def get_competency_matrix(level: str, role: str) -> Dict[str, Any]:
 
     Args:
         level: 'LEVEL_JUNIOR', 'LEVEL_MID', 'LEVEL_SENIOR', 'LEVEL_STAFF'
-        role: 'ROLE_FE', 'ROLE_BE'
+        role: 'ROLE_FE', 'ROLE_BE', 'ROLE_AI'
 
     Returns:
         해당 레벨/역할의 역량 매트릭스
@@ -45,6 +45,8 @@ def get_competency_matrix(level: str, role: str) -> Dict[str, Any]:
         ("LEVEL_MID", "ROLE_FE"): "FE_MID",
         ("LEVEL_JUNIOR", "ROLE_BE"): "BE_JUNIOR",
         ("LEVEL_MID", "ROLE_BE"): "BE_MID",
+        ("LEVEL_JUNIOR", "ROLE_AI"): "AI_JUNIOR",
+        ("LEVEL_MID", "ROLE_AI"): "AI_MID",
     }
 
     competency_key = key_map.get((level, role))
@@ -80,6 +82,8 @@ def generate_interview_questions(
         ("LEVEL_MID", "ROLE_FE"): "FE_MID",
         ("LEVEL_JUNIOR", "ROLE_BE"): "BE_JUNIOR",
         ("LEVEL_MID", "ROLE_BE"): "BE_MID",
+        ("LEVEL_JUNIOR", "ROLE_AI"): "AI_JUNIOR",
+        ("LEVEL_MID", "ROLE_AI"): "AI_MID",
     }
 
     question_key = key_map.get((level, role))
@@ -130,6 +134,8 @@ def generate_interview_scenario(
         ("LEVEL_MID", "ROLE_FE"): "FE_MID",
         ("LEVEL_JUNIOR", "ROLE_BE"): "BE_JUNIOR",
         ("LEVEL_MID", "ROLE_BE"): "BE_MID",
+        ("LEVEL_JUNIOR", "ROLE_AI"): "AI_JUNIOR",
+        ("LEVEL_MID", "ROLE_AI"): "AI_MID",
     }
 
     template_key = key_map.get((level, role))
@@ -217,6 +223,8 @@ def evaluate_portfolio(
         ("LEVEL_MID", "ROLE_FE"): "FE_MID",
         ("LEVEL_JUNIOR", "ROLE_BE"): "BE_JUNIOR",
         ("LEVEL_MID", "ROLE_BE"): "BE_MID",
+        ("LEVEL_JUNIOR", "ROLE_AI"): "AI_JUNIOR",
+        ("LEVEL_MID", "ROLE_AI"): "AI_MID",
     }
 
     checklist_key = key_map.get((level, role))

@@ -12,10 +12,38 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    role: Optional[str] = None
+    level: Optional[str] = None
+    github_username: Optional[str] = None
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    role: Optional[str] = None
+    level: Optional[str] = None
+    github_username: Optional[str] = None
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    user_id: Optional[str] = None
+    email: Optional[str] = None
 
 
 class UserResponse(UserBase):
     id: str
+    role: Optional[str] = None
+    level: Optional[str] = None
+    github_username: Optional[str] = None
     created_at: str
 
     model_config = ConfigDict(from_attributes=True)
@@ -99,6 +127,7 @@ class InterviewQuestionBase(BaseModel):
     text: str
     type: str
     source: str
+    parent_question_id: Optional[str] = None
 
 
 class InterviewQuestionCreate(InterviewQuestionBase):

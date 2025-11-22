@@ -41,6 +41,11 @@
       "id": "ROLE_BE",
       "name": "Backend Developer",
       "description": "서버 측 로직, 데이터베이스, API를 담당하는 개발자"
+    },
+    "ai": {
+      "id": "ROLE_AI",
+      "name": "AI/ML Developer",
+      "description": "머신러닝/딥러닝 모델 개발 및 AI 시스템 구축을 담당하는 개발자"
     }
   },
   "competencies": {
@@ -798,6 +803,386 @@
             "description": "정기적 기술 공유",
             "keywords": ["블로그", "기술공유"],
             "verification_methods": ["블로그 링크"],
+            "importance": "low"
+          }
+        ]
+      }
+    },
+    "AI_JUNIOR": {
+      "id": "AI_JUNIOR",
+      "level": "LEVEL_JUNIOR",
+      "role": "ROLE_AI",
+      "must_have": {
+        "technical_skills": [
+          {
+            "id": "AI_JR_TECH_001",
+            "category": "언어",
+            "skill": "Python 숙달",
+            "description": "Python 기본 문법, 데이터 구조, 객체지향",
+            "keywords": ["Python", "프로그래밍", "데이터구조"],
+            "verification_methods": ["코딩 테스트", "기술 면접"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_JR_TECH_002",
+            "category": "머신러닝",
+            "skill": "머신러닝 기초",
+            "description": "지도/비지도 학습 개념, 회귀/분류 모델",
+            "keywords": ["머신러닝", "ML", "지도학습", "비지도학습"],
+            "verification_methods": ["기술 면접", "프로젝트 경험"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_JR_TECH_003",
+            "category": "라이브러리",
+            "skill": "NumPy, Pandas",
+            "description": "데이터 처리 및 분석",
+            "keywords": ["NumPy", "Pandas", "데이터분석"],
+            "verification_methods": ["코딩 테스트"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_JR_TECH_004",
+            "category": "라이브러리",
+            "skill": "Scikit-learn 기본",
+            "description": "기본 ML 모델 학습 및 평가",
+            "keywords": ["Scikit-learn", "sklearn", "ML모델"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_JR_TECH_005",
+            "category": "딥러닝",
+            "skill": "딥러닝 기초 개념",
+            "description": "신경망, 역전파, 활성화 함수",
+            "keywords": ["딥러닝", "신경망", "역전파"],
+            "verification_methods": ["기술 면접"],
+            "importance": "high"
+          },
+          {
+            "id": "AI_JR_TECH_006",
+            "category": "프레임워크",
+            "skill": "TensorFlow 또는 PyTorch 기본",
+            "description": "간단한 모델 구현 및 학습",
+            "keywords": ["TensorFlow", "PyTorch", "딥러닝프레임워크"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "high"
+          },
+          {
+            "id": "AI_JR_TECH_007",
+            "category": "수학",
+            "skill": "선형대수, 확률통계 기초",
+            "description": "벡터, 행렬, 확률 분포, 통계 개념",
+            "keywords": ["선형대수", "확률", "통계", "수학"],
+            "verification_methods": ["기술 면접"],
+            "importance": "high"
+          }
+        ],
+        "project_experiences": [
+          {
+            "id": "AI_JR_EXP_001",
+            "experience": "데이터 전처리 및 EDA",
+            "description": "탐색적 데이터 분석 및 시각화",
+            "keywords": ["EDA", "데이터전처리", "시각화"],
+            "verification_methods": ["포트폴리오 리뷰"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_JR_EXP_002",
+            "experience": "기본 ML 모델 구현",
+            "description": "회귀, 분류 모델 학습 및 평가",
+            "keywords": ["ML모델", "회귀", "분류"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_JR_EXP_003",
+            "experience": "캐글/데이터 경진대회 참여",
+            "description": "실전 데이터 분석 경험",
+            "keywords": ["캐글", "Kaggle", "경진대회"],
+            "verification_methods": ["포트폴리오"],
+            "importance": "high"
+          }
+        ],
+        "soft_skills": [
+          {
+            "id": "AI_JR_SOFT_001",
+            "skill": "실험 결과 정리",
+            "description": "모델 성능 기록 및 문서화",
+            "keywords": ["실험", "문서화", "기록"],
+            "verification_methods": ["경험 질문"],
+            "importance": "high"
+          },
+          {
+            "id": "AI_JR_SOFT_002",
+            "skill": "데이터 이해 능력",
+            "description": "도메인 지식을 바탕으로 데이터 해석",
+            "keywords": ["도메인지식", "데이터해석"],
+            "verification_methods": ["프로젝트 설명"],
+            "importance": "medium"
+          }
+        ]
+      },
+      "nice_to_have": {
+        "technical_skills": [
+          {
+            "id": "AI_JR_NICE_001",
+            "category": "시각화",
+            "skill": "Matplotlib, Seaborn",
+            "description": "데이터 시각화 라이브러리",
+            "keywords": ["Matplotlib", "Seaborn", "시각화"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "medium"
+          },
+          {
+            "id": "AI_JR_NICE_002",
+            "category": "개발도구",
+            "skill": "Jupyter Notebook",
+            "description": "인터랙티브 개발 환경",
+            "keywords": ["Jupyter", "Notebook"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "low"
+          },
+          {
+            "id": "AI_JR_NICE_003",
+            "category": "버전관리",
+            "skill": "Git/GitHub",
+            "description": "코드 및 모델 버전 관리",
+            "keywords": ["Git", "GitHub", "버전관리"],
+            "verification_methods": ["GitHub 프로필"],
+            "importance": "medium"
+          }
+        ]
+      }
+    },
+    "AI_MID": {
+      "id": "AI_MID",
+      "level": "LEVEL_MID",
+      "role": "ROLE_AI",
+      "must_have": {
+        "technical_skills": [
+          {
+            "id": "AI_MID_TECH_001",
+            "category": "딥러닝",
+            "skill": "딥러닝 아키텍처 설계",
+            "description": "CNN, RNN, Transformer 이해 및 구현",
+            "keywords": ["CNN", "RNN", "Transformer", "아키텍처"],
+            "verification_methods": ["기술 면접", "프로젝트 리뷰"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_MID_TECH_002",
+            "category": "프레임워크",
+            "skill": "TensorFlow/PyTorch 실무 수준",
+            "description": "커스텀 레이어, 손실 함수, 학습 루프 구현",
+            "keywords": ["TensorFlow", "PyTorch", "커스텀구현"],
+            "verification_methods": ["코드 리뷰", "프로젝트 경험"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_MID_TECH_003",
+            "category": "NLP",
+            "skill": "자연어 처리",
+            "description": "토큰화, 임베딩, 언어 모델 (BERT, GPT 계열)",
+            "keywords": ["NLP", "BERT", "GPT", "언어모델"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "high"
+          },
+          {
+            "id": "AI_MID_TECH_004",
+            "category": "Computer Vision",
+            "skill": "이미지 처리 및 객체 인식",
+            "description": "Object Detection, Segmentation (YOLO, R-CNN)",
+            "keywords": ["CV", "Object Detection", "YOLO", "Segmentation"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "high"
+          },
+          {
+            "id": "AI_MID_TECH_005",
+            "category": "모델 최적화",
+            "skill": "하이퍼파라미터 튜닝",
+            "description": "Grid Search, Random Search, Optuna",
+            "keywords": ["하이퍼파라미터", "튜닝", "최적화"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_MID_TECH_006",
+            "category": "MLOps",
+            "skill": "모델 배포 및 서빙",
+            "description": "FastAPI, Flask, TorchServe, TensorFlow Serving",
+            "keywords": ["MLOps", "모델배포", "API", "서빙"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_MID_TECH_007",
+            "category": "데이터",
+            "skill": "대용량 데이터 처리",
+            "description": "분산 처리, Spark, Dask",
+            "keywords": ["빅데이터", "Spark", "분산처리"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "high"
+          },
+          {
+            "id": "AI_MID_TECH_008",
+            "category": "실험 관리",
+            "skill": "실험 추적 도구",
+            "description": "MLflow, Weights & Biases, TensorBoard",
+            "keywords": ["MLflow", "W&B", "실험추적"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "high"
+          },
+          {
+            "id": "AI_MID_TECH_009",
+            "category": "클라우드",
+            "skill": "클라우드 AI 서비스",
+            "description": "AWS SageMaker, GCP Vertex AI, Azure ML",
+            "keywords": ["클라우드", "SageMaker", "VertexAI"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "medium"
+          }
+        ],
+        "project_experiences": [
+          {
+            "id": "AI_MID_EXP_001",
+            "experience": "엔드투엔드 ML 파이프라인 구축",
+            "description": "데이터 수집 → 전처리 → 학습 → 배포",
+            "keywords": ["MLOps", "파이프라인", "end-to-end"],
+            "verification_methods": ["프로젝트 상세 설명"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_MID_EXP_002",
+            "experience": "모델 성능 개선 프로젝트",
+            "description": "baseline 대비 정량적 개선",
+            "keywords": ["성능개선", "모델최적화"],
+            "verification_methods": ["성과 지표", "before/after"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_MID_EXP_003",
+            "experience": "프로덕션 모델 운영",
+            "description": "실서비스 모델 모니터링 및 재학습",
+            "keywords": ["프로덕션", "모니터링", "재학습"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_MID_EXP_004",
+            "experience": "데이터 레이블링 전략 수립",
+            "description": "효율적인 어노테이션 프로세스 설계",
+            "keywords": ["레이블링", "어노테이션", "데이터구축"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "high"
+          },
+          {
+            "id": "AI_MID_EXP_005",
+            "experience": "A/B 테스트",
+            "description": "모델 성능 실험 및 통계적 검증",
+            "keywords": ["A/B테스트", "실험설계", "통계"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "medium"
+          }
+        ],
+        "soft_skills": [
+          {
+            "id": "AI_MID_SOFT_001",
+            "skill": "비즈니스 문제를 ML 문제로 정의",
+            "description": "요구사항을 ML 태스크로 변환",
+            "keywords": ["문제정의", "비즈니스"],
+            "verification_methods": ["경험 질문"],
+            "importance": "critical"
+          },
+          {
+            "id": "AI_MID_SOFT_002",
+            "skill": "모델 성능 설명",
+            "description": "비전문가에게 결과 설명",
+            "keywords": ["커뮤니케이션", "설명력"],
+            "verification_methods": ["발표 경험"],
+            "importance": "high"
+          },
+          {
+            "id": "AI_MID_SOFT_003",
+            "skill": "데이터 사이언티스트 협업",
+            "description": "데이터팀과 효과적 협업",
+            "keywords": ["협업", "데이터팀"],
+            "verification_methods": ["경험 질문"],
+            "importance": "high"
+          }
+        ]
+      },
+      "nice_to_have": {
+        "technical_skills": [
+          {
+            "id": "AI_MID_NICE_001",
+            "category": "LLM",
+            "skill": "대규모 언어 모델 활용",
+            "description": "Fine-tuning, Prompt Engineering, RAG",
+            "keywords": ["LLM", "GPT", "Fine-tuning", "RAG"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "high"
+          },
+          {
+            "id": "AI_MID_NICE_002",
+            "category": "경량화",
+            "skill": "모델 경량화",
+            "description": "Quantization, Pruning, Distillation",
+            "keywords": ["경량화", "Quantization", "Distillation"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "medium"
+          },
+          {
+            "id": "AI_MID_NICE_003",
+            "category": "강화학습",
+            "skill": "강화학습 기초",
+            "description": "Q-Learning, Policy Gradient",
+            "keywords": ["강화학습", "RL", "Q-Learning"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "low"
+          },
+          {
+            "id": "AI_MID_NICE_004",
+            "category": "AutoML",
+            "skill": "AutoML 도구 활용",
+            "description": "H2O, AutoKeras, Neural Architecture Search",
+            "keywords": ["AutoML", "NAS"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "low"
+          },
+          {
+            "id": "AI_MID_NICE_005",
+            "category": "추천시스템",
+            "skill": "추천 알고리즘",
+            "description": "Collaborative Filtering, Matrix Factorization",
+            "keywords": ["추천시스템", "CF", "RecSys"],
+            "verification_methods": ["프로젝트 경험"],
+            "importance": "medium"
+          }
+        ],
+        "project_experiences": [
+          {
+            "id": "AI_MID_NICE_EXP_001",
+            "experience": "AI 논문 구현",
+            "description": "최신 논문 재현 및 개선",
+            "keywords": ["논문구현", "재현", "연구"],
+            "verification_methods": ["GitHub, 기술블로그"],
+            "importance": "high"
+          },
+          {
+            "id": "AI_MID_NICE_EXP_002",
+            "experience": "캐글 메달 획득",
+            "description": "Bronze 이상 메달",
+            "keywords": ["캐글", "Kaggle", "메달"],
+            "verification_methods": ["캐글 프로필"],
+            "importance": "medium"
+          },
+          {
+            "id": "AI_MID_NICE_EXP_003",
+            "experience": "AI 컨퍼런스 발표",
+            "description": "학회 또는 기술 컨퍼런스",
+            "keywords": ["발표", "컨퍼런스", "학회"],
+            "verification_methods": ["발표 자료"],
             "importance": "low"
           }
         ]

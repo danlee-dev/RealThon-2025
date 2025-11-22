@@ -6,74 +6,23 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Combobox from '@/components/Combobox';
 import { profileApi, portfolioApi } from '@/lib/auth-client';
-import styles from './page.module.css';
 
-// Predefined job positions
+// Simplified job positions (reduced count, no labels).
 const JOB_POSITIONS = [
-    // Frontend
     'Frontend Developer',
-    'React Developer',
-    'Vue.js Developer',
-    'Angular Developer',
-
-    // Backend
     'Backend Developer',
-    'Node.js Developer',
-    'Java Developer',
-    'Python Developer',
-    'Go Developer',
-    'PHP Developer',
-
-    // Full Stack
     'Full Stack Developer',
-
-    // Mobile
     'Mobile Developer',
-    'iOS Developer',
-    'Android Developer',
-    'React Native Developer',
-    'Flutter Developer',
-
-    // DevOps & Cloud
-    'DevOps Engineer',
     'Cloud Engineer',
-    'Site Reliability Engineer (SRE)',
-    'Infrastructure Engineer',
-    'Platform Engineer',
-
-    // Data & AI
     'Data Scientist',
-    'Data Engineer',
     'Machine Learning Engineer',
-    'AI Research Engineer',
-    'Data Analyst',
-
-    // Product & Design
     'Product Manager',
-    'Product Owner',
-    'UX Designer',
-    'UI Designer',
-    'UX/UI Designer',
     'Product Designer',
-
-    // QA & Testing
     'QA Engineer',
-    'Test Engineer',
-    'QA Automation Engineer',
-
-    // Architecture & Leadership
-    'Software Architect',
-    'Solution Architect',
-    'Technical Lead',
-    'Engineering Manager',
-
-    // Specialized
     'Security Engineer',
     'Database Administrator',
-    'System Administrator',
     'Blockchain Developer',
     'Game Developer',
-    'Embedded Systems Engineer',
 ];
 
 interface PortfolioLink {
@@ -164,15 +113,15 @@ export default function OnboardingPage() {
                 setUploading(false);
             }
 
-            // 2. Update profile with name, jobTitle, and portfolio URLs
+            // 2. Update profile with name, role, and portfolio URLs
             const urls = formData.portfolioLinks
                 .filter(link => link.url.trim())
                 .map(link => link.url.trim());
 
-            // TODO: Portfolio URLs will need to be saved separately or User type needs to be updated
+            // TODO: Portfolio URLs will need to be saved separately
             const response = await profileApi.updateProfile({
                 name: formData.name,
-                jobTitle: formData.jobTitle,
+                role: formData.jobTitle, // Map jobTitle to role field
             });
 
             if (response.success) {
@@ -232,6 +181,11 @@ export default function OnboardingPage() {
                                     placeholder="홍길동"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            handleNext();
+                                        }
+                                    }}
                                     required
                                     autoFocus
                                 />
@@ -240,7 +194,7 @@ export default function OnboardingPage() {
 
                         {/* Step 2: Job Title */}
                         {step === 2 && (
-                            <div className="space-y-4 animate-fade-in">
+                            <div className="space-y-4 animate-fade-in relative z-50">
                                 <Combobox
                                     label="희망 직무"
                                     options={JOB_POSITIONS}
