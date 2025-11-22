@@ -143,6 +143,26 @@ class InterviewTranscriptResponse(InterviewTranscriptBase):
 
 
 # NonverbalMetrics Schemas
+class MetricsMetadata(BaseModel):
+    """Computation metadata for metrics transparency and debugging"""
+    # Frame analysis metadata
+    fps_analyzed: Optional[float] = None
+    frame_count_total: Optional[int] = None
+    frame_count_valid: Optional[int] = None
+    
+    # Thresholds used
+    thresholds: Optional[dict] = None  # e.g., {"smile_threshold": 0.5, "gaze_center_range": [0.35, 0.65], ...}
+    
+    # Models and versions
+    models: Optional[dict] = None  # e.g., {"vision_model": "MediaPipe FaceMesh", "stt_model": "whisper-base", ...}
+    
+    # Confidence scores
+    confidence: Optional[dict] = None  # e.g., {"gaze_confidence_mean": 0.95, ...}
+    
+    # Outlier detection
+    outlier_flags: Optional[dict] = None  # e.g., {"pose_outlier_ratio": 0.02, ...}
+
+
 class NonverbalMetricsBase(BaseModel):
     center_gaze_ratio: Optional[float] = None
     smile_ratio: Optional[float] = None
@@ -153,13 +173,14 @@ class NonverbalMetricsBase(BaseModel):
 
 
 class NonverbalMetricsCreate(NonverbalMetricsBase):
-    pass
+    metadata_json: Optional[str] = None  # JSON string of MetricsMetadata
 
 
 class NonverbalMetricsResponse(NonverbalMetricsBase):
     id: str
     video_id: str
     created_at: str
+    metadata: Optional[MetricsMetadata] = None  # Parsed from metadata_json
 
     model_config = ConfigDict(from_attributes=True)
 

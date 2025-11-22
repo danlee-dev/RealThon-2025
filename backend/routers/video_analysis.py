@@ -17,7 +17,8 @@ from models import InterviewVideo, InterviewTranscript, NonverbalMetrics, Nonver
 from pipeline.video_io import extract_frames_opencv, extract_audio_ffmpeg
 from pipeline.vision_mediapipe import build_timeline_from_frames, save_timeline
 from pipeline.metrics import (
-    center_gaze_ratio, smile_ratio, nod_count, emotion_distribution, get_primary_emotion
+    center_gaze_ratio, smile_ratio, nod_count, emotion_distribution, get_primary_emotion,
+    compute_metadata
 )
 from pipeline.audio_analysis import transcribe_whisper, compute_wpm, compute_filler_count
 from pipeline.feedback_generator import generate_feedback_with_gemini, generate_feedback_fallback
@@ -33,75 +34,11 @@ VIDEO_UPLOAD_DIR = Path("uploads/videos")
 VIDEO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # Gemini API 사용 여부 확인 (.env 로드 후)
-USE_GEMINI = bool(os.getenv("GEMINI_API_KEY"))
-
-
-def generate_feedback(m: dict):
-    """분석 메트릭을 기반으로 한국어 피드백 생성"""
-    fb = []
-
-    # ---- gaze ----
-    if m["center_gaze_ratio"] >= 0.8:
-        fb.append(f"카메라 응시 비율이 {m['center_gaze_ratio']:.0%}로 매우 안정적이다. 정면 시선 유지가 잘 된다.")
-    elif m["center_gaze_ratio"] >= 0.5:
-        fb.append(f"카메라 응시 비율이 {m['center_gaze_ratio']:.0%}로 대체로 양호하다. 핵심 답변 구간에서 조금 더 유지하면 좋다.")
-    else:
-        fb.append(f"카메라 응시 비율이 {m['center_gaze_ratio']:.0%}로 낮다. 정면 시선을 더 의식해보면 신뢰감이 올라간다.")
-
-    # ---- smile ----
-    if m["smile_ratio"] >= 0.3:
-        fb.append(f"미소/긍정 표정 비율이 {m['smile_ratio']:.0%}로 자연스럽다. 친근한 인상을 준다.")
-    elif m["smile_ratio"] >= 0.1:
-        fb.append(f"미소 비율이 {m['smile_ratio']:.0%}로 약간 적을 수 있다. 시작/마무리에서 가볍게 웃어보면 좋다.")
-    else:
-        fb.append(f"미소 비율이 {m['smile_ratio']:.0%}로 낮다. 표정이 딱딱하게 보일 수 있어 의도적으로 부드러운 표정을 넣어보자.")
-
-    # ---- nod ----
-    if m["nod_count"] == 0:
-        fb.append("고개 끄덕임이 거의 감지되지 않는다. 공감/리스닝 제스처가 약해 보일 수 있다.")
-    elif m["nod_count"] <= 2:
-        fb.append("끄덕임이 과하지 않고 적절하다. 경청하는 인상을 준다.")
-    else:
-        fb.append("끄덕임이 많은 편이다. 과도하면 불안해 보일 수 있으니 속도를 조금 줄여도 좋다.")
-    
-    # ---- emotion ----
-    emotion_dist = m.get("emotion_distribution", {})
-    primary_emotion = m.get("primary_emotion")
-    
-    if emotion_dist and primary_emotion:
-        emotion_names = {
-            "happy": "밝고 긍정적",
-            "pleasant": "차분하고 호감가는",
-            "neutral": "중립적",
-            "surprised": "놀람/집중",
-            "concerned": "걱정스러운"
-        }
-        emotion_kr = emotion_names.get(primary_emotion, primary_emotion)
-        primary_ratio = emotion_dist.get(primary_emotion, 0)
-        
-        if primary_emotion == "happy" and primary_ratio > 0.4:
-            fb.append(f"전체적으로 {emotion_kr} 표정({primary_ratio:.0%})이 우세하다. 매우 긍정적인 인상을 준다.")
-        elif primary_emotion == "pleasant":
-            fb.append(f"{emotion_kr} 표정({primary_ratio:.0%})이 주를 이룬다. 안정적이고 신뢰감 있는 인상이다.")
-        elif primary_emotion == "neutral" and primary_ratio > 0.7:
-            fb.append(f"중립적 표정({primary_ratio:.0%})이 많다. 핵심 내용을 말할 때 미소를 더하면 좋다.")
-        elif primary_emotion == "concerned":
-            fb.append(f"다소 긴장된 표정({primary_ratio:.0%})이 보인다. 심호흡하고 어깨를 내리면 좋다.")
-
-    # ---- speech ----
-    if m["wpm"] > 190:
-        fb.append(f"말 속도가 WPM {m['wpm']:.0f}로 빠른 편이다. 문장 사이에 짧은 호흡을 넣어 전달력을 높여라.")
-    elif m["wpm"] < 100:
-        fb.append(f"말 속도가 WPM {m['wpm']:.0f}로 느린 편이다. 핵심 문장은 조금 더 자신 있게 속도를 줘도 좋다.")
-    else:
-        fb.append(f"말 속도(WPM {m['wpm']:.0f})가 안정적이다. 듣기 편한 템포다.")
-
-    if m["filler_count"] > 6:
-        fb.append(f"필러(음/어/uh 등)가 {m['filler_count']}회로 잦다. 답변 전 1초만 생각하고 말하면 훨씬 줄어든다.")
-    else:
-        fb.append(f"필러 사용({m['filler_count']}회)이 과도하지 않다. 전반적으로 유창하다.")
-
-    return fb
+# GEMINI_API_KEY1, GEMINI_API_KEY2, GEMINI_API_KEY3 또는 GEMINI_API_KEY 중 하나라도 있으면 사용
+# 실제 피드백 생성 시에는 generate_feedback_with_gemini()에서 키 1, 2, 3을 순차적으로 시도
+USE_GEMINI = any(
+    os.getenv(f"GEMINI_API_KEY{i}") for i in range(1, 4)
+) or bool(os.getenv("GEMINI_API_KEY"))
 
 
 @router.get("/status")
@@ -247,8 +184,9 @@ def analyze_interview(video_id: str, db: Session = Depends(get_db)):
         artifacts_dir = Path("artifacts") / video_id
         frames_dir = artifacts_dir / "frames"
         
+        FPS_ANALYZED = 5.0  # Store for metadata
         frames = extract_frames_opencv(
-            video_path, fps=5.0, out_dir=frames_dir
+            video_path, fps=FPS_ANALYZED, out_dir=frames_dir
         )
 
         # 3. Vision timeline 생성
@@ -265,7 +203,8 @@ def analyze_interview(video_id: str, db: Session = Depends(get_db)):
         duration_sec = len(audio) / sr
         
         print("📝 Transcribing speech...")
-        stt = transcribe_whisper(wav, model_size="base")
+        WHISPER_MODEL_SIZE = "base"  # Store for metadata
+        stt = transcribe_whisper(wav, model_size=WHISPER_MODEL_SIZE)
         text = stt["text"]
 
         # 5. 메트릭 계산
@@ -273,15 +212,32 @@ def analyze_interview(video_id: str, db: Session = Depends(get_db)):
         emotion_dist = emotion_distribution(timeline)
         primary_emo = get_primary_emotion(timeline)
         
+        # Calculate smile_ratio and capture threshold used
+        smile_ratio_val, smile_threshold_used = smile_ratio(timeline, threshold=None)
+        
+        # Nod pitch threshold
+        NOD_PITCH_THRESHOLD = 8.0
+        
         metrics = {
             "center_gaze_ratio": center_gaze_ratio(timeline),
-            "smile_ratio": smile_ratio(timeline, threshold=None),
-            "nod_count": nod_count(timeline),
+            "smile_ratio": smile_ratio_val,
+            "nod_count": nod_count(timeline, pitch_thresh_deg=NOD_PITCH_THRESHOLD),
             "emotion_distribution": emotion_dist,
             "primary_emotion": primary_emo,
             "wpm": compute_wpm(text, duration_sec),
             "filler_count": compute_filler_count(text),
         }
+        
+        # 5.5. 메타데이터 계산
+        print("📋 Computing metadata...")
+        metadata = compute_metadata(
+            timeline=timeline,
+            fps_analyzed=FPS_ANALYZED,
+            smile_threshold=smile_threshold_used,
+            nod_pitch_threshold=NOD_PITCH_THRESHOLD,
+            whisper_model_size=WHISPER_MODEL_SIZE,
+            duration_sec=duration_sec
+        )
 
         # 6. 피드백 생성
         if USE_GEMINI:
@@ -298,8 +254,16 @@ def analyze_interview(video_id: str, db: Session = Depends(get_db)):
             feedback_list = generate_feedback_fallback(metrics)
             feedback_mode = "rule-based"
 
-        # 7. DB에 저장
+        # 7. DB에 저장 (기존 데이터 삭제 후 새로 저장)
         print("💾 Saving to database...")
+        
+        # 7-0. 기존 분석 결과 삭제 (재분석 시 중복 방지)
+        print("🗑️  기존 분석 결과 삭제 중...")
+        db.query(InterviewTranscript).filter(InterviewTranscript.video_id == video_id).delete()
+        db.query(NonverbalMetrics).filter(NonverbalMetrics.video_id == video_id).delete()
+        db.query(NonverbalTimeline).filter(NonverbalTimeline.video_id == video_id).delete()
+        db.query(Feedback).filter(Feedback.video_id == video_id).delete()
+        db.flush()  # 삭제를 즉시 반영
         
         # 7-1. Transcript 저장
         transcript_record = InterviewTranscript(
@@ -309,7 +273,7 @@ def analyze_interview(video_id: str, db: Session = Depends(get_db)):
         )
         db.add(transcript_record)
         
-        # 7-2. NonverbalMetrics 저장
+        # 7-2. NonverbalMetrics 저장 (with metadata)
         metrics_record = NonverbalMetrics(
             video_id=video_id,
             center_gaze_ratio=metrics["center_gaze_ratio"],
@@ -317,7 +281,8 @@ def analyze_interview(video_id: str, db: Session = Depends(get_db)):
             nod_count=metrics["nod_count"],
             wpm=metrics["wpm"],
             filler_count=metrics["filler_count"],
-            primary_emotion=primary_emo
+            primary_emotion=primary_emo,
+            metadata_json=json.dumps(metadata, ensure_ascii=False)  # Store metadata as JSON
         )
         db.add(metrics_record)
         
@@ -359,7 +324,10 @@ def analyze_interview(video_id: str, db: Session = Depends(get_db)):
         
         return {
             "video_id": video_id,
-            "metrics": metrics,
+            "metrics": {
+                **metrics,
+                "metadata": metadata  # Include computation metadata in response
+            },
             "feedback": feedback_list,
             "feedback_mode": feedback_mode,
             "transcript": text,
@@ -427,6 +395,14 @@ def get_analysis_results(video_id: str, db: Session = Depends(get_db)):
     if metrics and metrics.primary_emotion:
         primary_emo = metrics.primary_emotion
     
+    # Parse metadata from JSON
+    metadata_dict = None
+    if metrics and metrics.metadata_json:
+        try:
+            metadata_dict = json.loads(metrics.metadata_json)
+        except Exception as e:
+            print(f"⚠️ 메타데이터 파싱 실패: {e}")
+    
     return {
         "video": {
             "id": video.id,
@@ -444,6 +420,7 @@ def get_analysis_results(video_id: str, db: Session = Depends(get_db)):
             "filler_count": metrics.filler_count if metrics else None,
             "primary_emotion": primary_emo,
             "emotion_distribution": emotion_dist,
+            "metadata": metadata_dict  # Include computation metadata
         } if metrics else None,
         "feedbacks": [
             {
