@@ -98,3 +98,23 @@ export interface InterviewQuestion {
   parent_question_id?: string;
 }
 
+// Video Analysis types
+export interface VideoAnalysisResult {
+  video_id: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed';
+  metrics?: {
+    confidence_score: number;
+    fluency_score: number;
+    engagement_score: number;
+  };
+  feedback?: string;
+  transcript?: string;
+  capabilities?: Capability[];
+}
+
+// Answer submission types
+export interface AnswerResponse {
+  success: boolean;
+  next_question?: InterviewQuestion;
+  is_final?: boolean;
+}
