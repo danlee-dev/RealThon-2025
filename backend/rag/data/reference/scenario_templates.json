@@ -715,6 +715,117 @@
       "사용_기술_스택": "사용한 기술 스택",
       "프로젝트_개수": "프로젝트 수",
       "프로젝트_규모": "프로젝트 규모 (팀 크기, 사용자 수 등)"
+    },
+    "AI_JUNIOR": {
+      "id": "SCENARIO_AI_JUNIOR",
+      "level": "LEVEL_JUNIOR",
+      "role": "ROLE_AI",
+      "total_duration": "60-90분",
+      "introduction": {
+        "greeting": "안녕하세요, {이름}님. AI 개발자 포지션 면접을 진행할 면접관입니다. 편하게 진행하겠습니다.",
+        "ice_breaker": [
+          "간단하게 자기소개 부탁드립니다.",
+          "AI/ML 개발에 관심을 갖게 된 계기가 있나요?",
+          "최근에 공부하고 있는 AI 기술이나 논문이 있나요?"
+        ],
+        "portfolio_overview": "포트폴리오를 미리 확인했습니다. {강점_요약}이 인상적이었습니다. 오늘은 프로젝트 경험과 AI 기술에 대해 깊이 있는 대화를 나눠보겠습니다."
+      },
+      "portfolio_review": {
+        "main_project_question": "가장 의미있게 생각하는 AI/ML 프로젝트를 하나 선택해서 설명해주세요.",
+        "data_question": "데이터는 어떻게 수집하고 전처리했나요?",
+        "model_question": "어떤 모델을 사용했고, 왜 그 모델을 선택했나요?",
+        "evaluation_question": "모델 성능은 어떻게 평가했나요? 사용한 지표와 결과를 말씀해주세요.",
+        "challenge_question": "프로젝트 진행 중 가장 어려웠던 기술적 문제는 무엇이었고, 어떻게 해결하셨나요?",
+        "learning_question": "이 프로젝트를 통해 배운 점과 아쉬웠던 점을 말씀해주세요."
+      },
+      "technical_deep_dive": {
+        "description": "머신러닝/딥러닝 기초 및 실무 능력 확인",
+        "core_ml_questions": [
+          "과적합과 과소적합의 차이를 설명하고, 과적합을 방지하는 방법을 말씀해주세요.",
+          "Gradient Descent의 동작 원리를 설명해주세요.",
+          "Batch Size가 학습에 미치는 영향은 무엇인가요?"
+        ],
+        "framework_questions": [
+          "TensorFlow와 PyTorch의 차이점을 설명해주세요.",
+          "학습 과정에서 손실 함수와 옵티마이저는 어떻게 선택하나요?"
+        ]
+      },
+      "problem_solving": {
+        "description": "실무 문제 해결 능력 확인",
+        "scenarios": [
+          "불균형 데이터셋을 다루는 방법에 대해 설명해주세요.",
+          "모델이 학습 데이터에서는 잘 동작하는데 테스트 데이터에서 성능이 낮다면, 어떻게 해결하시겠습니까?",
+          "실시간 추론이 필요한 서비스에서 모델 응답 시간이 너무 느리다면 어떻게 개선하시겠습니까?"
+        ]
+      },
+      "cultural_fit": {
+        "collaboration": "팀 프로젝트 경험이 있다면, 어떤 역할을 맡았고 어떻게 협업했나요?",
+        "learning": "새로운 AI 기술을 학습할 때 어떤 방식으로 공부하시나요?",
+        "failure": "실패한 프로젝트나 실험이 있다면, 그 경험에서 무엇을 배웠나요?"
+      },
+      "closing": {
+        "reverse_question": "{이름}님께서 저희에게 궁금한 점이 있으신가요?",
+        "next_steps": "면접 결과는 일주일 내로 연락드리겠습니다. 오늘 수고하셨습니다."
+      }
+    },
+    "AI_MID": {
+      "id": "SCENARIO_AI_MID",
+      "level": "LEVEL_MID",
+      "role": "ROLE_AI",
+      "total_duration": "90-120분",
+      "introduction": {
+        "greeting": "안녕하세요, {이름}님. AI/ML 시니어 포지션 면접을 진행할 면접관입니다.",
+        "ice_breaker": [
+          "간단하게 자기소개와 주요 경력을 말씀해주세요.",
+          "최근에 가장 관심있게 보고 있는 AI 트렌드나 논문이 있나요?",
+          "우리 회사/팀에 지원하신 이유가 있나요?"
+        ],
+        "portfolio_overview": "포트폴리오와 경력을 미리 확인했습니다. 특히 {강점_요약} 부분이 인상적이었습니다. 오늘은 기술 역량과 프로젝트 리딩 경험을 중심으로 면접을 진행하겠습니다."
+      },
+      "portfolio_review": {
+        "main_project_question": "가장 임팩트가 컸던 AI 프로젝트를 하나 선택해서 처음부터 끝까지 설명해주세요.",
+        "architecture_question": "모델 아키텍처는 어떻게 설계했고, 왜 그렇게 선택했나요?",
+        "mlops_question": "프로덕션 배포는 어떻게 진행했나요? MLOps 파이프라인에 대해 설명해주세요.",
+        "optimization_question": "모델 성능을 개선하기 위해 어떤 시도를 했고, 결과는 어땠나요?",
+        "impact_question": "이 프로젝트의 비즈니스 임팩트는 무엇이었나요? 정량적 지표로 설명해주세요.",
+        "failure_question": "시도했지만 실패한 방법도 있었나요? 그 이유는 무엇이라고 생각하시나요?"
+      },
+      "technical_deep_dive": {
+        "description": "딥러닝 고급 및 최신 기술 이해도 확인",
+        "architecture_questions": [
+          "Transformer의 Self-Attention 메커니즘을 수식과 함께 설명해주세요.",
+          "ResNet의 Skip Connection이 왜 효과적인지 설명해주세요.",
+          "YOLO와 Faster R-CNN의 차이점과 각각의 장단점을 설명해주세요."
+        ],
+        "optimization_questions": [
+          "모델 경량화 기법에 대해 아는 대로 설명해주세요.",
+          "Distributed Training을 해본 경험이 있나요? 어떻게 구현했나요?",
+          "하이퍼파라미터 튜닝은 어떤 방법을 주로 사용하시나요?"
+        ],
+        "mlops_questions": [
+          "모델 드리프트를 어떻게 감지하고 대응하시나요?",
+          "A/B 테스트 설계 경험이 있다면 설명해주세요.",
+          "모델 버전 관리는 어떻게 하시나요?"
+        ]
+      },
+      "problem_solving": {
+        "description": "실무 시나리오 기반 문제 해결",
+        "scenarios": [
+          "추천 시스템의 Cold Start 문제를 어떻게 해결하시겠습니까?",
+          "대용량 데이터를 효율적으로 학습하는 방법에 대해 설명해주세요.",
+          "LLM의 Hallucination 문제를 완화하는 방법은 무엇인가요?"
+        ],
+        "system_design": "실시간 이미지 분류 서비스를 설계한다면, 전체 시스템 아키텍처를 어떻게 구성하시겠습니까?"
+      },
+      "leadership": {
+        "mentoring": "주니어 개발자를 멘토링한 경험이 있나요? 어떤 방식으로 진행했나요?",
+        "decision": "기술 선택에서 의견이 갈릴 때 어떻게 의사결정을 하시나요?",
+        "stakeholder": "비기술 이해관계자에게 AI 모델을 설명한 경험이 있나요?"
+      },
+      "closing": {
+        "reverse_question": "저희 팀이나 회사에 대해 궁금한 점이 있으신가요?",
+        "next_steps": "면접 결과는 3-5일 내로 연락드리겠습니다. 감사합니다."
+      }
     }
   }
 }

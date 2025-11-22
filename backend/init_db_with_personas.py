@@ -40,11 +40,11 @@ PERSONAS = [
         "name": "송재헌",
         "email": "thdwogjs040923@korea.ac.kr",
         "password": "password123",
-        "role": "ROLE_BE",
-        "level": "LEVEL_MID",
+        "role": "ROLE_AI",
+        "level": "LEVEL_JUNIOR",
         "github_username": "thdwogjs",
         "github_token": "FROM_ENV",  # Will be replaced from .env
-        "cv_file": None  # No CV file
+        "cv_file": "my_cv.pdf"  # AI developer CV
     }
 ]
 
@@ -217,21 +217,13 @@ def main():
     # 2. 페르소나 생성
     create_personas(db_engine)
 
-    # 3. CV 자동 분석 (선택사항)
-    print("\n" + "=" * 60)
-    analyze_cv = input("Do you want to analyze CVs automatically? (y/n): ").strip().lower()
-    if analyze_cv == 'y':
-        analyze_persona_cvs(db_engine)
-    else:
-        print("[SKIP] CV analysis skipped")
-
+    # 3. CV 자동 분석 생략 (사용자가 나중에 수동으로 실행)
     print("\n" + "=" * 60)
     print("INITIALIZATION COMPLETE")
     print("=" * 60)
     print("\nYou can now:")
     print("1. Start the FastAPI server: uvicorn main:app --reload")
-    if analyze_cv != 'y':
-        print("2. Run CV analysis: POST /api/portfolios/{portfolio_id}/analyze")
+    print("2. Run CV analysis: POST /api/portfolios/{portfolio_id}/analyze")
     print("\nPersona Credentials:")
     for persona in PERSONAS:
         print(f"  - {persona['name']}: {persona['email']} / {persona['password']}")

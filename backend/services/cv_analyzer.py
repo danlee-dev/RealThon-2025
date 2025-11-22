@@ -13,14 +13,14 @@ from PIL import Image
 
 from models import User, Portfolio
 from rag.utils import get_competency_matrix
-from .gemini_service import GeminiService
+from .llm_analyzer import LLMAnalyzer
 
 
 class CVAnalyzer:
     """CV 분석 클래스"""
 
     def __init__(self):
-        self.gemini_service = GeminiService()
+        self.llm_analyzer = LLMAnalyzer()
 
     def extract_text_from_file(self, file_path: str) -> str:
         """
@@ -101,7 +101,7 @@ class CVAnalyzer:
             불필요한 마크다운 형식은 제거하고 순수 텍스트로만 반환해주세요.
             """
 
-            response = self.gemini_service.model.generate_content([prompt, file])
+            response = self.llm_analyzer.model.generate_content([prompt, file])
             return response.text.strip()
 
         except Exception as e:
@@ -138,7 +138,7 @@ class CVAnalyzer:
             불필요한 마크다운 형식은 제거하고 순수 텍스트로만 반환해주세요.
             """
 
-            response = self.gemini_service.model.generate_content([prompt, img])
+            response = self.llm_analyzer.model.generate_content([prompt, img])
             return response.text.strip()
 
         except Exception as e:
@@ -217,9 +217,9 @@ class CVAnalyzer:
         except Exception as e:
             raise ValueError(f"역량 매트릭스 조회 실패: {str(e)}")
 
-        # 6. Gemini로 분석
-        print(f"[INFO] Analyzing CV with Gemini API...")
-        analysis_result = self.gemini_service.analyze_cv_with_competency(
+        # 6. LLM으로 분석
+        print(f"[INFO] Analyzing CV with LLM...")
+        analysis_result = self.llm_analyzer.analyze_cv_with_competency(
             cv_text=extracted_text,
             role=role,
             competency_matrix=competency_matrix
@@ -254,7 +254,7 @@ class CVAnalyzer:
         db: Session
     ):
         """
-        분석 결과를 DB에 저장
+        분석 결과를 DB에 저장 (기존 summary와 병합)
 
         Args:
             portfolio: Portfolio 객체
@@ -262,14 +262,25 @@ class CVAnalyzer:
             analysis: 분석 결과
             db: 데이터베이스 세션
         """
+        # 기존 summary 확인
+        existing_summary = {}
+        if portfolio.summary:
+            try:
+                existing_summary = json.loads(portfolio.summary)
+            except json.JSONDecodeError:
+                existing_summary = {}
+
+        # CV 분석 결과 추가
+        existing_summary["cv_analysis"] = analysis
+
         # Portfolio 업데이트
         portfolio.parsed_text = extracted_text
-        portfolio.summary = json.dumps(analysis, ensure_ascii=False)
+        portfolio.summary = json.dumps(existing_summary, ensure_ascii=False)
 
         db.commit()
         db.refresh(portfolio)
 
-        print(f"[SUCCESS] Analysis saved to portfolio {portfolio.id}")
+        print(f"[SUCCESS] CV analysis saved to portfolio {portfolio.id}")
 
 
 # 싱글톤 인스턴스

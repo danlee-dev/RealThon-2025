@@ -1,0 +1,42 @@
+{
+  "position": "AI/ML Developer",
+  "core_skills": {
+    "languages": ["Python"],
+    "ml_frameworks": ["Scikit-learn", "XGBoost", "LightGBM"],
+    "dl_frameworks": ["TensorFlow", "Keras", "PyTorch"],
+    "data_processing": {
+      "libraries": ["NumPy", "Pandas"],
+      "visualization": ["Matplotlib", "Seaborn", "Plotly"]
+    },
+    "tools": ["Jupyter Notebook", "Google Colab", "Docker"],
+    "mathematics": ["선형대수", "확률통계", "미적분"]
+  },
+  "essential_competencies": {
+    "technical": [
+      "Python 프로그래밍 숙달",
+      "머신러닝 기초 (지도/비지도 학습)",
+      "데이터 전처리 및 EDA",
+      "모델 학습 및 평가",
+      "딥러닝 기초 개념",
+      "하이퍼파라미터 튜닝",
+      "과적합/과소적합 이해",
+      "Git/GitHub 사용",
+      "선형대수 및 확률통계 기초"
+    ],
+    "soft_skills": [
+      "실험 결과 정리 및 문서화",
+      "데이터 이해 및 분석 능력",
+      "논문 읽기 및 구현",
+      "문제 해결 능력",
+      "학습 의지 및 호기심"
+    ]
+  },
+  "preferred_experience": [
+    "캐글 또는 데이터 경진대회 참여",
+    "Computer Vision 프로젝트",
+    "NLP (자연어 처리) 프로젝트",
+    "딥러닝 모델 구현 경험",
+    "논문 구현 및 재현",
+    "기술 블로그 운영"
+  ]
+}
