@@ -6,7 +6,6 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Combobox from '@/components/Combobox';
 import { profileApi, portfolioApi } from '@/lib/auth-client';
-import styles from './page.module.css';
 
 // Predefined job positions
 const JOB_POSITIONS = [
@@ -164,15 +163,15 @@ export default function OnboardingPage() {
                 setUploading(false);
             }
 
-            // 2. Update profile with name, jobTitle, and portfolio URLs
+            // 2. Update profile with name, role, and portfolio URLs
             const urls = formData.portfolioLinks
                 .filter(link => link.url.trim())
                 .map(link => link.url.trim());
 
-            // TODO: Portfolio URLs will need to be saved separately or User type needs to be updated
+            // TODO: Portfolio URLs will need to be saved separately
             const response = await profileApi.updateProfile({
                 name: formData.name,
-                jobTitle: formData.jobTitle,
+                role: formData.jobTitle, // Map jobTitle to role field
             });
 
             if (response.success) {

@@ -1,38 +1,15 @@
 import { ApiResponse, AuthResponse, User, Portfolio } from '@/types';
 
-// Mock Data
-const MOCK_USER: User = {
-    id: 'user_1',
-    email: 'demo@example.com',
-    name: '김철수',
-    jobTitle: 'Frontend Developer',
-};
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-const MOCK_PORTFOLIOS: Portfolio[] = [
-    {
-        id: 'portfolio_1',
-        user_id: 'user_1',
-        filename: 'portfolio_v1.pdf',
-        file_url: '#',
-        parsed_text: '이 포트폴리오는 프론트엔드 개발 경험을 중심으로 구성되어 있습니다. React, Next.js, TypeScript를 주력으로 사용하며, 다양한 프로젝트 경험을 보유하고 있습니다.',
-        summary: '프론트엔드 개발자로서의 역량이 잘 드러나는 포트폴리오입니다. 특히 React 생태계에 대한 이해도가 높습니다.',
-    },
-    {
-        id: 'portfolio_2',
-        user_id: 'user_1',
-        filename: 'project_showcase.pdf',
-        file_url: '#',
-        parsed_text: '이 프로젝트는 AI를 활용한 면접 코칭 서비스입니다. 사용자의 이력서를 분석하고 맞춤형 면접 질문을 생성합니다.',
-        summary: 'AI 기술을 활용한 프로젝트 경험이 돋보입니다. 풀스택 개발 능력을 증명하는 좋은 사례입니다.',
-    }
-];
-
-// Token storage (simulated)
+// Token storage
 export const TokenStorage = {
-    setTokens: (tokens: { accessToken: string; refreshToken: string }) => {
+    setTokens: (tokens: { accessToken: string; refreshToken?: string }) => {
         if (typeof window !== 'undefined') {
             localStorage.setItem('accessToken', tokens.accessToken);
-            localStorage.setItem('refreshToken', tokens.refreshToken);
+            if (tokens.refreshToken) {
+                localStorage.setItem('refreshToken', tokens.refreshToken);
+            }
         }
     },
 
@@ -51,59 +28,148 @@ export const TokenStorage = {
     },
 };
 
-// Mock Auth API
+// API client helper
+async function apiCall<T>(
+    endpoint: string,
+    options: RequestInit = {}
+): Promise<ApiResponse<T>> {
+    try {
+        const token = TokenStorage.getAccessToken();
+        const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+            ...options.headers,
+        };
+
+        if (token && !options.headers?.['Authorization']) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const response = await fetch(`${API_URL}${endpoint}`, {
+            ...options,
+            headers,
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            return {
+                success: false,
+                error: errorData.detail || `Request failed with status ${response.status}`,
+            };
+        }
+
+        const data = await response.json();
+        return {
+            success: true,
+            data,
+        };
+    } catch (error) {
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : 'Network error',
+        };
+    }
+}
+
+// Auth API
 export const authApi = {
-    signup: async (email: string, password: string): Promise<ApiResponse<AuthResponse>> => {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+    signup: async (
+        email: string,
+        password: string,
+        name?: string
+    ): Promise<ApiResponse<AuthResponse>> => {
+        // Step 1: Create user account
+        const signupResponse = await apiCall<User>('/api/users/signup', {
+            method: 'POST',
+            body: JSON.stringify({
+                email,
+                password,
+                name: name || email.split('@')[0],
+            }),
+        });
 
-        const mockTokens = {
-            accessToken: 'mock_access_token_' + Date.now(),
-            refreshToken: 'mock_refresh_token_' + Date.now(),
+        if (!signupResponse.success || !signupResponse.data) {
+            return {
+                success: false,
+                error: signupResponse.error || 'Signup failed',
+            };
+        }
+
+        // Step 2: Login to get access token
+        const loginResponse = await apiCall<{ access_token: string; token_type: string }>(
+            '/api/users/login',
+            {
+                method: 'POST',
+                body: JSON.stringify({ email, password }),
+            }
+        );
+
+        if (!loginResponse.success || !loginResponse.data) {
+            return {
+                success: false,
+                error: loginResponse.error || 'Failed to obtain access token',
+            };
+        }
+
+        // Save tokens
+        const tokens = {
+            accessToken: loginResponse.data.access_token,
+            refreshToken: '', // Backend doesn't provide refresh token yet
         };
-
-        // Simulate creating a new user
-        const newUser = {
-            ...MOCK_USER,
-            email,
-            name: email.split('@')[0],
-            jobTitle: '', // Reset for new user
-        };
-
-        // Update global mock user to simulate persistence
-        Object.assign(MOCK_USER, newUser);
 
         return {
             success: true,
             data: {
-                user: newUser,
-                tokens: mockTokens
-            }
+                user: signupResponse.data,
+                tokens,
+            },
         };
     },
 
     login: async (email: string, password: string): Promise<ApiResponse<AuthResponse>> => {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+        // Step 1: Login to get access token
+        const loginResponse = await apiCall<{ access_token: string; token_type: string }>(
+            '/api/users/login',
+            {
+                method: 'POST',
+                body: JSON.stringify({ email, password }),
+            }
+        );
 
-        // For testing, accept any credentials
-        const mockTokens = {
-            accessToken: 'mock_access_token_' + Date.now(),
-            refreshToken: 'mock_refresh_token_' + Date.now(),
-        };
-
-        // Update mock user to match login email if different
-        if (email !== MOCK_USER.email) {
-            Object.assign(MOCK_USER, {
-                email,
-                name: email.split('@')[0],
-            });
+        if (!loginResponse.success || !loginResponse.data) {
+            return {
+                success: false,
+                error: loginResponse.error || 'Login failed',
+            };
         }
+
+        // Temporarily save token to fetch user data
+        const token = loginResponse.data.access_token;
+        TokenStorage.setTokens({ accessToken: token });
+
+        // Step 2: Get user profile
+        const userResponse = await apiCall<User>('/api/users/me', {
+            method: 'GET',
+        });
+
+        if (!userResponse.success || !userResponse.data) {
+            TokenStorage.clearTokens();
+            return {
+                success: false,
+                error: userResponse.error || 'Failed to fetch user data',
+            };
+        }
+
+        const tokens = {
+            accessToken: token,
+            refreshToken: '', // Backend doesn't provide refresh token yet
+        };
 
         return {
             success: true,
             data: {
-                user: { ...MOCK_USER },
-                tokens: mockTokens
-            }
+                user: userResponse.data,
+                tokens,
+            },
         };
     },
 
@@ -116,56 +182,62 @@ export const authApi = {
     },
 };
 
-// Mock Profile API
+// Profile API
 export const profileApi = {
     getProfile: async (): Promise<ApiResponse<User>> => {
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-        return {
-            success: true,
-            data: MOCK_USER
-        };
+        return apiCall<User>('/api/users/me', {
+            method: 'GET',
+        });
     },
 
     updateProfile: async (data: Partial<User>): Promise<ApiResponse<User>> => {
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
-
-        // Update mock user in memory (persists only for session/reload if we don't save to LS, but good enough for mock)
-        Object.assign(MOCK_USER, data);
-
-        return {
-            success: true,
-            data: { ...MOCK_USER }
-        };
+        return apiCall<User>('/api/users/me', {
+            method: 'PATCH',
+            body: JSON.stringify(data),
+        });
     },
 };
 
-// Mock Portfolio API
+// Portfolio API
 export const portfolioApi = {
     uploadPortfolio: async (file: File): Promise<ApiResponse<Portfolio>> => {
-        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate upload delay
+        try {
+            const token = TokenStorage.getAccessToken();
+            const formData = new FormData();
+            formData.append('file', file);
 
-        const newPortfolio: Portfolio = {
-            id: 'portfolio_' + Date.now(),
-            user_id: MOCK_USER.id,
-            filename: file.name,
-            file_url: URL.createObjectURL(file), // Create a local URL for the file
-            parsed_text: '새로 업로드된 포트폴리오의 분석 내용입니다. 이력서 내용이 충실하며, 프로젝트 경험이 잘 기술되어 있습니다.',
-            summary: '업로드된 파일에 대한 AI 분석 요약입니다. 전반적으로 훌륭한 역량을 보유하고 있습니다.',
-        };
+            const response = await fetch(`${API_URL}/api/portfolios/upload`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: formData,
+            });
 
-        MOCK_PORTFOLIOS.push(newPortfolio);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                return {
+                    success: false,
+                    error: errorData.detail || 'Upload failed',
+                };
+            }
 
-        return {
-            success: true,
-            data: newPortfolio
-        };
+            const data = await response.json();
+            return {
+                success: true,
+                data,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Network error',
+            };
+        }
     },
 
     getPortfolios: async (): Promise<ApiResponse<Portfolio[]>> => {
-        await new Promise(resolve => setTimeout(resolve, 500)); // Simulate delay
-        return {
-            success: true,
-            data: [...MOCK_PORTFOLIOS]
-        };
+        return apiCall<Portfolio[]>('/api/portfolios', {
+            method: 'GET',
+        });
     },
 };
