@@ -20,6 +20,20 @@ import { ResponsivePie } from '@nivo/pie';
 import { AnalysisResults } from '../../types';
 import { getVideoFromIndexedDB } from '@/lib/indexedDB';
 
+type ReactPlayerInstance = {
+    seekTo: (seconds: number, type?: 'seconds' | 'fraction') => void;
+};
+
+interface Message {
+    id: number;
+    sender?: string;
+    avatar?: string;
+    message: string;
+    time?: string;
+    isMe?: boolean;
+    type?: 'system' | 'user';
+}
+
 interface CompleteScreenProps {
     analysisResults: AnalysisResults;
 }
@@ -30,13 +44,13 @@ interface TimestampRange {
 }
 
 export default function CompleteScreen({ analysisResults }: CompleteScreenProps) {
-    const playerRef = useRef<ReactPlayer>(null);
+    const playerRef = useRef<HTMLVideoElement>(null);
     const [activeTimestamp, setActiveTimestamp] = useState<TimestampRange | null>(null);
 
     const handleTimestampClick = (timestamp: TimestampRange) => {
         setActiveTimestamp(timestamp);
         if (playerRef.current) {
-            playerRef.current.seekTo(timestamp.start, 'seconds');
+            playerRef.current.currentTime = timestamp.start;
         }
     };
 
@@ -89,7 +103,7 @@ export default function CompleteScreen({ analysisResults }: CompleteScreenProps)
 }
 
 interface VideoSectionProps {
-    playerRef: React.RefObject<ReactPlayer>;
+    playerRef: React.RefObject<HTMLVideoElement>;
     activeTimestamp: TimestampRange | null;
 }
 
@@ -150,13 +164,13 @@ function VideoSection({ playerRef, activeTimestamp }: VideoSectionProps) {
         const newPlayed = x / rect.width;
         setPlayed(newPlayed);
         if (playerRef.current) {
-            playerRef.current.seekTo(newPlayed);
+            playerRef.current.currentTime = newPlayed * duration;
         }
     };
 
-    const handleProgress = (state: { played: number; playedSeconds: number; loaded: number; loadedSeconds: number }) => {
+    const handleTimeUpdate = (e: React.SyntheticEvent<HTMLVideoElement>) => {
         if (!seeking) {
-            setPlayed(state.played);
+            setPlayed(e.currentTarget.currentTime / e.currentTarget.duration);
         }
     };
 
@@ -191,20 +205,14 @@ function VideoSection({ playerRef, activeTimestamp }: VideoSectionProps) {
                 {videoUrl ? (
                     <ReactPlayer
                         ref={playerRef}
-                        url={videoUrl}
+                        src={videoUrl}
                         playing={playing}
                         volume={muted ? 0 : volume}
                         width="100%"
                         height="100%"
-                        onProgress={handleProgress}
-                        onDuration={setDuration}
-                        config={{
-                            file: {
-                                attributes: {
-                                    style: { objectFit: 'cover' }
-                                }
-                            }
-                        }}
+                        onTimeUpdate={handleTimeUpdate}
+                        onDurationChange={(e) => setDuration(e.currentTarget.duration)}
+                        style={{ objectFit: 'cover' }}
                     />
                 ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-white">
@@ -423,7 +431,7 @@ interface ChatSectionProps {
 }
 
 function ChatSection({ onTimestampClick }: ChatSectionProps) {
-    const messages = [
+    const messages: Message[] = [
         {
             id: 1,
             sender: 'Richard Gomez',
@@ -520,7 +528,7 @@ function ChatSection({ onTimestampClick }: ChatSectionProps) {
         <div className="bg-white rounded-3xl shadow-sm flex-1 flex flex-col overflow-hidden" style={{ border: '1px solid #E5E5EC' }}>
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
-                {messages.map((msg: any) => {
+                {messages.map((msg) => {
                     if (msg.type === 'system') {
                         return (
                             <div key={msg.id} className="flex justify-center">
