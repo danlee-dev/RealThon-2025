@@ -2,12 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from database import get_db
-from models import Portfolio, User
-from schemas import PortfolioCreate, PortfolioResponse, CVAnalysisResponse
+from models import Portfolio, User, CapabilityEvaluation
+from schemas import (
+    PortfolioCreate, PortfolioResponse, CVAnalysisResponse,
+    CapabilityEvaluationResponse, CapabilityData, ImprovementSuggestionData
+)
 from services.cv_analyzer import analyze_cv_pipeline
+from services.capability_evaluator import evaluate_portfolio_capabilities
 from auth import get_current_user
 import os
 import uuid
+import json
 from PyPDF2 import PdfReader
 
 router = APIRouter()
@@ -203,3 +208,126 @@ def analyze_portfolio_cv(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"CV 분석 중 오류 발생: {str(e)}"
         )
+
+
+@router.post("/{portfolio_id}/capabilities/generate")
+def generate_portfolio_capabilities(
+    portfolio_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Gemini를 사용하여 포트폴리오 역량 평가 생성
+
+    portfolio.summary (CV + GitHub 분석)를 기반으로 6개 역량 평가 자동 생성
+
+    Args:
+        portfolio_id: Portfolio ID
+        current_user: 현재 로그인한 유저
+
+    Returns:
+        생성된 역량 평가 결과
+    """
+    # 1. Portfolio 조회
+    portfolio = db.query(Portfolio).filter(Portfolio.id == portfolio_id).first()
+    if not portfolio:
+        raise HTTPException(status_code=404, detail="Portfolio not found")
+
+    # 2. 권한 확인
+    if portfolio.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # 3. Gemini로 역량 평가 생성
+    try:
+        result = evaluate_portfolio_capabilities(
+            portfolio_id=portfolio_id,
+            user_id=current_user.id,
+            db=db
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"역량 평가 생성 실패: {str(e)}")
+
+
+@router.get("/{portfolio_id}/capabilities", response_model=CapabilityEvaluationResponse)
+def get_portfolio_capabilities(
+    portfolio_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    포트폴리오의 역량 평가 결과 조회 (스파이더 차트용)
+
+    6개 역량 카테고리와 점수, 개선 제안을 반환
+    역량 평가가 없으면 404 에러 (먼저 /generate 호출 필요)
+
+    Args:
+        portfolio_id: Portfolio ID
+        current_user: 현재 로그인한 유저
+
+    Returns:
+        {
+            "capabilities": [{"skill": "Technical Skills", "value": 85, "skill_ko": "기술 역량"}, ...],
+            "improvement_suggestions": [...]
+        }
+    """
+    # 1. Portfolio 조회
+    portfolio = db.query(Portfolio).filter(Portfolio.id == portfolio_id).first()
+    if not portfolio:
+        raise HTTPException(status_code=404, detail="Portfolio not found")
+
+    # 2. 권한 확인
+    if portfolio.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    # 3. 역량 평가 조회
+    evaluation = db.query(CapabilityEvaluation).filter(
+        CapabilityEvaluation.portfolio_id == portfolio_id
+    ).first()
+
+    if not evaluation:
+        raise HTTPException(
+            status_code=404,
+            detail="역량 평가 데이터가 없습니다. POST /api/portfolios/{portfolio_id}/capabilities/generate를 먼저 호출하세요."
+        )
+
+    # 4. 응답 데이터 생성
+    capabilities = []
+    improvement_suggestions = []
+
+    for i in range(1, 7):
+        name_en = getattr(evaluation, f"capability{i}_name_en")
+        name_ko = getattr(evaluation, f"capability{i}_name_ko")
+        score = getattr(evaluation, f"capability{i}_score")
+        reason = getattr(evaluation, f"capability{i}_reason")
+        feedback = getattr(evaluation, f"capability{i}_feedback")
+
+        # Capability 데이터
+        capabilities.append(CapabilityData(
+            skill=name_en,
+            value=score,
+            skill_ko=name_ko
+        ))
+
+        # 낮은 점수(80점 미만)면 개선 제안 추가
+        if score < 80:
+            improvement_suggestions.append(ImprovementSuggestionData(
+                id=f"{evaluation.id}_{i}",
+                capability=name_en,
+                capability_ko=name_ko,
+                currentScore=score,
+                title=f"{name_ko} 역량 강화 방안",
+                description=feedback,
+                actionItems=[
+                    f"{name_ko} 관련 온라인 강의 수강",
+                    f"{name_ko} 실무 프로젝트 경험 쌓기",
+                    f"{name_ko} 관련 기술 블로그 작성"
+                ]
+            ))
+
+    return CapabilityEvaluationResponse(
+        capabilities=capabilities,
+        improvement_suggestions=improvement_suggestions
+    )

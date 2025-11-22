@@ -343,3 +343,26 @@ class CVAnalysisResponse(BaseModel):
     weaknesses: List[SkillItem]
     overall_score: int
     summary: str
+
+
+# Capability Evaluation Schemas (프론트엔드용)
+class CapabilityData(BaseModel):
+    skill: str  # category.name_en
+    value: float  # score (0-100)
+    skill_ko: Optional[str] = None  # category.name_ko
+
+
+class ImprovementSuggestionData(BaseModel):
+    id: str
+    capability: str  # category.name_en
+    capability_ko: str  # category.name_ko
+    currentScore: float
+    title: str
+    description: str
+    actionItems: List[str]
+
+
+class CapabilityEvaluationResponse(BaseModel):
+    """프론트엔드 스파이더 차트용 API 응답"""
+    capabilities: List[CapabilityData]
+    improvement_suggestions: List[ImprovementSuggestionData]

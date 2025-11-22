@@ -242,67 +242,250 @@ export const portfolioApi = {
     },
 };
 
-// Mock Capability API (simulates backend analysis results)
+// Capability API (real backend integration)
 export const capabilityApi = {
-    getCapabilities: async (): Promise<ApiResponse<import('@/types').Capability[]>> => {
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+    /**
+     * 역량 평가 생성 (Gemini 사용)
+     *
+     * @param portfolioId - 포트폴리오 ID (선택, 없으면 첫 번째 포트폴리오 사용)
+     * @returns 생성된 역량 평가 결과
+     */
+    generateCapabilities: async (portfolioId?: string): Promise<ApiResponse<any>> => {
+        try {
+            // 1. portfolioId가 없으면 첫 번째 포트폴리오 조회
+            if (!portfolioId) {
+                const portfoliosResponse = await apiCall<import('@/types').Portfolio[]>('/api/portfolios', {
+                    method: 'GET'
+                });
 
-        // Mock backend capability analysis results
-        const capabilities = [
-            { skill: 'Professionalism', value: 75 },
-            { skill: 'Attitude', value: 80 },
-            { skill: 'Creativity', value: 65 },
-            { skill: 'Communication', value: 85 },
-            { skill: 'Leadership', value: 60 },
-            { skill: 'Teamwork', value: 75 },
-            { skill: 'Sociability', value: 80 },
-        ];
+                if (!portfoliosResponse.success || !portfoliosResponse.data || portfoliosResponse.data.length === 0) {
+                    return {
+                        success: false,
+                        error: '포트폴리오를 찾을 수 없습니다.'
+                    };
+                }
 
-        return {
-            success: true,
-            data: capabilities
-        };
+                portfolioId = portfoliosResponse.data[0].id;
+            }
+
+            // 2. 역량 평가 생성 요청
+            const response = await apiCall<any>(`/api/portfolios/${portfolioId}/capabilities/generate`, {
+                method: 'POST'
+            });
+
+            if (!response.success || !response.data) {
+                return {
+                    success: false,
+                    error: response.error || '역량 평가 생성 실패'
+                };
+            }
+
+            return {
+                success: true,
+                data: response.data
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Network error'
+            };
+        }
     },
 
-    getImprovementSuggestions: async (): Promise<ApiResponse<import('@/types').ImprovementSuggestion[]>> => {
-        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+    /**
+     * 포트폴리오의 역량 평가 데이터 조회
+     *
+     * @param portfolioId - 포트폴리오 ID (선택, 없으면 첫 번째 포트폴리오 사용)
+     * @returns 6개 역량 카테고리 (스파이더 차트용)
+     */
+    getCapabilities: async (portfolioId?: string): Promise<ApiResponse<import('@/types').Capability[]>> => {
+        try {
+            // 1. portfolioId가 없으면 첫 번째 포트폴리오 조회
+            if (!portfolioId) {
+                const portfoliosResponse = await apiCall<import('@/types').Portfolio[]>('/api/portfolios', {
+                    method: 'GET'
+                });
 
-        // Mock backend improvement suggestions for weak capabilities
-        const suggestions = [
-            {
-                id: 'suggestion_1',
-                capability: 'Leadership',
-                currentScore: 60,
-                title: '리더십 역량 강화 방안',
-                description: '팀을 이끄는 경험이 부족합니다. 작은 프로젝트부터 리드 역할을 맡아보세요.',
-                actionItems: [
-                    '소규모 스터디 그룹이나 프로젝트에서 리더 역할 맡아보기',
-                    '멘토링 프로그램에 참여하여 후배 개발자 지도하기',
-                    '팀 회의에서 적극적으로 의견 제시하고 토론 주도하기',
-                    '리더십 관련 도서 읽기 (예: "The Five Dysfunctions of a Team")',
-                    '온라인 강의로 리더십 스킬 학습하기'
-                ]
-            },
-            {
-                id: 'suggestion_2',
-                capability: 'Creativity',
-                currentScore: 65,
-                title: '창의성 향상 전략',
-                description: '창의적인 문제 해결 능력을 더 발전시킬 필요가 있습니다.',
-                actionItems: [
-                    '다양한 분야의 기술 블로그와 케이스 스터디 읽기',
-                    '해커톤이나 아이디어톤에 참여하여 새로운 솔루션 제안하기',
-                    '기존 프로젝트를 다른 기술 스택으로 재구현해보기',
-                    'UX/UI 디자인 원칙 학습하여 사용자 중심 사고 기르기',
-                    '브레인스토밍 세션에 정기적으로 참여하기'
-                ]
+                if (!portfoliosResponse.success || !portfoliosResponse.data || portfoliosResponse.data.length === 0) {
+                    return {
+                        success: false,
+                        error: '포트폴리오를 찾을 수 없습니다.'
+                    };
+                }
+
+                portfolioId = portfoliosResponse.data[0].id;
             }
-        ];
 
-        return {
-            success: true,
-            data: suggestions
-        };
+            // 2. 역량 평가 데이터 조회
+            const response = await apiCall<{
+                capabilities: Array<{
+                    skill: string;
+                    value: number;
+                    skill_ko?: string;
+                }>;
+                improvement_suggestions: any[];
+            }>(`/api/portfolios/${portfolioId}/capabilities`, {
+                method: 'GET'
+            });
+
+            if (!response.success || !response.data) {
+                // 404 에러인 경우 역량 평가가 없는 것이므로, 자동 생성 시도
+                if (response.error?.includes('404') || response.error?.includes('역량 평가 데이터가 없습니다')) {
+                    console.log('[INFO] 역량 평가 없음. 자동 생성 시도...');
+
+                    // 자동으로 역량 평가 생성
+                    const generateResponse = await capabilityApi.generateCapabilities(portfolioId);
+
+                    if (!generateResponse.success) {
+                        return {
+                            success: false,
+                            error: '역량 평가 생성 실패: ' + (generateResponse.error || 'Unknown error')
+                        };
+                    }
+
+                    // 생성 후 다시 조회
+                    const retryResponse = await apiCall<{
+                        capabilities: Array<{
+                            skill: string;
+                            value: number;
+                            skill_ko?: string;
+                        }>;
+                        improvement_suggestions: any[];
+                    }>(`/api/portfolios/${portfolioId}/capabilities`, {
+                        method: 'GET'
+                    });
+
+                    if (!retryResponse.success || !retryResponse.data) {
+                        return {
+                            success: false,
+                            error: '역량 데이터 재조회 실패'
+                        };
+                    }
+
+                    return {
+                        success: true,
+                        data: retryResponse.data.capabilities
+                    };
+                }
+
+                return {
+                    success: false,
+                    error: response.error || '역량 데이터 조회 실패'
+                };
+            }
+
+            return {
+                success: true,
+                data: response.data.capabilities
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Network error'
+            };
+        }
+    },
+
+    /**
+     * 개선 제안 데이터 조회
+     *
+     * @param portfolioId - 포트폴리오 ID (선택, 없으면 첫 번째 포트폴리오 사용)
+     * @returns 낮은 점수 역량에 대한 개선 제안 리스트
+     */
+    getImprovementSuggestions: async (portfolioId?: string): Promise<ApiResponse<import('@/types').ImprovementSuggestion[]>> => {
+        try {
+            // 1. portfolioId가 없으면 첫 번째 포트폴리오 조회
+            if (!portfolioId) {
+                const portfoliosResponse = await apiCall<import('@/types').Portfolio[]>('/api/portfolios', {
+                    method: 'GET'
+                });
+
+                if (!portfoliosResponse.success || !portfoliosResponse.data || portfoliosResponse.data.length === 0) {
+                    return {
+                        success: false,
+                        error: '포트폴리오를 찾을 수 없습니다.'
+                    };
+                }
+
+                portfolioId = portfoliosResponse.data[0].id;
+            }
+
+            // 2. 역량 평가 데이터 조회
+            const response = await apiCall<{
+                capabilities: any[];
+                improvement_suggestions: Array<{
+                    id: string;
+                    capability: string;
+                    capability_ko: string;
+                    currentScore: number;
+                    title: string;
+                    description: string;
+                    actionItems: string[];
+                }>;
+            }>(`/api/portfolios/${portfolioId}/capabilities`, {
+                method: 'GET'
+            });
+
+            if (!response.success || !response.data) {
+                // 404 에러인 경우 역량 평가가 없는 것이므로, 자동 생성 시도
+                if (response.error?.includes('404') || response.error?.includes('역량 평가 데이터가 없습니다')) {
+                    console.log('[INFO] 역량 평가 없음. 자동 생성 시도...');
+
+                    // 자동으로 역량 평가 생성
+                    const generateResponse = await capabilityApi.generateCapabilities(portfolioId);
+
+                    if (!generateResponse.success) {
+                        return {
+                            success: false,
+                            error: '역량 평가 생성 실패: ' + (generateResponse.error || 'Unknown error')
+                        };
+                    }
+
+                    // 생성 후 다시 조회
+                    const retryResponse = await apiCall<{
+                        capabilities: any[];
+                        improvement_suggestions: Array<{
+                            id: string;
+                            capability: string;
+                            capability_ko: string;
+                            currentScore: number;
+                            title: string;
+                            description: string;
+                            actionItems: string[];
+                        }>;
+                    }>(`/api/portfolios/${portfolioId}/capabilities`, {
+                        method: 'GET'
+                    });
+
+                    if (!retryResponse.success || !retryResponse.data) {
+                        return {
+                            success: false,
+                            error: '개선 제안 재조회 실패'
+                        };
+                    }
+
+                    return {
+                        success: true,
+                        data: retryResponse.data.improvement_suggestions
+                    };
+                }
+
+                return {
+                    success: false,
+                    error: response.error || '개선 제안 조회 실패'
+                };
+            }
+
+            return {
+                success: true,
+                data: response.data.improvement_suggestions
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Network error'
+            };
+        }
     },
 };
 

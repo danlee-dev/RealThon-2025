@@ -9,12 +9,15 @@ from .github_analyzer import (
     analyze_github_pipeline,
     GitHubAnalyzer
 )
-from .llm_analyzer import LLMAnalyzer
 from .cv_analyzer import analyze_cv_pipeline, CVAnalyzer
 from .portfolio_analyzer import (
     analyze_full_portfolio,
     analyze_cv_only,
     analyze_github_only
+)
+from .capability_evaluator import (
+    evaluate_portfolio_capabilities,
+    CapabilityEvaluator
 )
 
 __all__ = [
@@ -22,9 +25,6 @@ __all__ = [
     "analyze_github_profile",
     "analyze_github_pipeline",
     "GitHubAnalyzer",
-
-    # LLM 분석
-    "LLMAnalyzer",
 
     # CV 분석
     "analyze_cv_pipeline",
@@ -34,4 +34,8 @@ __all__ = [
     "analyze_full_portfolio",
     "analyze_cv_only",
     "analyze_github_only",
+
+    # 역량 평가
+    "evaluate_portfolio_capabilities",
+    "CapabilityEvaluator",
 ]
