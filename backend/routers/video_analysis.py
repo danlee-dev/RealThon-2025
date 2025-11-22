@@ -21,7 +21,7 @@ from pipeline.metrics import (
     compute_metadata
 )
 from pipeline.audio_analysis import transcribe_whisper, compute_wpm, compute_filler_count
-from pipeline.feedback_generator import generate_feedback_with_gemini, generate_feedback_fallback
+from pipeline.feedback_generator import generate_feedback_with_gemini, generate_feedback_fallback, generate_alerts_from_timeline
 from dotenv import load_dotenv
 
 # .env 파일 로드
@@ -260,6 +260,16 @@ def analyze_interview(video_id: str, db: Session = Depends(get_db)):
             feedback_list = generate_feedback_fallback(metrics)
             feedback_mode = "rule-based"
 
+        # 6.5. Timeline 기반 Alerts 생성 (시선 이탈, 과도한 웃음)
+        print("🔔 Generating timeline alerts...")
+        alerts = []
+        try:
+            alerts = generate_alerts_from_timeline(timeline)
+            print(f"✅ 생성된 알림 개수: {len(alerts)}")
+        except Exception as e:
+            print(f"⚠️ Alerts 생성 실패: {e}")
+            alerts = []
+
         # 7. DB에 저장 (기존 데이터 삭제 후 새로 저장)
         print("💾 Saving to database...")
         
@@ -337,6 +347,7 @@ def analyze_interview(video_id: str, db: Session = Depends(get_db)):
             },
             "feedback": feedback_list,
             "feedback_mode": feedback_mode,
+            "alerts": alerts,  # NEW: Timeline-based alerts
             "transcript": text,
             "database_records": {
                 "transcript_id": transcript_record.id,
@@ -410,6 +421,15 @@ def get_analysis_results(video_id: str, db: Session = Depends(get_db)):
         except Exception as e:
             print(f"⚠️ 메타데이터 파싱 실패: {e}")
     
+    # Generate alerts from timeline
+    alerts = []
+    if timeline_data:
+        try:
+            alerts = generate_alerts_from_timeline(timeline_data)
+        except Exception as e:
+            print(f"⚠️ Alerts 생성 실패: {e}")
+            alerts = []
+    
     return {
         "video": {
             "id": video.id,
@@ -430,6 +450,7 @@ def get_analysis_results(video_id: str, db: Session = Depends(get_db)):
             "emotion_distribution": emotion_dist
         } if metrics else None,
         "metadata": metadata_dict,  # NEW: metadata moved to top level for clarity
+        "alerts": alerts,  # NEW: Timeline-based alerts
         "feedbacks": [
             {
                 "id": f.id,
