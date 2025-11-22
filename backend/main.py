@@ -1,10 +1,12 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from database import get_db, engine
 from models import Base
 import uvicorn
+import os
 
 # Create tables on startup
 Base.metadata.create_all(bind=engine)
@@ -53,6 +55,12 @@ app.include_router(portfolios.router, prefix="/api/portfolios", tags=["portfolio
 app.include_router(job_postings.router, prefix="/api/job-postings", tags=["job-postings"])
 app.include_router(interviews.router, prefix="/api/interviews", tags=["interviews"])
 app.include_router(video_analysis.router, prefix="/api/video", tags=["video-analysis"])
+
+# Mount static files for uploaded portfolios
+uploads_dir = "uploads"
+if not os.path.exists(uploads_dir):
+    os.makedirs(uploads_dir)
+app.mount("/uploads", StaticFiles(directory=uploads_dir), name="uploads")
 
 
 if __name__ == "__main__":
