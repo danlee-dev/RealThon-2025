@@ -6,10 +6,10 @@ import Link from 'next/link';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import { authApi, TokenStorage } from '@/lib/auth-client';
-import styles from './page.module.css';
 
 export default function SignupPage() {
     const router = useRouter();
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
@@ -21,7 +21,7 @@ export default function SignupPage() {
         setError('');
 
         // Validation
-        if (!email || !password) {
+        if (!name || !email || !password) {
             setError('모든 필드를 입력해주세요.');
             return;
         }
@@ -39,7 +39,7 @@ export default function SignupPage() {
         setLoading(true);
 
         try {
-            const response = await authApi.signup(email, password);
+            const response = await authApi.signup(email, password, name);
 
             if (response.success && response.data) {
                 // Save tokens
@@ -74,6 +74,15 @@ export default function SignupPage() {
 
                     {/* Form */}
                     <form onSubmit={handleSubmit} className="space-y-5">
+                        <Input
+                            type="text"
+                            label="이름"
+                            placeholder="홍길동"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            required
+                        />
+
                         <Input
                             type="email"
                             label="이메일"

@@ -3,7 +3,10 @@ export interface User {
   id: string;
   email: string;
   name: string;
-  jobTitle?: string;
+  role?: string;
+  level?: string;
+  github_username?: string;
+  jobTitle?: string; // Frontend convenience field (maps to role)
 }
 
 // Authentication tokens
