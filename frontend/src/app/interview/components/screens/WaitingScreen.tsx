@@ -8,9 +8,10 @@ import Input from '@/components/Input';
 interface WaitingScreenProps {
     onStart: (jobPostingUrl?: string) => void;
     isLoading?: boolean;
+    isSignLanguageMode?: boolean;
 }
 
-export default function WaitingScreen({ onStart, isLoading = false }: WaitingScreenProps) {
+export default function WaitingScreen({ onStart, isLoading = false, isSignLanguageMode = false }: WaitingScreenProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [cameraReady, setCameraReady] = useState(false);
     const [micReady, setMicReady] = useState(false);
@@ -63,7 +64,11 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
                     {/* Title */}
                     <div className="text-center mb-4">
                         <h2 className="text-2xl font-bold text-gray-900 mb-1">면접 준비</h2>
-                        <p className="text-sm text-gray-600">카메라와 마이크를 확인한 후 면접을 시작하세요</p>
+                        <p className="text-sm text-gray-600">
+                            {isSignLanguageMode
+                                ? '카메라를 확인한 후 면접을 시작하세요 🤟'
+                                : '카메라와 마이크를 확인한 후 면접을 시작하세요'}
+                        </p>
                     </div>
 
                     {/* Camera Preview with layoutId */}
@@ -87,12 +92,15 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
                                     {cameraReady ? '카메라 준비됨' : '카메라 확인 중...'}
                                 </span>
                             </div>
-                            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${micReady ? 'bg-green-500/80' : 'bg-gray-500/80'} backdrop-blur-sm`}>
-                                <Mic className="w-4 h-4 text-white" />
-                                <span className="text-white text-xs font-medium">
-                                    {micReady ? '마이크 준비됨' : '마이크 확인 중...'}
-                                </span>
-                            </div>
+                            {/* 수화 모드에서는 마이크 체크 숨김 */}
+                            {!isSignLanguageMode && (
+                                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${micReady ? 'bg-green-500/80' : 'bg-gray-500/80'} backdrop-blur-sm`}>
+                                    <Mic className="w-4 h-4 text-white" />
+                                    <span className="text-white text-xs font-medium">
+                                        {micReady ? '마이크 준비됨' : '마이크 확인 중...'}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     </motion.div>
 
@@ -129,7 +137,7 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
                     {/* Start Button */}
                     <button
                         onClick={handleStartClick}
-                        disabled={!cameraReady || !micReady || isLoading}
+                        disabled={!cameraReady || (!isSignLanguageMode && !micReady) || isLoading}
                         type="button"
                         className="w-full py-3 bg-primary hover:bg-brand-purple text-white rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
