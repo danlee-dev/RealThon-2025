@@ -78,13 +78,36 @@ export default function AnalyzingScreen({ onComplete, videoId, sessionId }: Anal
                         setStatus('completed');
 
                         // Transform API result to AnalysisResults format
-                        // Assuming the API returns data matching or similar to AnalysisResults
-                        // We might need to map it if the structure is different
                         const analysisResults: AnalysisResults = {
                             capabilities: result.capabilities || [],
                             suggestions: result.suggestions || [],
-                            videoScore: result.metrics?.confidence_score || 0, // Example mapping
-                            workmapScore: result.metrics?.fluency_score || 0, // Example mapping
+                            videoScore: result.metrics?.confidence_score || 0,
+                            workmapScore: result.metrics?.fluency_score || 0,
+                            detailedResult: {
+                                video: result.video || {
+                                    id: vid,
+                                    user_id: '',
+                                    session_id: sessionId || '',
+                                    question_id: '',
+                                    duration_sec: 0,
+                                    created_at: new Date().toISOString()
+                                },
+                                metrics: result.metrics || {
+                                    center_gaze_ratio: 0,
+                                    smile_ratio: 0,
+                                    nod_count: 0,
+                                    nod_rate_per_min: 0,
+                                    wpm: 0,
+                                    filler_count: 0,
+                                    primary_emotion: 'neutral',
+                                    emotion_distribution: {}
+                                },
+                                feedbacks: result.feedbacks || [],
+                                alerts: result.alerts || [],
+                                transcript: result.transcript || '',
+                                timeline: result.timeline || [],
+                                timeline_available: !!result.timeline && result.timeline.length > 0
+                            }
                         };
 
                         // Add a small delay for better UX
