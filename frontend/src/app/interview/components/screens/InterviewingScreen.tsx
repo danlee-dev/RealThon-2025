@@ -12,9 +12,12 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioRecorderRef = useRef<MediaRecorder | null>(null);
+    const videoRecorderRef = useRef<MediaRecorder | null>(null);
+    const videoChunksRef = useRef<Blob[]>([]);
     const [volume, setVolume] = useState(75);
     const [isRecording, setIsRecording] = useState(false);
     const [isAudioRecording, setIsAudioRecording] = useState(false);
+    const [isVideoRecording, setIsVideoRecording] = useState(false);
     const [showProgress, setShowProgress] = useState(true);
     const [questions, setQuestions] = useState<string[]>([
         '자기소개를 해주세요.',
@@ -36,6 +39,30 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
                 if (videoRef.current) {
                     videoRef.current.srcObject = stream;
                 }
+
+                // Start video recording
+                const videoRecorder = new MediaRecorder(stream, {
+                    mimeType: 'video/webm;codecs=vp9'
+                });
+
+                videoChunksRef.current = [];
+
+                videoRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        videoChunksRef.current.push(event.data);
+                    }
+                };
+
+                videoRecorder.onstop = async () => {
+                    console.log('[DEBUG] Video recording stopped, preparing to upload');
+                    const videoBlob = new Blob(videoChunksRef.current, { type: 'video/webm' });
+                    await uploadVideo(videoBlob);
+                };
+
+                videoRecorderRef.current = videoRecorder;
+                videoRecorder.start();
+                setIsVideoRecording(true);
+                console.log('[DEBUG] Video recording started');
             } catch (error) {
                 console.error('Camera access error:', error);
             }
@@ -44,12 +71,62 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
         startCamera();
 
         return () => {
+            if (videoRecorderRef.current && isVideoRecording) {
+                videoRecorderRef.current.stop();
+            }
             if (videoRef.current?.srcObject) {
                 const stream = videoRef.current.srcObject as MediaStream;
                 stream.getTracks().forEach(track => track.stop());
             }
         };
     }, []);
+
+    // Upload video to backend
+    const uploadVideo = async (videoBlob: Blob) => {
+        try {
+            const formData = new FormData();
+            formData.append('video', videoBlob, 'interview-video.webm');
+            formData.append('timestamp', new Date().toISOString());
+
+            // Hardcoded backend endpoint
+            const response = await fetch('https://api.example.com/interview/upload-video', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.ok) {
+                console.log('[DEBUG] Video uploaded successfully');
+            } else {
+                console.error('[DEBUG] Video upload failed:', response.statusText);
+            }
+        } catch (error) {
+            console.error('[DEBUG] Video upload error:', error);
+        }
+    };
+
+    // Upload audio to backend
+    const uploadAudio = async (audioBlob: Blob, questionIndex: number) => {
+        try {
+            const formData = new FormData();
+            formData.append('audio', audioBlob, `question-${questionIndex + 1}.webm`);
+            formData.append('questionIndex', questionIndex.toString());
+            formData.append('timestamp', new Date().toISOString());
+
+            // Hardcoded backend endpoint
+            const response = await fetch('https://api.example.com/interview/upload-audio', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.ok) {
+                console.log(`[DEBUG] Audio for question ${questionIndex + 1} uploaded successfully`);
+            } else {
+                console.error(`[DEBUG] Audio upload failed for question ${questionIndex + 1}:`, response.statusText);
+            }
+        } catch (error) {
+            console.error(`[DEBUG] Audio upload error for question ${questionIndex + 1}:`, error);
+        }
+    };
 
     const startAudioRecording = () => {
         if (!videoRef.current?.srcObject) return;
@@ -69,7 +146,7 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
             }
         };
 
-        audioRecorder.onstop = () => {
+        audioRecorder.onstop = async () => {
             setAudioRecordings(prev => {
                 const newRecordings = [...prev];
                 newRecordings[currentQuestionIndex] = chunks;
@@ -77,6 +154,10 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
             });
 
             console.log(`[DEBUG] Question ${currentQuestionIndex + 1} audio saved`);
+
+            // Upload the audio file
+            const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+            await uploadAudio(audioBlob, currentQuestionIndex);
         };
 
         audioRecorderRef.current = audioRecorder;
@@ -85,15 +166,25 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
         console.log(`[DEBUG] Recording answer for question ${currentQuestionIndex + 1}`);
     };
 
-    const stopAudioRecording = () => {
+    const stopAudioRecording = async () => {
         if (audioRecorderRef.current && isAudioRecording) {
             audioRecorderRef.current.stop();
             setIsAudioRecording(false);
 
-            // 마지막 질문이면 면접 종료
+            // 마지막 질문이면 비디오 녹화 종료 및 면접 종료
             if (currentQuestionIndex === questions.length - 1) {
-                console.log('[DEBUG] Last question completed, ending interview');
-                onEnd();
+                console.log('[DEBUG] Last question completed, stopping video and ending interview');
+
+                // Stop video recording
+                if (videoRecorderRef.current && isVideoRecording) {
+                    videoRecorderRef.current.stop();
+                    setIsVideoRecording(false);
+                }
+
+                // Wait a bit for video upload to complete before transitioning
+                setTimeout(() => {
+                    onEnd();
+                }, 1000);
             } else {
                 setCurrentQuestionIndex(prev => prev + 1);
             }
