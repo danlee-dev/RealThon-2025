@@ -6,7 +6,7 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Combobox from '@/components/Combobox';
 import { authApi, profileApi, portfolioApi } from '@/lib/auth-client';
-import { User, Portfolio } from '@/types';
+import { User, Portfolio, CVAnalysisResult } from '@/types';
 import { JOB_POSITIONS, JOB_LABEL_TO_ROLE, JOB_ROLE_TO_LABEL } from '@/constants/jobs';
 import styles from './page.module.css';
 
@@ -15,8 +15,11 @@ export default function ProfilePage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [uploading, setUploading] = useState(false);
+    const [analyzing, setAnalyzing] = useState(false);
     const [user, setUser] = useState<User | null>(null);
     const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
+    const [analysisResult, setAnalysisResult] = useState<CVAnalysisResult | null>(null);
+    const [showAnalysisModal, setShowAnalysisModal] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
@@ -43,9 +46,8 @@ export default function ProfilePage() {
             if (profileResponse.success && profileResponse.data) {
                 setUser(profileResponse.data);
                 // Convert role to display label
-                const displayJobTitle = profileResponse.data.jobTitle 
-                    ? JOB_ROLE_TO_LABEL[profileResponse.data.jobTitle] 
-                    : '';
+                const role = profileResponse.data.role || profileResponse.data.jobTitle;
+                const displayJobTitle = role ? JOB_ROLE_TO_LABEL[role] : '';
                 setFormData({
                     name: profileResponse.data.name || '',
                     jobTitle: displayJobTitle || '',
@@ -77,7 +79,7 @@ export default function ProfilePage() {
             
             const response = await profileApi.updateProfile({
                 name: formData.name,
-                jobTitle: role,
+                role: role,
             });
 
             if (response.success && response.data) {
@@ -139,6 +141,28 @@ export default function ProfilePage() {
         }
     };
 
+    const handleAnalyzePortfolio = async (portfolioId: string) => {
+        setError('');
+        setSuccess('');
+        setAnalyzing(true);
+        
+        try {
+            const response = await portfolioApi.analyzePortfolio(portfolioId);
+            if (response.success && response.data) {
+                setAnalysisResult(response.data);
+                setShowAnalysisModal(true);
+                setSuccess('분석이 완료되었습니다.');
+            } else {
+                setError(response.error || '분석에 실패했습니다.');
+            }
+        } catch (err) {
+            setError('서버와의 통신에 실패했습니다.');
+            console.error('Analyze error:', err);
+        } finally {
+            setAnalyzing(false);
+        }
+    };
+
     const handleLogout = () => {
         authApi.logout();
         router.push('/login');
@@ -166,8 +190,8 @@ export default function ProfilePage() {
                                 {user?.name || '사용자'}
                             </h1>
                             <p className="text-muted-foreground">
-                                {user?.jobTitle 
-                                    ? JOB_ROLE_TO_LABEL[user.jobTitle] 
+                                {(user?.role || user?.jobTitle)
+                                    ? JOB_ROLE_TO_LABEL[user.role || user.jobTitle || ''] 
                                     : '직무 미설정'}
                             </p>
                         </div>
@@ -265,7 +289,12 @@ export default function ProfilePage() {
                                                 </div>
                                             </div>
                                             <div className="flex gap-2">
-                                                <Button variant="outline" size="sm">
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    onClick={() => handleAnalyzePortfolio(portfolio.id)}
+                                                    isLoading={analyzing}
+                                                >
                                                     분석 보기
                                                 </Button>
                                                 <Button 
@@ -303,6 +332,89 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 </div>
+
+                {/* Analysis Modal */}
+                {showAnalysisModal && analysisResult && (
+                    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                        <div className="bg-background rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-in">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-2xl font-bold text-foreground">포트폴리오 분석 결과</h2>
+                                <button 
+                                    onClick={() => setShowAnalysisModal(false)}
+                                    className="text-muted-foreground hover:text-foreground"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                            
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-surface p-4 rounded-xl">
+                                        <p className="text-sm text-muted-foreground mb-1">직무 적합도</p>
+                                        <p className="text-2xl font-bold text-primary">{analysisResult.overall_score}점</p>
+                                    </div>
+                                    <div className="bg-surface p-4 rounded-xl">
+                                        <p className="text-sm text-muted-foreground mb-1">분석된 직무</p>
+                                        <p className="text-xl font-bold text-foreground">{analysisResult.role}</p>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="font-bold text-foreground mb-3">보유 기술</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                        {analysisResult.possessed_skills.map((skill, i) => (
+                                            <span key={i} className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
+                                                {skill}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div>
+                                        <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
+                                            <span className="text-green-500">💪</span> 강점
+                                        </h3>
+                                        <ul className="space-y-3">
+                                            {analysisResult.strengths.map((item, i) => (
+                                                <li key={i} className="bg-surface/50 p-3 rounded-xl text-sm">
+                                                    <p className="font-bold text-foreground mb-1">{item.skill}</p>
+                                                    <p className="text-muted-foreground">{item.reason}</p>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h3 className="font-bold text-foreground mb-3 flex items-center gap-2">
+                                            <span className="text-red-500">🎯</span> 보완점
+                                        </h3>
+                                        <ul className="space-y-3">
+                                            {analysisResult.weaknesses.map((item, i) => (
+                                                <li key={i} className="bg-surface/50 p-3 rounded-xl text-sm">
+                                                    <p className="font-bold text-foreground mb-1">{item.skill}</p>
+                                                    <p className="text-muted-foreground">{item.reason}</p>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h3 className="font-bold text-foreground mb-3">총평</h3>
+                                    <div className="bg-surface/50 p-4 rounded-xl text-sm text-muted-foreground leading-relaxed">
+                                        {analysisResult.summary}
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end pt-4">
+                                    <Button onClick={() => setShowAnalysisModal(false)}>
+                                        닫기
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
