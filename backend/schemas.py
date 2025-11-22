@@ -116,6 +116,7 @@ class InterviewQuestionBase(BaseModel):
     text: str
     type: str
     source: str
+    parent_question_id: Optional[str] = None
 
 
 class InterviewQuestionCreate(InterviewQuestionBase):

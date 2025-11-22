@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Text, Integer, Float, ForeignKey, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from datetime import datetime
 from database import Base
 import uuid
@@ -91,11 +91,22 @@ class InterviewQuestion(Base):
     text = Column(Text, nullable=False)
     type = Column(String, nullable=False)  # 'intro' | 'portfolio' | 'job' | ...
     source = Column(String, nullable=False)  # 'portfolio' | 'job_posting' | 'combined' | 'manual'
+    parent_question_id = Column(
+        String,
+        ForeignKey("interview_question.id", ondelete="SET NULL"),
+        nullable=True
+    )
     created_at = Column(String, nullable=False, default=lambda: datetime.utcnow().isoformat())
 
     # Relationships
     session = relationship("InterviewSession", back_populates="questions")
     videos = relationship("InterviewVideo", back_populates="question", cascade="all, delete-orphan")
+    parent_question = relationship(
+        "InterviewQuestion",
+        remote_side=[id],
+        backref=backref("followup_questions"),
+        foreign_keys=[parent_question_id]
+    )
 
 
 class InterviewVideo(Base):
