@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Lightbulb, TrendingUp, BookOpen } from 'lucide-react';
 import { AnalysisResults } from '../../types';
 
@@ -54,10 +55,20 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
     ];
 
     return (
-        <div className="flex-1 flex gap-6 p-6 overflow-auto" style={{ backgroundColor: 'rgb(250, 250, 248)' }}>
+        <motion.div
+            className="flex-1 flex gap-6 p-6 overflow-auto"
+            style={{ backgroundColor: 'rgb(250, 250, 248)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+        >
             <div className="flex-[2] flex flex-col gap-6">
                 <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
-                    <div className="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video">
+                    {/* Removed layoutId to disable 3->4 transition */}
+                    <motion.div
+                        layoutId="main-interview-area"
+                        className="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video"
+                    >
                         <img
                             src="/avatar.png"
                             alt="Interview Avatar"
@@ -65,7 +76,12 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
                         />
 
                         {/* Analysis Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-primary/90 to-brand-purple/90 backdrop-blur-sm flex items-center justify-center">
+                        <motion.div
+                            className="absolute inset-0 bg-gradient-to-b from-primary/90 to-brand-purple/90 backdrop-blur-sm flex items-center justify-center"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.3, duration: 0.5 }}
+                        >
                             <div className="text-center text-white max-w-2xl px-6">
                                 <div className="mb-6">
                                     <div className="w-20 h-20 mx-auto bg-white/20 rounded-full flex items-center justify-center mb-4">
@@ -75,8 +91,8 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
                                 <h3 className="text-2xl font-bold mb-2">AI가 면접을 분석하고 있습니다</h3>
                                 <p className="text-white/80 mb-8">직무 역량 강화를 위한 맞춤형 피드백을 준비 중입니다...</p>
                             </div>
-                        </div>
-                    </div>
+                        </motion.div>
+                    </motion.div>
                 </div>
 
                 {/* Improvement Cards */}
@@ -89,8 +105,8 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
                                 className="p-4 rounded-xl bg-gradient-to-br ${card.color} text-white transform hover:scale-105 transition-transform"
                                 style={{
                                     background: `linear-gradient(135deg, ${index === 0 ? '#9333ea, #7c3aed' :
-                                            index === 1 ? '#3b82f6, #2563eb' :
-                                                '#10b981, #059669'
+                                        index === 1 ? '#3b82f6, #2563eb' :
+                                            '#10b981, #059669'
                                         })`
                                 }}
                             >
@@ -102,6 +118,6 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

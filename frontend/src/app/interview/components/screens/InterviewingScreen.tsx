@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Mic, Volume2, PhoneOff, Video, Settings } from 'lucide-react';
 
 interface InterviewingScreenProps {
@@ -99,7 +100,12 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
     };
 
     return (
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <motion.div
+            className="flex-1 flex flex-col overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+        >
             <div className="flex-1 flex gap-6 p-6 overflow-auto" style={{ backgroundColor: 'rgb(250, 250, 248)' }}>
                 {/* Left Column - Video */}
                 <div className="flex-[2] flex flex-col gap-6">
@@ -161,7 +167,10 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
                         )}
 
                         {/* Video Area */}
-                        <div className="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video">
+                        <motion.div
+                            layoutId="main-interview-area"
+                            className="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video"
+                        >
                             {/* Main Video - Avatar Background */}
                             <img
                                 src="/avatar.png"
@@ -169,8 +178,12 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
                                 className="absolute inset-0 w-full h-full object-cover"
                             />
 
-                            {/* User Camera - Horizontal Card */}
-                            <div className="absolute top-4 right-4 w-64 h-36 bg-gray-800 rounded-xl overflow-hidden shadow-lg border-2 border-gray-700">
+                            {/* User Camera - Horizontal Card with layoutId */}
+                            <motion.div
+                                layoutId="user-camera"
+                                className="absolute top-4 right-4 w-64 h-36 bg-gray-800 rounded-xl overflow-hidden shadow-lg border-2 border-gray-700"
+                                transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                            >
                                 <video
                                     ref={videoRef}
                                     autoPlay
@@ -178,7 +191,7 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
                                     muted
                                     className="w-full h-full object-cover"
                                 />
-                            </div>
+                            </motion.div>
 
                             {/* Volume Slider */}
                             <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
@@ -219,7 +232,7 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
                                     <Settings className="w-5 h-5" />
                                 </button>
                             </div>
-                        </div>
+                        </motion.div>
 
                         {/* Caption */}
                         <div className="mt-4 flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
@@ -254,6 +267,6 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
                     </div>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

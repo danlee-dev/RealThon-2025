@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { Mic, Video, Play } from 'lucide-react';
 
 interface WaitingScreenProps {
@@ -46,7 +47,13 @@ export default function WaitingScreen({ onStart }: WaitingScreenProps) {
     };
 
     return (
-        <div className="flex-1 flex items-center justify-center p-4 overflow-auto" style={{ backgroundColor: 'rgb(250, 250, 248)' }}>
+        <motion.div
+            className="flex-1 flex items-center justify-center p-4 overflow-auto"
+            style={{ backgroundColor: 'rgb(250, 250, 248)' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+        >
             <div className="max-w-3xl w-full my-auto">
                 <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
                     {/* Title */}
@@ -55,8 +62,13 @@ export default function WaitingScreen({ onStart }: WaitingScreenProps) {
                         <p className="text-sm text-gray-600">카메라와 마이크를 확인한 후 면접을 시작하세요</p>
                     </div>
 
-                    {/* Camera Preview */}
-                    <div className="relative bg-gray-900 rounded-2xl overflow-hidden mb-4" style={{ aspectRatio: '16/9' }}>
+                    {/* Camera Preview with layoutId */}
+                    <motion.div
+                        layoutId="user-camera"
+                        className="relative bg-gray-900 rounded-2xl overflow-hidden mb-4"
+                        style={{ aspectRatio: '16/9' }}
+                        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                    >
                         <video
                             ref={videoRef}
                             autoPlay
@@ -78,7 +90,7 @@ export default function WaitingScreen({ onStart }: WaitingScreenProps) {
                                 </span>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
 
                     {/* Interview Info */}
                     <div className="grid grid-cols-3 gap-3 mb-4">
@@ -108,6 +120,6 @@ export default function WaitingScreen({ onStart }: WaitingScreenProps) {
                     </button>
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

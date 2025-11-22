@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
 import WaitingScreen from './components/screens/WaitingScreen';
@@ -47,18 +48,20 @@ export default function InterviewPage() {
         <Header stage={currentStage} />
 
         {/* Content Area - Different screens based on stage */}
-        {currentStage === InterviewStage.WAITING && (
-          <WaitingScreen onStart={handleStartInterview} />
-        )}
-        {currentStage === InterviewStage.INTERVIEWING && (
-          <InterviewingScreen onEnd={handleEndInterview} />
-        )}
-        {currentStage === InterviewStage.ANALYZING && (
-          <AnalyzingScreen onComplete={handleAnalysisComplete} />
-        )}
-        {currentStage === InterviewStage.COMPLETE && analysisResults && (
-          <CompleteScreen analysisResults={analysisResults} />
-        )}
+        <AnimatePresence mode="wait">
+          {currentStage === InterviewStage.WAITING && (
+            <WaitingScreen key="waiting" onStart={handleStartInterview} />
+          )}
+          {currentStage === InterviewStage.INTERVIEWING && (
+            <InterviewingScreen key="interviewing" onEnd={handleEndInterview} />
+          )}
+          {currentStage === InterviewStage.ANALYZING && (
+            <AnalyzingScreen key="analyzing" onComplete={handleAnalysisComplete} />
+          )}
+          {currentStage === InterviewStage.COMPLETE && analysisResults && (
+            <CompleteScreen key="complete" analysisResults={analysisResults} />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
