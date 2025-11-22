@@ -262,6 +262,26 @@ export const portfolioApi = {
             method: 'DELETE',
         });
     },
+
+    analyzePortfolio: async (portfolioId: string): Promise<ApiResponse<import('@/types').CVAnalysisResult>> => {
+        // Get current user to get user_id
+        const userResponse = await apiCall<User>('/api/users/me', {
+            method: 'GET',
+        });
+
+        if (!userResponse.success || !userResponse.data) {
+            return {
+                success: false,
+                error: 'Failed to get user information',
+            };
+        }
+
+        const userId = userResponse.data.id;
+
+        return apiCall<import('@/types').CVAnalysisResult>(`/api/portfolios/${portfolioId}/analyze?user_id=${userId}`, {
+            method: 'POST',
+        });
+    },
 };
 
 
