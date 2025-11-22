@@ -28,7 +28,7 @@ export default function CompleteScreen({ analysisResults }: CompleteScreenProps)
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.15 }}
         >
             {/* Left Column - Video & Charts */}
             <motion.div
@@ -74,19 +74,6 @@ function VideoSection() {
 
     return (
         <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                    <span className="text-sm text-gray-600">Interview Complete</span>
-                </div>
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-primary rounded-full"></div>
-                        <span className="text-sm text-primary">Analysis Finished</span>
-                    </div>
-                </div>
-            </div>
-
             {/* Video Area */}
             <div className="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video">
                 {/* Main Video - Avatar Background */}
@@ -122,18 +109,6 @@ function VideoSection() {
                     </button>
                 </div>
             </div>
-
-            {/* Caption */}
-            <div className="mt-4 flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
-                <div className="flex gap-0.5 mt-1">
-                    {[...Array(5)].map((_, i) => (
-                        <div key={i} className="w-1 h-4 bg-primary rounded-full" style={{ opacity: 0.3 }}></div>
-                    ))}
-                </div>
-                <p className="text-sm text-gray-700">
-                    <span className="font-medium">Interview Completed:</span> Thank you for participating in this interview. Your responses have been analyzed.
-                </p>
-            </div>
         </div>
     );
 }
@@ -158,7 +133,7 @@ function AIVideoScoreChart({ data }: { data: { skill: string; value: number }[] 
                     dotSize={8}
                     dotColor={{ theme: 'background' }}
                     dotBorderWidth={2}
-                    colors={['#7C5CFC']}
+                    colors={['#7c3aed']}
                     fillOpacity={0.25}
                     blendMode="multiply"
                     animate={true}
@@ -171,10 +146,10 @@ function AIVideoScoreChart({ data }: { data: { skill: string; value: number }[] 
 
 function WorkmapScoreChart() {
     const scores = [
-        { label: 'Presentation', value: 90, color: '#7C5CFC' },
-        { label: 'Opportunistic', value: 60, color: '#FF8D68' },
-        { label: 'Business Acumen', value: 85, color: '#7C5CFC' },
-        { label: 'Closing Technique', value: 40, color: '#FF8D68' },
+        { label: 'Presentation', value: 90, color: '#7c3aed' },
+        { label: 'Opportunistic', value: 60, color: '#dc2626' },
+        { label: 'Business Acumen', value: 85, color: '#7c3aed' },
+        { label: 'Closing Technique', value: 40, color: '#dc2626' },
     ];
 
     return (
@@ -209,17 +184,20 @@ function WorkmapScoreChart() {
 
 function ScoreCards({ videoScore, workmapScore }: { videoScore: number; workmapScore: number }) {
     return (
-        <div className="grid grid-cols-2 gap-4">
-            <ScoreCard
-                title="AI Video Score"
-                score={videoScore}
-                color="#7C5CFC"
-            />
-            <ScoreCard
-                title="Workmap Score"
-                score={workmapScore}
-                color="#FF8D68"
-            />
+        <div className="bg-white rounded-2xl p-3 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
+            <h3 className="font-semibold text-gray-900 mb-3 text-sm">스코어</h3>
+            <div className="grid grid-cols-2 gap-3">
+                <ScoreCard
+                    title="AI Video Score"
+                    score={videoScore}
+                    color="#7c3aed"
+                />
+                <ScoreCard
+                    title="Workmap Score"
+                    score={workmapScore}
+                    color="#ea580c"
+                />
+            </div>
         </div>
     );
 }
@@ -231,12 +209,12 @@ function ScoreCard({ title, score, color }: { title: string; score: number; colo
     ];
 
     return (
-        <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ backgroundColor: '#f3f4f6', border: '1px solid #E5E5EC' }}>
-            <div className="h-32 relative">
+        <div className="bg-gray-50 rounded-lg p-3 flex flex-col items-center">
+            <div className="h-16 w-16 relative">
                 <ResponsivePie
                     data={data}
-                    margin={{ top: 10, right: 10, bottom: 10, left: 10 }}
-                    innerRadius={0.7}
+                    margin={{ top: 2, right: 2, bottom: 2, left: 2 }}
+                    innerRadius={0.75}
                     padAngle={0}
                     cornerRadius={0}
                     colors={[color, '#F0F0F0']}
@@ -246,11 +224,11 @@ function ScoreCard({ title, score, color }: { title: string; score: number; colo
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                        <div className="text-2xl font-bold" style={{ color }}>{score}%</div>
+                        <div className="text-xs font-bold" style={{ color }}>{score}%</div>
                     </div>
                 </div>
             </div>
-            <p className="text-sm text-gray-700 text-center mt-2">{title}</p>
+            <p className="text-xs text-gray-700 text-center mt-1.5">{title}</p>
         </div>
     );
 }
@@ -289,16 +267,6 @@ function ChatSection() {
 
     return (
         <div className="bg-white rounded-3xl shadow-sm flex-1 flex flex-col overflow-hidden" style={{ border: '1px solid #E5E5EC' }}>
-            {/* Tabs */}
-            <div className="flex border-b border-gray-100">
-                <button className="flex-1 py-4 text-sm font-medium text-white bg-primary rounded-tl-3xl">
-                    Chat
-                </button>
-                <button className="flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700">
-                    Participant
-                </button>
-            </div>
-
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {messages.map((msg: any) => {
@@ -324,7 +292,7 @@ function ChatSection() {
                                     <p className="text-sm font-medium text-gray-900 mb-1">{msg.sender}</p>
                                 )}
                                 <div className={`inline-block px-4 py-2 rounded-2xl ${msg.isMe
-                                    ? 'bg-primary text-white rounded-tr-none'
+                                    ? 'bg-blue-900 text-white rounded-tr-none'
                                     : 'bg-gray-100 text-gray-900 rounded-tl-none'
                                     }`}>
                                     <p className="text-sm">{msg.message}</p>
