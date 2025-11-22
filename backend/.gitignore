@@ -63,3 +63,7 @@ MediaPipe/
 
 # Static files
 static/uploads/
+
+# Test outputs
+tests/*.txt
+extracted_text*.txt
