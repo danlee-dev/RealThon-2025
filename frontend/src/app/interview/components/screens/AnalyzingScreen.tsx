@@ -61,6 +61,7 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
         >
             <div className="flex-[2] flex flex-col gap-6">
                 <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
