@@ -76,13 +76,13 @@ class GeminiClient(LLMClient):
     ) -> str:
         """
         꼬리질문 생성을 위한 프롬프트 구성
-
+        
         Args:
             portfolio_text: 포트폴리오 파싱 텍스트
             current_question: 현재 질문
             user_answer: 사용자 답변 (STT 결과)
             question_type: 질문 유형 (technical, behavioral, project)
-
+            
         Returns:
             꼬리질문 생성 프롬프트
         """
@@ -113,6 +113,63 @@ class GeminiClient(LLMClient):
 - "포트폴리오에 있는 Docker를 실제 프로젝트에서 어떻게 활용하셨나요?"
 """
         return prompt
+
+    async def generate_initial_questions(
+        self,
+        portfolio_text: str,
+        job_posting_text: str
+    ) -> str:
+        """
+        초기 면접 질문 3개를 생성합니다. (약점, 포트폴리오 검증, 직무 역량)
+
+        Args:
+            portfolio_text: 포트폴리오 내용
+            job_posting_text: 직무 공고 내용
+
+        Returns:
+            JSON 문자열 (질문 리스트)
+        """
+        prompt = f"""
+당신은 전문 기술 면접관입니다.
+지원자의 포트폴리오와 채용 공고를 바탕으로 면접 질문 3개를 생성해주세요.
+
+# 채용 공고
+{job_posting_text}
+
+# 지원자 포트폴리오
+{portfolio_text}
+
+# 질문 생성 규칙 (반드시 아래 3가지 유형으로 하나씩 생성)
+
+1. 약점 질문 (Weakness)
+   - 정의: 직무(채용 공고)에서는 중요하게 요구하지만, 포트폴리오에는 드러나지 않거나 부족해 보이는 역량에 대한 질문입니다.
+   - 기준: 반드시 '직무 공고'를 기준으로 판단하세요.
+
+2. 포트폴리오 검증 질문 (Portfolio Verification)
+   - 정의: 포트폴리오에 기재된 프로젝트 경험, 성과, 기술 사용에 대한 사실 여부와 깊이를 검증하는 질문입니다.
+   - 내용: 포트폴리오의 구체적인 내용을 언급하며 질문하세요.
+
+3. 직무 관련 질문 (Job Competency)
+   - 정의: 업로드한 직무 공고에서 요구하는 핵심 역량 전반에 대한 질문입니다.
+   - 내용: 해당 직무를 수행하기 위해 필수적인 지식이나 문제 해결 능력을 묻습니다.
+
+# 출력 형식 (반드시 JSON 배열로만 응답, 마크다운 없이)
+[
+  {{
+    "type": "weakness",
+    "text": "질문 내용"
+  }},
+  {{
+    "type": "portfolio",
+    "text": "질문 내용"
+  }},
+  {{
+    "type": "job",
+    "text": "질문 내용"
+  }}
+]
+"""
+        return await self.generate(prompt, max_tokens=1000)
 
 
 class LLaMAA6000Client(LLMClient):

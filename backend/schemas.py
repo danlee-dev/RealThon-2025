@@ -109,6 +109,7 @@ class InterviewSessionBase(BaseModel):
 
 
 class InterviewSessionCreate(InterviewSessionBase):
+    job_posting_id: str  # Required for session creation
     status: str = "in_progress"
 
 

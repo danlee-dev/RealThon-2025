@@ -113,10 +113,14 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 ### Interviews (세션 및 질문 관리)
 - `POST /api/interviews/sessions?user_id={user_id}` - 면접 세션 생성
+  - **필수 입력**: `job_posting_id` (직무 공고 ID)
+  - 세션 생성 시 **초기 면접 질문 3개가 자동으로 생성**되어 저장됩니다. (약점, 포트폴리오 검증, 직무 관련 질문)
+  - 입력받은 공고 내용을 반영하여 질문이 생성됩니다.
 - `GET /api/interviews/sessions/{session_id}` - 세션 조회
 - `GET /api/interviews/sessions/user/{user_id}` - 사용자별 세션 목록
 - `PATCH /api/interviews/sessions/{session_id}/complete` - 세션 완료 처리
-- `POST /api/interviews/sessions/{session_id}/questions` - 면접 질문 생성
+- `POST /api/interviews/sessions/{session_id}/questions/generate` - 면접 질문 수동 재생성 (초기 질문 3개)
+- `POST /api/interviews/sessions/{session_id}/questions` - 면접 질문 추가
 - `GET /api/interviews/sessions/{session_id}/questions` - 세션 질문 목록 조회
 
 ### Video Analysis (비디오 분석 - 통합 파이프라인) ⭐️

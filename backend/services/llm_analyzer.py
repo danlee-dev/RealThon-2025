@@ -245,6 +245,83 @@ class LLMAnalyzer:
                 "error": str(e)
             }
 
+    def generate_initial_questions(
+        self,
+        portfolio_text: str,
+        job_posting_text: str
+    ) -> List[Dict[str, str]]:
+        """
+        초기 면접 질문 3개를 생성합니다.
+        
+        Args:
+            portfolio_text: 포트폴리오 내용 (요약 또는 전체)
+            job_posting_text: 직무 공고 내용
+            
+        Returns:
+            질문 리스트 (type, text)
+        """
+        prompt = f"""
+당신은 전문 기술 면접관입니다.
+지원자의 포트폴리오와 채용 공고를 바탕으로 면접 질문 3개를 생성해주세요.
+
+# 채용 공고
+{job_posting_text}
+
+# 지원자 포트폴리오
+{portfolio_text}
+
+# 질문 생성 규칙 (반드시 아래 3가지 유형으로 하나씩 생성)
+
+1. 약점 질문 (Weakness)
+   - 정의: 직무(채용 공고)에서는 중요하게 요구하지만, 포트폴리오에는 드러나지 않거나 부족해 보이는 역량에 대한 질문입니다.
+   - 기준: 반드시 '직무 공고'를 기준으로 판단하세요.
+
+2. 포트폴리오 검증 질문 (Portfolio Verification)
+   - 정의: 포트폴리오에 기재된 프로젝트 경험, 성과, 기술 사용에 대한 사실 여부와 깊이를 검증하는 질문입니다.
+   - 내용: 포트폴리오의 구체적인 내용을 언급하며 질문하세요.
+
+3. 직무 관련 질문 (Job Competency)
+   - 정의: 업로드한 직무 공고에서 요구하는 핵심 역량 전반에 대한 질문입니다.
+   - 내용: 해당 직무를 수행하기 위해 필수적인 지식이나 문제 해결 능력을 묻습니다.
+
+# 출력 형식 (반드시 JSON 배열로만 응답)
+[
+  {{
+    "type": "weakness",
+    "text": "질문 내용"
+  }},
+  {{
+    "type": "portfolio",
+    "text": "질문 내용"
+  }},
+  {{
+    "type": "job",
+    "text": "질문 내용"
+  }}
+]
+"""
+        try:
+            response = self._generate_content(prompt)
+            result_text = response.text.strip()
+            
+            # JSON 파싱
+            if "```json" in result_text:
+                result_text = result_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in result_text:
+                result_text = result_text.split("```")[1].split("```")[0].strip()
+                
+            questions = json.loads(result_text)
+            return questions
+            
+        except Exception as e:
+            print(f"Initial question generation failed: {e}")
+            # 실패 시 기본 질문 반환
+            return [
+                {"type": "weakness", "text": "직무 공고에서 요구하는 기술 중 본인이 가장 부족하다고 생각하는 것은 무엇이며, 이를 보완하기 위해 어떤 노력을 하고 있나요?"},
+                {"type": "portfolio", "text": "포트폴리오에 기재된 프로젝트 중 가장 도전적이었던 경험에 대해 구체적으로 설명해주세요."},
+                {"type": "job", "text": "이 직무에 지원하게 된 동기와 본인이 이 직무에 적합하다고 생각하는 이유는 무엇인가요?"}
+            ]
+
     def _build_cv_analysis_prompt(
         self,
         cv_text: str,
@@ -335,7 +412,6 @@ class LLMAnalyzer:
 
         prompt = f"""
 당신은 개발자 역량을 평가하는 전문가입니다.
-
 아래 GitHub 프로필 정보를 분석하여 {role_name} 직무에 대한 역량을 평가해주세요.
 
 # GitHub 프로필 정보

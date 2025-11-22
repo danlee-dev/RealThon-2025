@@ -8,12 +8,12 @@ from database import get_db
 from models import JobPosting, User
 from schemas import JobPostingCreate, JobPostingResponse
 from services.job_posting_crawler import crawl_job_posting
-from services.gemini_service import GeminiService
+from services.llm_analyzer import LLMAnalyzer
 
 router = APIRouter()
 
-# Gemini 서비스 인스턴스
-gemini_service = GeminiService()
+# LLM 분석기 인스턴스
+llm_analyzer = LLMAnalyzer()
 
 
 class CrawlRequest(BaseModel):
@@ -86,7 +86,7 @@ def crawl_and_create_job_posting(
     
     # Gemini로 구조화된 JSON 파싱
     try:
-        structured_json = gemini_service.parse_job_posting(
+        structured_json = llm_analyzer.parse_job_posting(
             raw_text=crawled_data['raw_text'],
             company_name=crawled_data['company_name'],
             position=crawled_data['title'],
