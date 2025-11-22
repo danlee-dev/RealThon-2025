@@ -45,7 +45,7 @@ export default function InterviewPage() {
         <Header />
 
         {/* Content Area */}
-        <div className="flex-1 flex gap-6 p-6 overflow-auto bg-light-grey">
+        <div className="flex-1 flex gap-6 p-6 overflow-auto" style={{ backgroundColor: 'rgb(250, 250, 248)' }}>
           {/* Left Column - Video & Charts */}
           <div className="flex-[2] flex flex-col gap-6">
             {/* Video Section */}
@@ -91,11 +91,10 @@ function Sidebar({ isCollapsed, onToggle, isSignLanguageMode, onSignLanguageTogg
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className={`absolute top-1/2 -translate-y-1/2 z-20 w-8 h-16 flex items-center justify-center transition-all duration-300 ${
-          isCollapsed
-            ? '-right-4 bg-sidebar text-primary rounded-r-full'
-            : '-right-4 bg-white text-gray-700 rounded-l-full shadow-lg'
-        }`}
+        className={`absolute top-1/2 -translate-y-1/2 z-20 w-8 h-16 flex items-center justify-center transition-all duration-300 ${isCollapsed
+          ? '-right-4 bg-sidebar text-primary rounded-r-full'
+          : '-right-4 bg-white text-gray-700 rounded-l-full shadow-lg'
+          }`}
       >
         <ChevronRight className={`w-5 h-5 transition-transform ${isCollapsed ? '' : 'rotate-180'}`} />
       </button>
@@ -123,24 +122,21 @@ function Sidebar({ isCollapsed, onToggle, isSignLanguageMode, onSignLanguageTogg
         {/* Sign Language Mode Toggle */}
         <button
           onClick={onSignLanguageToggle}
-          className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-xl mb-1 transition-all ${
-            isSignLanguageMode
-              ? 'bg-primary text-white shadow-lg'
-              : 'text-gray-400 hover:text-white hover:bg-white/5'
-          }`}
+          className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-xl mb-1 transition-all ${isSignLanguageMode
+            ? 'bg-primary text-white shadow-lg'
+            : 'text-gray-400 hover:text-white hover:bg-white/5'
+            }`}
           title={isCollapsed ? 'Sign Language Mode' : ''}
         >
           {/* Custom Toggle Switch */}
           <div className="relative flex-shrink-0">
-            <div className={`w-11 h-6 rounded-full transition-colors ${
-              isSignLanguageMode ? 'bg-gray-400' : 'bg-gray-400'
-            }`}>
+            <div className={`w-11 h-6 rounded-full transition-colors ${isSignLanguageMode ? 'bg-gray-400' : 'bg-gray-400'
+              }`}>
               <div
-                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-all duration-300 ${
-                  isSignLanguageMode
-                    ? 'translate-x-5'
-                    : 'translate-x-0 bg-white'
-                }`}
+                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-all duration-300 ${isSignLanguageMode
+                  ? 'translate-x-5'
+                  : 'translate-x-0 bg-white'
+                  }`}
                 style={isSignLanguageMode ? { backgroundColor: '#9A00ED' } : {}}
               />
             </div>
@@ -167,11 +163,10 @@ function Sidebar({ isCollapsed, onToggle, isSignLanguageMode, onSignLanguageTogg
 function SidebarItem({ icon: Icon, label, active, isCollapsed }: { icon: any, label: string, active: boolean, isCollapsed: boolean }) {
   return (
     <button
-      className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-xl mb-1 transition-all ${
-        active
-          ? 'bg-primary text-white shadow-lg'
-          : 'text-gray-400 hover:text-white hover:bg-white/5'
-      }`}
+      className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-xl mb-1 transition-all ${active
+        ? 'bg-primary text-white shadow-lg'
+        : 'text-gray-400 hover:text-white hover:bg-white/5'
+        }`}
       title={isCollapsed ? label : ''}
     >
       <Icon className="w-5 h-5 flex-shrink-0" />
@@ -210,7 +205,7 @@ function Header() {
 
 function VideoSection() {
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm">
+    <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -304,7 +299,7 @@ function AIVideoScoreChart() {
   ];
 
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm">
+    <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-gray-900">AI Video Score</h3>
         <HelpCircle className="w-5 h-5 text-gray-400" />
@@ -342,7 +337,7 @@ function WorkmapScoreChart() {
   ];
 
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm">
+    <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-gray-900">Workmap Score</h3>
         <HelpCircle className="w-5 h-5 text-gray-400" />
@@ -395,7 +390,7 @@ function ScoreCard({ title, score, color }: { title: string, score: number, colo
   ];
 
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-sm">
+    <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ backgroundColor: '#f3f4f6', border: '1px solid #E5E5EC' }}>
       <div className="h-32 relative">
         <ResponsivePie
           data={data}
@@ -452,7 +447,7 @@ function ChatSection() {
   ];
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm flex-1 flex flex-col overflow-hidden">
+    <div className="bg-white rounded-3xl shadow-sm flex-1 flex flex-col overflow-hidden" style={{ border: '1px solid #E5E5EC' }}>
       {/* Tabs */}
       <div className="flex border-b border-gray-100">
         <button className="flex-1 py-4 text-sm font-medium text-white bg-primary rounded-tl-3xl">
@@ -487,11 +482,10 @@ function ChatSection() {
                 {!msg.isMe && (
                   <p className="text-sm font-medium text-gray-900 mb-1">{msg.sender}</p>
                 )}
-                <div className={`inline-block px-4 py-2 rounded-2xl ${
-                  msg.isMe
-                    ? 'bg-primary text-white rounded-tr-none'
-                    : 'bg-gray-100 text-gray-900 rounded-tl-none'
-                }`}>
+                <div className={`inline-block px-4 py-2 rounded-2xl ${msg.isMe
+                  ? 'bg-primary text-white rounded-tr-none'
+                  : 'bg-gray-100 text-gray-900 rounded-tl-none'
+                  }`}>
                   <p className="text-sm">{msg.message}</p>
                 </div>
                 <p className="text-xs text-gray-400 mt-1">{msg.time}</p>
