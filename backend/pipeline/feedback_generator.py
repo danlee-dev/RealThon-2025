@@ -3,7 +3,7 @@ Gemini-based feedback generation
 AI를 활용한 면접 피드백 생성
 """
 import os
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 from dotenv import load_dotenv
 import google.generativeai as genai
 
@@ -53,9 +53,9 @@ def generate_feedback_with_gemini(metrics: Dict, transcript: str = "") -> List[s
             genai.configure(api_key=api_key)
             
             # Gemini 2.0 Flash 모델 사용 (가장 빠르고 효율적)
-            # 사용 가능한 모델: gemini-2.0-flash-exp, gemini-1.5-flash, gemini-1.5-pro
+            # 사용 가능한 모델: gemini-2.0-flash, gemini-1.5-flash, gemini-1.5-pro
             try:
-                model = genai.GenerativeModel('gemini-2.0-flash-exp')
+                model = genai.GenerativeModel('gemini-2.0-flash')
             except Exception:
                 # Fallback to stable version
                 model = genai.GenerativeModel('gemini-1.5-flash')
@@ -372,4 +372,150 @@ def generate_feedback_fallback(metrics: Dict) -> List[str]:
         fb.append(f"필러 사용({metrics['filler_count']}회)이 과도하지 않다. 전반적으로 유창하고 자연스러운 답변으로 좋은 인상을 준다. 이 패턴을 유지하면 좋다.")
 
     return fb
+
+
+def detect_timeline_segments(timeline: List[Dict]) -> List[Dict]:
+    """
+    Detect problematic segments in timeline:
+    - smile >= 0.8 (과도한 웃음)
+    
+    Returns list of segments with start_t, end_t, and average smile value
+    """
+    segments = []
+    
+    if not timeline:
+        return segments
+    
+    valid_frames = [f for f in timeline if f.get("valid")]
+    if not valid_frames:
+        return segments
+    
+    # Smile segments (smile >= 0.8)
+    current_smile_start = None
+    smile_values = []  # Collect smile values for average
+    
+    for i, frame in enumerate(valid_frames):
+        smile = frame.get("smile")
+        t = frame.get("t", 0.0)
+        
+        if smile is not None and smile >= 0.8:
+            if current_smile_start is None:
+                # Start of new smile segment
+                current_smile_start = t
+                smile_values = [smile]
+            else:
+                # Continue segment, collect smile value
+                smile_values.append(smile)
+        else:
+            # End of smile segment
+            if current_smile_start is not None:
+                # Use previous frame's time as end
+                prev_t = valid_frames[i-1].get("t", t) if i > 0 else current_smile_start
+                # Calculate average smile value
+                avg_smile = sum(smile_values) / len(smile_values) if smile_values else 0.8
+                segments.append({
+                    "start_t": current_smile_start,
+                    "end_t": prev_t,
+                    "severity": avg_smile  # Average smile value as severity
+                })
+                current_smile_start = None
+                smile_values = []
+    
+    # Handle segment that continues to end
+    if current_smile_start is not None:
+        last_t = valid_frames[-1].get("t", 0.0)
+        avg_smile = sum(smile_values) / len(smile_values) if smile_values else 0.8
+        segments.append({
+            "start_t": current_smile_start,
+            "end_t": last_t,
+            "severity": avg_smile
+        })
+    
+    # Sort by start_t
+    segments.sort(key=lambda x: x["start_t"])
+    
+    return segments
+
+
+def generate_alert_feedback_with_gemini(segment: Dict) -> Optional[str]:
+    """
+    Generate natural language feedback for a timeline segment using Gemini.
+    
+    Args:
+        segment: Segment dict with start_t, end_t, and severity (average smile value)
+    
+    Returns:
+        Natural language feedback string in Korean, or None if Gemini fails
+    """
+    api_keys = get_gemini_api_keys()
+    
+    severity = segment.get("severity", 0.8)
+    
+    if not api_keys:
+        # Fallback to simple rule-based feedback
+        return f"{segment['start_t']:.1f}초~{segment['end_t']:.1f}초 구간에서 웃음이 과도했습니다 (평균 미소 점수: {severity:.2f}). 자연스러운 표정을 유지하는 것이 좋습니다."
+    
+    # Build prompt
+    prompt = f"""면접 영상 분석 중 {segment['start_t']:.1f}초부터 {segment['end_t']:.1f}초까지의 구간에서 웃음이 과도했습니다 (평균 미소 점수: {severity:.2f}).
+
+이 구간에 대해 면접 코칭 전문가 관점에서 간단하고 실용적인 피드백을 한 문장으로 작성해주세요.
+예: "웃음이 과하다" 또는 "표정을 조금 더 차분하게 유지하세요" 같은 자연스러운 표현으로 작성해주세요.
+
+피드백:"""
+    
+    # Try each API key
+    for idx, api_key in enumerate(api_keys, 1):
+        try:
+            genai.configure(api_key=api_key)
+            
+            try:
+                model = genai.GenerativeModel('gemini-2.0-flash')
+            except Exception:
+                model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            response = model.generate_content(prompt)
+            feedback_text = response.text.strip()
+            
+            # Clean up feedback (remove quotes, bullets, etc.)
+            feedback_text = feedback_text.lstrip('"\'•-*123456789.) ')
+            feedback_text = feedback_text.rstrip('"\'')
+            
+            if len(feedback_text) >= 5:  # Minimum length check
+                return feedback_text
+            
+        except Exception as e:
+            if idx < len(api_keys):
+                continue
+            # All keys failed, use fallback
+            break
+    
+    # Fallback
+    return f"{segment['start_t']:.1f}초~{segment['end_t']:.1f}초 구간에서 웃음이 과하다."
+
+
+def generate_alerts_from_timeline(timeline: List[Dict]) -> List[Dict]:
+    """
+    Generate alerts from timeline by detecting problematic segments and generating feedback.
+    
+    Returns list of alerts with:
+    - start_t: start time in seconds
+    - end_t: end time in seconds
+    - severity: average smile value in the segment
+    - message: natural language feedback from Gemini
+    """
+    segments = detect_timeline_segments(timeline)
+    alerts = []
+    
+    for segment in segments:
+        message = generate_alert_feedback_with_gemini(segment)
+        
+        if message:
+            alerts.append({
+                "start_t": segment["start_t"],
+                "end_t": segment["end_t"],
+                "severity": segment["severity"],
+                "message": message
+            })
+    
+    return alerts
 

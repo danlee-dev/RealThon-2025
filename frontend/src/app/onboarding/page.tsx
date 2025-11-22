@@ -97,7 +97,7 @@ export default function OnboardingPage() {
                 setUploading(false);
             }
 
-            // 2. Update profile with name, jobTitle, and portfolio URLs
+            // 2. Update profile with name, role, and portfolio URLs
             const urls = formData.portfolioLinks
                 .filter(link => link.url.trim())
                 .map(link => link.url.trim());

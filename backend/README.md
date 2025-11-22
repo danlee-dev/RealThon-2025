@@ -99,17 +99,28 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 - `DELETE /api/portfolios/{portfolio_id}` - 포트폴리오 삭제
 
 ### Job Postings
-- `POST /api/job-postings/?user_id={user_id}` - 공고 생성
+- `POST /api/job-postings/?user_id={user_id}` - 공고 생성 (수동 입력)
+- `POST /api/job-postings/crawl?user_id={user_id}` - **직무 공고 URL 크롤링 및 저장** ⭐️
+  - Body: `{ "url": "https://www.wanted.co.kr/wd/12345" }`
+  - 지원 플랫폼: Wanted, 사람인, 잡코리아, 인크루트, LinkedIn, Indeed
+  - 자동으로 회사명, 직무명, 공고 내용을 추출하여 DB에 저장
+  - **Gemini AI로 구조화된 JSON 파싱**: 크롤링한 내용을 자동으로 구조화하여 다음 형식으로 저장
+    - DB의 `parsed_skills` 필드에 JSON 문자열로 저장 (구조화된 데이터 보존)
+    - 구조화된 필드: `company`, `position`, `experience_years`, `employment_type`, `required_skills`, `preferred_skills`, `responsibilities`, `qualifications`, `preferred_qualifications`
 - `GET /api/job-postings/{job_posting_id}` - 공고 조회
 - `GET /api/job-postings/user/{user_id}` - 사용자별 공고 목록
 - `DELETE /api/job-postings/{job_posting_id}` - 공고 삭제
 
 ### Interviews (세션 및 질문 관리)
 - `POST /api/interviews/sessions?user_id={user_id}` - 면접 세션 생성
+  - **필수 입력**: `job_posting_id` (직무 공고 ID)
+  - 세션 생성 시 **초기 면접 질문 3개가 자동으로 생성**되어 저장됩니다. (약점, 포트폴리오 검증, 직무 관련 질문)
+  - 입력받은 공고 내용을 반영하여 질문이 생성됩니다.
 - `GET /api/interviews/sessions/{session_id}` - 세션 조회
 - `GET /api/interviews/sessions/user/{user_id}` - 사용자별 세션 목록
 - `PATCH /api/interviews/sessions/{session_id}/complete` - 세션 완료 처리
-- `POST /api/interviews/sessions/{session_id}/questions` - 면접 질문 생성
+- `POST /api/interviews/sessions/{session_id}/questions/generate` - 면접 질문 수동 재생성 (초기 질문 3개)
+- `POST /api/interviews/sessions/{session_id}/questions` - 면접 질문 추가
 - `GET /api/interviews/sessions/{session_id}/questions` - 세션 질문 목록 조회
 
 ### Video Analysis (비디오 분석 - 통합 파이프라인) ⭐️
@@ -201,6 +212,7 @@ GET /api/video/results/{video_id}
 - `video`: 비디오 메타데이터
 - `metrics`: 비언어 지표 (center_gaze_ratio, smile_ratio, nod_count, nod_rate_per_min, wpm, filler_count, primary_emotion, emotion_distribution)
 - `metadata`: 계산 메타데이터 (fps, frame counts, thresholds, models, confidence, outliers)
+- `alerts`: 타임라인 기반 실시간 알림 (smile >= 0.8인 구간 감지 및 Gemini 피드백)
 - `feedbacks`: 피드백 목록
 - `transcript`: STT 전사 결과
 - `timeline`: 타임라인 JSON 배열 (각 프레임별 gaze, smile, emotion, pitch, yaw 등)
@@ -404,6 +416,20 @@ GET /api/video/results/{video_id}
   // 🎯 의미: 구체적이고 실천 가능한 면접 코칭 피드백
   // 💡 구성: 관찰 → 해석 → 개선 제안 (1~3가지 구체적 솔루션)
   
+  // === 타임라인 기반 알림 (Alerts) 존재하는 경우에만 반환 ===
+  "alerts": [
+    {
+      "start_t": 0.21,         // 구간 시작 시간 (초)
+      "end_t": 2.50,           // 구간 종료 시간 (초)
+      "severity": 0.85,        // 해당 구간의 평균 smile 값 (0.0 ~ 1.0)
+      "message": "0.2초~2.5초 구간에서 웃음이 과도했습니다. 표정을 조금 더 차분하게 유지하세요."
+    }
+  ],
+  // 🎯 의미: 타임라인에서 감지된 문제 구간에 대한 실시간 알림
+  // 🔧 감지 기준: smile >= 0.8인 연속 구간
+  // 💡 활용: 프론트엔드에서 타임라인 시각화 시 해당 구간에 알림 표시
+  // 📝 참고: smile >= 0.8인 구간이 없으면 빈 배열 [] 반환
+  
   // === 전사 텍스트 ===
   "transcript": "안녕하세요, 저는 백엔드 개발자로 지원한...",
   // 🎯 의미: Whisper STT로 변환된 음성 전사 텍스트
@@ -453,7 +479,24 @@ GET /api/video/results/{video_id}
 | **pose_outlier_ratio** | 포즈 이상치 비율 | < 0.05: 정상, 0.05~0.15: 불안정, > 0.15: 매우 불안정 |
 | **frame_count_expected** | 기대 프레임 수 | duration * fps, total과 차이가 크면 추출 문제 |
 
-**참고**: 정책 및 평가 기준은 UI/서비스 레이어에서 관리합니다. JSON 로그에는 관측값과 계산 조건만 포함됩니다.
+### 타임라인 기반 알림 (Alerts)
+
+타임라인을 분석하여 문제가 되는 구간을 실시간으로 감지하고 Gemini로 피드백을 생성합니다.
+
+| 필드 | 의미 | 설명 |
+|-----|------|-----|
+| **start_t** | 구간 시작 시간 | 초 단위 타임스탬프 |
+| **end_t** | 구간 종료 시간 | 초 단위 타임스탬프 |
+| **severity** | 심각도 | 해당 구간의 평균 smile 값 (0.0 ~ 1.0) |
+| **message** | 피드백 메시지 | Gemini로 생성한 자연어 피드백 |
+
+**감지 기준:**
+- `smile >= 0.8`인 연속 프레임 구간
+- 구간이 없으면 빈 배열 `[]` 반환
+
+**활용:**
+- 프론트엔드 타임라인 시각화에서 해당 구간에 알림 표시
+- 사용자가 문제 구간을 바로 확인하고 개선 가능
 
 ## 주의사항
 

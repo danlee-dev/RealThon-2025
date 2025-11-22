@@ -9,16 +9,57 @@ import InterviewingScreen from './components/screens/InterviewingScreen';
 import AnalyzingScreen from './components/screens/AnalyzingScreen';
 import CompleteScreen from './components/screens/CompleteScreen';
 import { InterviewStage, AnalysisResults } from './types';
+import { interviewApi } from '@/lib/auth-client';
 
 export default function InterviewPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isSignLanguageMode, setIsSignLanguageMode] = useState(false);
   const [currentStage, setCurrentStage] = useState<InterviewStage>(InterviewStage.WAITING);
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
 
-  const handleStartInterview = () => {
-    console.log('[DEBUG] Starting interview, changing stage to INTERVIEWING');
-    setCurrentStage(InterviewStage.INTERVIEWING);
+  const handleStartInterview = async () => {
+    console.log('[DEBUG] Starting interview, creating session and loading questions');
+    setIsLoadingQuestions(true);
+
+    try {
+      const sessionResponse = await interviewApi.createSession();
+
+      if (!sessionResponse.success || !sessionResponse.data) {
+        console.error('[ERROR] Failed to create interview session:', sessionResponse.error);
+        alert('면접 세션 생성에 실패했습니다.');
+        setIsLoadingQuestions(false);
+        return;
+      }
+
+      const session = sessionResponse.data;
+      setSessionId(session.id);
+      console.log('[DEBUG] Session created:', session.id);
+
+      const questionsResponse = await interviewApi.getSessionQuestions(session.id);
+
+      if (!questionsResponse.success || !questionsResponse.data) {
+        console.error('[ERROR] Failed to load questions:', questionsResponse.error);
+        alert('질문 로드에 실패했습니다.');
+        setIsLoadingQuestions(false);
+        return;
+      }
+
+      const loadedQuestions = questionsResponse.data
+        .sort((a, b) => a.order - b.order)
+        .map(q => q.text);
+
+      setQuestions(loadedQuestions);
+      console.log('[DEBUG] Questions loaded:', loadedQuestions.length);
+      setCurrentStage(InterviewStage.INTERVIEWING);
+    } catch (error) {
+      console.error('[ERROR] Failed to start interview:', error);
+      alert('면접 시작에 실패했습니다.');
+    } finally {
+      setIsLoadingQuestions(false);
+    }
   };
 
   const handleEndInterview = () => {
@@ -50,10 +91,19 @@ export default function InterviewPage() {
         {/* Content Area - Different screens based on stage */}
         <AnimatePresence mode="wait">
           {currentStage === InterviewStage.WAITING && (
-            <WaitingScreen key="waiting" onStart={handleStartInterview} />
+            <WaitingScreen
+              key="waiting"
+              onStart={handleStartInterview}
+              isLoading={isLoadingQuestions}
+            />
           )}
           {currentStage === InterviewStage.INTERVIEWING && (
-            <InterviewingScreen key="interviewing" onEnd={handleEndInterview} />
+            <InterviewingScreen
+              key="interviewing"
+              onEnd={handleEndInterview}
+              questions={questions}
+              sessionId={sessionId || ''}
+            />
           )}
           {currentStage === InterviewStage.ANALYZING && (
             <AnalyzingScreen key="analyzing" onComplete={handleAnalysisComplete} />

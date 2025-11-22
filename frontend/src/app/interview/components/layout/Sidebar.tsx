@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import {
     LayoutDashboard,
     Video as VideoIcon,
@@ -9,6 +10,7 @@ import {
     LogOut,
     ChevronRight,
 } from 'lucide-react';
+import { authApi } from '@/lib/auth-client';
 
 interface SidebarProps {
     isCollapsed: boolean;
@@ -25,6 +27,13 @@ export default function Sidebar({
     onSignLanguageToggle,
     activeItem = 'Interview'
 }: SidebarProps) {
+    const router = useRouter();
+
+    const handleLogout = () => {
+        authApi.logout();
+        router.push('/login');
+    };
+
     const mainMenuItems = [
         { icon: LayoutDashboard, label: 'Dashboard' },
         { icon: VideoIcon, label: 'Interview' },
@@ -100,7 +109,10 @@ export default function Sidebar({
 
             {/* Footer */}
             <div className={`mt-auto ${isCollapsed ? 'p-2' : 'p-4'} space-y-2`}>
-                <button className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/5`}>
+                <button
+                    onClick={handleLogout}
+                    className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/5`}
+                >
                     <LogOut className="w-5 h-5" />
                     {!isCollapsed && <span>Log Out</span>}
                 </button>

@@ -1,0 +1,40 @@
+{
+  "company": "AI Tech Solutions",
+  "position": "AI/ML Junior Developer",
+  "experience_years": "0-2년",
+  "employment_type": "정규직",
+  "required_skills": [
+    "Python",
+    "머신러닝 기초 이론 (지도/비지도 학습)",
+    "NumPy, Pandas",
+    "Scikit-learn or TensorFlow/PyTorch",
+    "선형대수, 확률통계 기초",
+    "Git/GitHub"
+  ],
+  "preferred_skills": [
+    "캐글 또는 데이터 경진대회 참여 경험",
+    "딥러닝 프로젝트 경험",
+    "Computer Vision 또는 NLP 프로젝트 경험",
+    "논문 구현 경험",
+    "기술 블로그 운영"
+  ],
+  "responsibilities": [
+    "머신러닝/딥러닝 모델 개발 및 학습",
+    "데이터 전처리 및 탐색적 데이터 분석(EDA)",
+    "학습 데이터 수집 및 정제",
+    "모델 성능 평가 및 최적화",
+    "연구 논문 구현 및 실험"
+  ],
+  "qualifications": [
+    "Python 프로그래밍 능력",
+    "머신러닝 기초 이론 이해",
+    "데이터 처리 경험 (NumPy, Pandas)",
+    "ML/DL 프레임워크 사용 경험"
+  ],
+  "preferred_qualifications": [
+    "캐글 또는 데이터 경진대회 참여 경험",
+    "딥러닝 프로젝트 경험",
+    "Computer Vision 또는 NLP 관련 프로젝트",
+    "논문 구현 및 기술 블로그 운영"
+  ]
+}

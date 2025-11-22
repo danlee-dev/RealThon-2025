@@ -719,6 +719,227 @@
         "action": "면접 질문 매핑",
         "details": "부족한 역량의 competency_id를 사용하여 interview_questions.json에서 해당 질문 추출"
       }
-    ]
+    ],
+    "AI_JUNIOR": {
+      "id": "CHECKLIST_AI_JUNIOR",
+      "level": "LEVEL_JUNIOR",
+      "role": "ROLE_AI",
+      "must_have_checklist": [
+        {
+          "competency_id": "AI_JR_TECH_001",
+          "item": "Python 기본 문법 및 활용 능력",
+          "keywords_to_find": ["Python", "파이썬", "프로그래밍"],
+          "score": 10,
+          "verification": "프로젝트 코드, 기술 스택에 Python 언급"
+        },
+        {
+          "competency_id": "AI_JR_TECH_002",
+          "item": "머신러닝 기초 개념 이해",
+          "keywords_to_find": ["머신러닝", "ML", "Machine Learning", "지도학습", "비지도학습", "회귀", "분류"],
+          "score": 10,
+          "verification": "ML 프로젝트 경험 또는 학습 이력"
+        },
+        {
+          "competency_id": "AI_JR_TECH_003",
+          "item": "NumPy, Pandas 데이터 처리",
+          "keywords_to_find": ["NumPy", "Pandas", "데이터분석", "데이터전처리"],
+          "score": 10,
+          "verification": "데이터 분석 프로젝트, EDA 경험"
+        },
+        {
+          "competency_id": "AI_JR_TECH_004",
+          "item": "Scikit-learn 사용 경험",
+          "keywords_to_find": ["Scikit-learn", "sklearn", "사이킷런"],
+          "score": 10,
+          "verification": "ML 모델 구현 프로젝트"
+        },
+        {
+          "competency_id": "AI_JR_TECH_005",
+          "item": "딥러닝 기초 이해",
+          "keywords_to_find": ["딥러닝", "Deep Learning", "신경망", "Neural Network", "역전파"],
+          "score": 8,
+          "verification": "딥러닝 프로젝트 또는 학습 경험"
+        },
+        {
+          "competency_id": "AI_JR_TECH_006",
+          "item": "TensorFlow 또는 PyTorch 경험",
+          "keywords_to_find": ["TensorFlow", "텐서플로", "PyTorch", "파이토치", "Keras"],
+          "score": 8,
+          "verification": "딥러닝 프레임워크 사용 프로젝트"
+        },
+        {
+          "competency_id": "AI_JR_TECH_007",
+          "item": "수학 기초 (선형대수, 확률통계)",
+          "keywords_to_find": ["선형대수", "확률", "통계", "수학"],
+          "score": 6,
+          "verification": "학력 또는 프로젝트 설명에서 확인"
+        },
+        {
+          "competency_id": "AI_JR_EXP_001",
+          "item": "데이터 전처리 및 EDA 경험",
+          "keywords_to_find": ["EDA", "탐색적데이터분석", "데이터전처리", "시각화", "데이터분석"],
+          "score": 10,
+          "verification": "EDA 프로젝트, 데이터 분석 경험"
+        },
+        {
+          "competency_id": "AI_JR_EXP_002",
+          "item": "기본 ML 모델 구현 경험",
+          "keywords_to_find": ["회귀모델", "분류모델", "ML모델", "모델학습"],
+          "score": 10,
+          "verification": "ML 프로젝트 포트폴리오"
+        },
+        {
+          "competency_id": "AI_JR_EXP_003",
+          "item": "캐글/경진대회 참여 경험",
+          "keywords_to_find": ["Kaggle", "캐글", "경진대회", "Competition", "데이콘"],
+          "score": 8,
+          "verification": "경진대회 참여 이력"
+        }
+      ],
+      "nice_to_have_checklist": [
+        {
+          "competency_id": "AI_JR_NICE_001",
+          "item": "데이터 시각화 (Matplotlib, Seaborn)",
+          "keywords_to_find": ["Matplotlib", "Seaborn", "시각화", "Plotly"],
+          "score": 5,
+          "verification": "시각화 포함된 프로젝트"
+        },
+        {
+          "competency_id": "AI_JR_NICE_002",
+          "item": "Jupyter Notebook 사용",
+          "keywords_to_find": ["Jupyter", "Notebook", "Colab"],
+          "score": 3,
+          "verification": "프로젝트 도구 섹션"
+        },
+        {
+          "competency_id": "AI_JR_NICE_003",
+          "item": "Git/GitHub 사용",
+          "keywords_to_find": ["Git", "GitHub", "버전관리"],
+          "score": 5,
+          "verification": "GitHub 프로필 링크, 버전관리 경험"
+        }
+      ]
+    },
+    "AI_MID": {
+      "id": "CHECKLIST_AI_MID",
+      "level": "LEVEL_MID",
+      "role": "ROLE_AI",
+      "must_have_checklist": [
+        {
+          "competency_id": "AI_MID_TECH_001",
+          "item": "딥러닝 아키텍처 설계 능력 (CNN, RNN, Transformer)",
+          "keywords_to_find": ["CNN", "RNN", "Transformer", "BERT", "GPT", "ResNet", "LSTM"],
+          "score": 10,
+          "verification": "딥러닝 아키텍처 구현 프로젝트"
+        },
+        {
+          "competency_id": "AI_MID_TECH_002",
+          "item": "PyTorch/TensorFlow 고급 활용",
+          "keywords_to_find": ["PyTorch", "TensorFlow", "커스텀", "고급", "분산학습"],
+          "score": 10,
+          "verification": "복잡한 모델 구현 경험"
+        },
+        {
+          "competency_id": "AI_MID_TECH_003",
+          "item": "자연어 처리 (NLP) 경험",
+          "keywords_to_find": ["NLP", "자연어처리", "BERT", "GPT", "Transformer", "토큰화", "임베딩"],
+          "score": 8,
+          "verification": "NLP 프로젝트 경험"
+        },
+        {
+          "competency_id": "AI_MID_TECH_004",
+          "item": "Computer Vision 경험",
+          "keywords_to_find": ["CV", "Computer Vision", "YOLO", "Object Detection", "Segmentation", "이미지"],
+          "score": 8,
+          "verification": "CV 프로젝트 경험"
+        },
+        {
+          "competency_id": "AI_MID_TECH_005",
+          "item": "하이퍼파라미터 튜닝",
+          "keywords_to_find": ["하이퍼파라미터", "튜닝", "Optuna", "최적화", "GridSearch"],
+          "score": 8,
+          "verification": "모델 최적화 경험"
+        },
+        {
+          "competency_id": "AI_MID_TECH_006",
+          "item": "MLOps 및 모델 배포",
+          "keywords_to_find": ["MLOps", "배포", "FastAPI", "Flask", "Docker", "서빙"],
+          "score": 10,
+          "verification": "프로덕션 배포 경험"
+        },
+        {
+          "competency_id": "AI_MID_TECH_007",
+          "item": "대용량 데이터 처리",
+          "keywords_to_find": ["Spark", "Dask", "대용량", "빅데이터", "분산처리"],
+          "score": 7,
+          "verification": "대규모 데이터 처리 프로젝트"
+        },
+        {
+          "competency_id": "AI_MID_TECH_008",
+          "item": "실험 관리 도구 (MLflow, W&B)",
+          "keywords_to_find": ["MLflow", "W&B", "Weights & Biases", "TensorBoard", "실험관리"],
+          "score": 7,
+          "verification": "실험 추적 시스템 사용"
+        },
+        {
+          "competency_id": "AI_MID_EXP_001",
+          "item": "End-to-End ML 파이프라인 구축",
+          "keywords_to_find": ["파이프라인", "end-to-end", "MLOps", "자동화"],
+          "score": 10,
+          "verification": "전체 ML 파이프라인 구축 경험"
+        },
+        {
+          "competency_id": "AI_MID_EXP_002",
+          "item": "모델 성능 개선 경험",
+          "keywords_to_find": ["성능개선", "최적화", "정확도향상", "baseline"],
+          "score": 10,
+          "verification": "정량적 개선 지표 포함"
+        },
+        {
+          "competency_id": "AI_MID_EXP_003",
+          "item": "프로덕션 모델 운영",
+          "keywords_to_find": ["프로덕션", "운영", "모니터링", "재학습"],
+          "score": 10,
+          "verification": "실서비스 모델 운영 경험"
+        }
+      ],
+      "nice_to_have_checklist": [
+        {
+          "competency_id": "AI_MID_NICE_001",
+          "item": "LLM Fine-tuning 경험",
+          "keywords_to_find": ["LLM", "Fine-tuning", "LoRA", "GPT", "BERT", "Prompt Engineering", "RAG"],
+          "score": 8,
+          "verification": "LLM 프로젝트"
+        },
+        {
+          "competency_id": "AI_MID_NICE_002",
+          "item": "모델 경량화",
+          "keywords_to_find": ["경량화", "Quantization", "Pruning", "Distillation", "TensorRT"],
+          "score": 6,
+          "verification": "모델 최적화 프로젝트"
+        },
+        {
+          "competency_id": "AI_MID_NICE_003",
+          "item": "강화학습",
+          "keywords_to_find": ["강화학습", "RL", "Reinforcement Learning", "Q-Learning"],
+          "score": 4,
+          "verification": "RL 프로젝트"
+        },
+        {
+          "competency_id": "AI_MID_NICE_EXP_001",
+          "item": "논문 구현 또는 게재",
+          "keywords_to_find": ["논문", "Paper", "arXiv", "학회", "연구"],
+          "score": 7,
+          "verification": "논문 링크 또는 구현 저장소"
+        },
+        {
+          "competency_id": "AI_MID_NICE_EXP_002",
+          "item": "캐글 메달 획득",
+          "keywords_to_find": ["Kaggle", "캐글", "메달", "Medal", "Competition"],
+          "score": 6,
+          "verification": "캐글 프로필"
+        }
+      ]
+    }
   }
 }

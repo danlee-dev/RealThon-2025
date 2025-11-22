@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Text, Integer, Float, ForeignKey, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from datetime import datetime
 from database import Base
 import uuid
@@ -91,11 +91,22 @@ class InterviewQuestion(Base):
     text = Column(Text, nullable=False)
     type = Column(String, nullable=False)  # 'intro' | 'portfolio' | 'job' | ...
     source = Column(String, nullable=False)  # 'portfolio' | 'job_posting' | 'combined' | 'manual'
+    parent_question_id = Column(
+        String,
+        ForeignKey("interview_question.id", ondelete="SET NULL"),
+        nullable=True
+    )
     created_at = Column(String, nullable=False, default=lambda: datetime.utcnow().isoformat())
 
     # Relationships
     session = relationship("InterviewSession", back_populates="questions")
     videos = relationship("InterviewVideo", back_populates="question", cascade="all, delete-orphan")
+    parent_question = relationship(
+        "InterviewQuestion",
+        remote_side=[id],
+        backref=backref("followup_questions"),
+        foreign_keys=[parent_question_id]
+    )
 
 
 class InterviewVideo(Base):
@@ -184,3 +195,65 @@ class Feedback(Base):
 
     # Relationships
     video = relationship("InterviewVideo", back_populates="feedbacks")
+
+
+class CapabilityEvaluation(Base):
+    """
+    포트폴리오별 역량 평가 (6개 역량 통합)
+
+    각 포트폴리오(Portfolio)에 대해 직무별 6개 역량을 평가하고 점수, 피드백 저장
+    Gemini를 통해 portfolio.summary를 분석하여 자동 생성
+    """
+    __tablename__ = "capability_evaluation"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    portfolio_id = Column(String, ForeignKey("portfolio.id", ondelete="CASCADE"), nullable=False, unique=True)
+    role = Column(String, nullable=False)  # 'ROLE_FE' | 'ROLE_BE' | 'ROLE_AI'
+
+    # 역량 1
+    capability1_name_en = Column(String, nullable=False)  # 예: "Technical Skills"
+    capability1_name_ko = Column(String, nullable=False)  # 예: "기술 역량"
+    capability1_score = Column(Float, nullable=False)     # 0-100
+    capability1_reason = Column(Text)                     # 점수를 준 이유
+    capability1_feedback = Column(Text)                   # 개선 피드백
+
+    # 역량 2
+    capability2_name_en = Column(String, nullable=False)
+    capability2_name_ko = Column(String, nullable=False)
+    capability2_score = Column(Float, nullable=False)
+    capability2_reason = Column(Text)
+    capability2_feedback = Column(Text)
+
+    # 역량 3
+    capability3_name_en = Column(String, nullable=False)
+    capability3_name_ko = Column(String, nullable=False)
+    capability3_score = Column(Float, nullable=False)
+    capability3_reason = Column(Text)
+    capability3_feedback = Column(Text)
+
+    # 역량 4
+    capability4_name_en = Column(String, nullable=False)
+    capability4_name_ko = Column(String, nullable=False)
+    capability4_score = Column(Float, nullable=False)
+    capability4_reason = Column(Text)
+    capability4_feedback = Column(Text)
+
+    # 역량 5
+    capability5_name_en = Column(String, nullable=False)
+    capability5_name_ko = Column(String, nullable=False)
+    capability5_score = Column(Float, nullable=False)
+    capability5_reason = Column(Text)
+    capability5_feedback = Column(Text)
+
+    # 역량 6
+    capability6_name_en = Column(String, nullable=False)
+    capability6_name_ko = Column(String, nullable=False)
+    capability6_score = Column(Float, nullable=False)
+    capability6_reason = Column(Text)
+    capability6_feedback = Column(Text)
+
+    created_at = Column(String, nullable=False, default=lambda: datetime.utcnow().isoformat())
+    updated_at = Column(String, nullable=False, default=lambda: datetime.utcnow().isoformat())
+
+    # Relationships
+    portfolio = relationship("Portfolio", backref=backref("capability_evaluation", uselist=False, cascade="all, delete-orphan"))

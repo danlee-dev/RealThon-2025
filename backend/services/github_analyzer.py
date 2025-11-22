@@ -5,12 +5,15 @@ GitHub API를 사용하여 사용자의 저장소를 분석하고 RAG + Gemini�
 """
 
 import os
+import json
 import requests
 from typing import Dict, Any, List
 from dotenv import load_dotenv
+from sqlalchemy.orm import Session
 
+from models import User, Portfolio
 from rag.utils import get_competency_matrix
-from .gemini_service import GeminiService
+from .llm_analyzer import LLMAnalyzer
 
 load_dotenv()
 
@@ -21,7 +24,7 @@ class GitHubAnalyzer:
     """GitHub 프로필 분석 클래스"""
 
     def __init__(self):
-        self.gemini_service = GeminiService()
+        self.llm_analyzer = LLMAnalyzer()
         self.headers = {}
         if GITHUB_TOKEN:
             self.headers["Authorization"] = f"token {GITHUB_TOKEN}"
@@ -106,7 +109,7 @@ class GitHubAnalyzer:
         max_repos: int = 10
     ) -> Dict[str, Any]:
         """
-        GitHub 프로필을 분석하여 역량 평가
+        GitHub 프로필을 분석하여 역량 평가 (DB 저장 없음)
 
         Args:
             username: GitHub 사용자명
@@ -181,8 +184,8 @@ class GitHubAnalyzer:
                 "github_username": username
             }
 
-        # 5. Gemini API로 분석
-        analysis_result = self.gemini_service.analyze_github_with_competency(
+        # 5. LLM으로 분석
+        analysis_result = self.llm_analyzer.analyze_github_with_competency(
             github_data=github_data,
             role=role,
             competency_matrix=competency_matrix
@@ -202,6 +205,118 @@ class GitHubAnalyzer:
 
         return analysis_result
 
+    def analyze_github_and_save(
+        self,
+        user_id: str,
+        portfolio_id: str,
+        db: Session,
+        role: str = None,
+        level: str = None,
+        max_repos: int = 10
+    ) -> Dict[str, Any]:
+        """
+        GitHub 프로필 분석 및 DB 저장
+
+        Args:
+            user_id: 사용자 ID
+            portfolio_id: 포트폴리오 ID
+            db: 데이터베이스 세션
+            role: 직무 (선택, 기본값: User.role)
+            level: 경력 레벨 (선택, 기본값: User.level)
+            max_repos: 분석할 최대 저장소 개수
+
+        Returns:
+            분석 결과
+        """
+        # 1. DB에서 User, Portfolio 조회
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise ValueError(f"User not found: {user_id}")
+
+        portfolio = db.query(Portfolio).filter(Portfolio.id == portfolio_id).first()
+        if not portfolio:
+            raise ValueError(f"Portfolio not found: {portfolio_id}")
+
+        # 2. GitHub username 확인
+        if not user.github_username:
+            raise ValueError(f"User {user.name}의 github_username이 설정되지 않았습니다.")
+
+        # 3. role, level 기본값 설정
+        if not role:
+            role = user.role
+        if not level:
+            level = user.level
+
+        print(f"[INFO] Analyzing GitHub profile for {user.github_username}...")
+
+        # 4. GitHub 토큰 설정 (User.github_token 우선 사용)
+        if user.github_token:
+            self.headers["Authorization"] = f"token {user.github_token}"
+
+        # 5. GitHub 프로필 분석
+        analysis_result = self.analyze_github_profile(
+            username=user.github_username,
+            role=role,
+            level=level,
+            max_repos=max_repos
+        )
+
+        # 에러 체크
+        if "error" in analysis_result:
+            raise Exception(analysis_result["error"])
+
+        # 6. DB 저장
+        print(f"[INFO] Saving GitHub analysis to database...")
+        self.save_github_analysis_to_db(
+            portfolio=portfolio,
+            analysis=analysis_result,
+            db=db
+        )
+
+        # 7. 결과 반환
+        result = {
+            "portfolio_id": portfolio_id,
+            "user_id": user_id,
+            "role": role,
+            "level": level,
+            **analysis_result
+        }
+
+        return result
+
+    def save_github_analysis_to_db(
+        self,
+        portfolio: Portfolio,
+        analysis: Dict[str, Any],
+        db: Session
+    ):
+        """
+        GitHub 분석 결과를 DB에 저장
+
+        Args:
+            portfolio: Portfolio 객체
+            analysis: GitHub 분석 결과
+            db: 데이터베이스 세션
+        """
+        # 기존 summary 확인
+        existing_summary = {}
+        if portfolio.summary:
+            try:
+                existing_summary = json.loads(portfolio.summary)
+            except json.JSONDecodeError:
+                existing_summary = {}
+
+        # GitHub 분석 결과 추가
+        existing_summary["github_analysis"] = analysis
+
+        # Portfolio 업데이트
+        portfolio.summary = json.dumps(existing_summary, ensure_ascii=False)
+
+        db.commit()
+        db.refresh(portfolio)
+
+        print(f"[SUCCESS] GitHub analysis saved to portfolio {portfolio.id}")
+
 
 # 싱글톤 인스턴스
 github_analyzer = GitHubAnalyzer()
@@ -214,7 +329,7 @@ def analyze_github_profile(
     max_repos: int = 10
 ) -> Dict[str, Any]:
     """
-    GitHub 프로필 분석 함수 (외부에서 직접 호출 가능)
+    GitHub 프로필 분석 함수 (외부에서 직접 호출 가능, DB 저장 없음)
 
     Args:
         username: GitHub 사용자명
@@ -226,3 +341,30 @@ def analyze_github_profile(
         역량 평가 결과 JSON
     """
     return github_analyzer.analyze_github_profile(username, role, level, max_repos)
+
+
+def analyze_github_pipeline(
+    user_id: str,
+    portfolio_id: str,
+    db: Session,
+    role: str = None,
+    level: str = None,
+    max_repos: int = 10
+) -> Dict[str, Any]:
+    """
+    GitHub 분석 파이프라인 (DB 저장 포함, 외부에서 직접 호출 가능)
+
+    Args:
+        user_id: 사용자 ID
+        portfolio_id: 포트폴리오 ID
+        db: 데이터베이스 세션
+        role: 직무 (선택)
+        level: 경력 레벨 (선택)
+        max_repos: 분석할 최대 저장소 개수
+
+    Returns:
+        분석 결과
+    """
+    return github_analyzer.analyze_github_and_save(
+        user_id, portfolio_id, db, role, level, max_repos
+    )

@@ -28,3 +28,12 @@ __pycache__/
 # Logs
 *.log
 temp_img/
+third_party/
+backend/third_party/
+backend/third_party/**
+backend/venv/
+backend/.venv/
+backend/tmp/
+
+# Personal Documentation
+backend/SERVICES_PIPELINE_README.md

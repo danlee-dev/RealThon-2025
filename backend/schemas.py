@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional, List
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
+from typing import Optional, List, Any, Dict
+import json
 from datetime import datetime
 
 
@@ -11,10 +12,38 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    role: Optional[str] = None
+    level: Optional[str] = None
+    github_username: Optional[str] = None
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    role: Optional[str] = None
+    level: Optional[str] = None
+    github_username: Optional[str] = None
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    user_id: Optional[str] = None
+    email: Optional[str] = None
 
 
 class UserResponse(UserBase):
     id: str
+    role: Optional[str] = None
+    level: Optional[str] = None
+    github_username: Optional[str] = None
     created_at: str
 
     model_config = ConfigDict(from_attributes=True)
@@ -56,10 +85,20 @@ class JobPostingCreate(JobPostingBase):
 class JobPostingResponse(JobPostingBase):
     id: str
     user_id: str
-    parsed_skills: Optional[str] = None
+    parsed_skills: Optional[Dict[str, Any]] = None
     created_at: str
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('parsed_skills', mode='before')
+    @classmethod
+    def parse_parsed_skills(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return None
+        return v
 
 
 # InterviewSession Schemas
@@ -70,6 +109,7 @@ class InterviewSessionBase(BaseModel):
 
 
 class InterviewSessionCreate(InterviewSessionBase):
+    job_posting_id: str  # Required for session creation
     status: str = "in_progress"
 
 
@@ -88,6 +128,7 @@ class InterviewQuestionBase(BaseModel):
     text: str
     type: str
     source: str
+    parent_question_id: Optional[str] = None
 
 
 class InterviewQuestionCreate(InterviewQuestionBase):
@@ -282,3 +323,46 @@ class FeedbackResponse(FeedbackBase):
     created_at: str
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# CV Analysis Schemas
+class SkillItem(BaseModel):
+    skill: str
+    reason: str
+
+
+class CVAnalysisResponse(BaseModel):
+    portfolio_id: str
+    user_id: str
+    role: str
+    level: str
+    extracted_text: str
+    possessed_skills: List[str]
+    missing_skills: List[str]
+    strengths: List[SkillItem]
+    weaknesses: List[SkillItem]
+    overall_score: int
+    summary: str
+
+
+# Capability Evaluation Schemas (프론트엔드용)
+class CapabilityData(BaseModel):
+    skill: str  # category.name_en
+    value: float  # score (0-100)
+    skill_ko: Optional[str] = None  # category.name_ko
+
+
+class ImprovementSuggestionData(BaseModel):
+    id: str
+    capability: str  # category.name_en
+    capability_ko: str  # category.name_ko
+    currentScore: float
+    title: str
+    description: str
+    actionItems: List[str]
+
+
+class CapabilityEvaluationResponse(BaseModel):
+    """프론트엔드 스파이더 차트용 API 응답"""
+    capabilities: List[CapabilityData]
+    improvement_suggestions: List[ImprovementSuggestionData]

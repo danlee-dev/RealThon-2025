@@ -1,0 +1,93 @@
+{
+  "name": "김머신",
+  "position": "AI/ML Developer",
+  "experience_years": 0,
+  "skills": [
+    "Python",
+    "Scikit-learn",
+    "TensorFlow",
+    "PyTorch",
+    "NumPy",
+    "Pandas",
+    "Matplotlib",
+    "Seaborn",
+    "Jupyter Notebook",
+    "Git"
+  ],
+  "projects": [
+    {
+      "name": "영화 추천 시스템",
+      "duration": "2개월",
+      "role": "개인 프로젝트",
+      "contribution_rate": 100,
+      "technologies": ["Python", "Pandas", "Scikit-learn", "Flask"],
+      "achievements": [
+        "MovieLens 데이터셋을 활용한 협업 필터링 기반 추천 시스템 구축",
+        "Cosine Similarity를 이용한 유사도 계산",
+        "Flask를 사용한 API 서버 구현",
+        "평균 추천 정확도 78% 달성",
+        "데이터 전처리 및 EDA를 통한 데이터 특성 파악"
+      ]
+    },
+    {
+      "name": "손글씨 숫자 인식 (MNIST)",
+      "duration": "1개월",
+      "role": "개인 프로젝트",
+      "contribution_rate": 100,
+      "technologies": ["Python", "TensorFlow", "Keras"],
+      "achievements": [
+        "CNN 모델을 활용한 손글씨 숫자 분류",
+        "Data Augmentation을 통한 학습 데이터 증강",
+        "모델 최적화 및 하이퍼파라미터 튜닝",
+        "테스트 정확도 98.5% 달성",
+        "과적합 방지를 위한 Dropout, Batch Normalization 적용"
+      ]
+    },
+    {
+      "name": "캐글 타이타닉 생존자 예측",
+      "duration": "1개월",
+      "role": "개인 참여",
+      "contribution_rate": 100,
+      "technologies": ["Python", "Pandas", "Scikit-learn", "XGBoost"],
+      "achievements": [
+        "Kaggle Titanic 데이터셋 분석 및 예측 모델 구축",
+        "Feature Engineering (나이, 성별, 가족 수 등)",
+        "Random Forest, XGBoost 앙상블 모델 사용",
+        "Public Leaderboard Top 30% 달성",
+        "교차 검증을 통한 모델 성능 평가"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "교육 과정",
+      "major": "AI 개발자 양성 과정",
+      "university": "멀티캠퍼스",
+      "graduation_year": 2024
+    }
+  ],
+  "certifications": [
+    {
+      "name": "SQL 개발자 (SQLD)",
+      "year": 2024
+    },
+    {
+      "name": "빅데이터 분석기사 (필기 합격)",
+      "year": 2024
+    }
+  ],
+  "activities": [
+    {
+      "type": "경진대회",
+      "name": "캐글 타이타닉 생존자 예측",
+      "duration": "1개월",
+      "description": "Public Leaderboard Top 30% 달성"
+    },
+    {
+      "type": "관심 분야",
+      "name": "자연어 처리 (NLP) 및 컴퓨터 비전",
+      "duration": "진행 중",
+      "description": "MLOps 및 모델 배포에 관심"
+    }
+  ]
+}
