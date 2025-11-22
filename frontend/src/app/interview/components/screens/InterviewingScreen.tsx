@@ -22,12 +22,12 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
     const [isAudioRecording, setIsAudioRecording] = useState(false);
     const [isVideoRecording, setIsVideoRecording] = useState(false);
     const [showProgress, setShowProgress] = useState(true);
-    const [questions, setQuestions] = useState<string[]>([
+    const effectiveQuestions = (questions && questions.length > 0) ? questions : [
         '자기소개를 해주세요.',
         '이 회사에 지원한 동기는 무엇인가요?',
         '본인의 강점과 약점을 말씀해주세요.',
         '5년 후 자신의 모습은 어떨 것 같나요?'
-    ]);
+    ];
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [audioRecordings, setAudioRecordings] = useState<Blob[][]>([]);
 
@@ -199,7 +199,7 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
     };
 
     // 질문이 없는 경우 처리
-    if (questions.length === 0) {
+    if (effectiveQuestions.length === 0) {
         return (
             <motion.div
                 className="flex-1 flex items-center justify-center"
@@ -233,7 +233,7 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
                 <div className="flex-[2] flex flex-col gap-4 min-h-0">
                     <div className="bg-white rounded-3xl p-6 shadow-sm flex-1 flex flex-col min-h-0 overflow-hidden" style={{ border: '1px solid #E5E5EC' }}>
                         {/* Question and Recording Controls */}
-                        {questions.length > 0 && (
+                        {effectiveQuestions.length > 0 && (
                             <div className="mb-3 p-4 bg-gradient-to-r from-primary/10 to-brand-purple-light/10 border-l-4 border-primary flex-shrink-0" style={{ borderRadius: '0.375rem' }}>
                                 <div className="flex items-center justify-between gap-4">
                                     <div className="flex items-center gap-3">
@@ -241,7 +241,7 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
                                             질문 {currentQuestionIndex + 1} / {questions.length}
                                         </span>
                                         <p className="text-gray-900 font-medium text-sm">
-                                            {questions[currentQuestionIndex]}
+                                            {effectiveQuestions[currentQuestionIndex]}
                                         </p>
                                     </div>
                                     <div className="flex-shrink-0">
@@ -362,7 +362,7 @@ export default function InterviewingScreen({ onEnd, questions, sessionId }: Inte
                         <div className="space-y-2 w-48">
                             <div className="flex justify-between text-xs">
                                 <span className="text-gray-600">현재 질문</span>
-                                <span className="font-semibold">{currentQuestionIndex + 1} / {questions.length}</span>
+                                <span className="font-semibold">{currentQuestionIndex + 1} / {effectiveQuestions.length}</span>
                             </div>
                             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                 <div
