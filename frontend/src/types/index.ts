@@ -60,3 +60,20 @@ export interface AuthResponse {
   user: User;
   tokens: AuthTokens;
 }
+
+// Capability types (for feedback page)
+export interface Capability {
+  skill: string;
+  value: number;
+  [key: string]: string | number;
+}
+
+export interface ImprovementSuggestion {
+  id: string;
+  capability: string;
+  currentScore: number;
+  title: string;
+  description: string;
+  actionItems: string[];
+}
+
