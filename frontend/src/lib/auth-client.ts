@@ -169,3 +169,68 @@ export const portfolioApi = {
         };
     },
 };
+
+// Mock Capability API (simulates backend analysis results)
+export const capabilityApi = {
+    getCapabilities: async (): Promise<ApiResponse<import('@/types').Capability[]>> => {
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+
+        // Mock backend capability analysis results
+        const capabilities = [
+            { skill: 'Professionalism', value: 75 },
+            { skill: 'Attitude', value: 80 },
+            { skill: 'Creativity', value: 65 },
+            { skill: 'Communication', value: 85 },
+            { skill: 'Leadership', value: 60 },
+            { skill: 'Teamwork', value: 75 },
+            { skill: 'Sociability', value: 80 },
+        ];
+
+        return {
+            success: true,
+            data: capabilities
+        };
+    },
+
+    getImprovementSuggestions: async (): Promise<ApiResponse<import('@/types').ImprovementSuggestion[]>> => {
+        await new Promise(resolve => setTimeout(resolve, 800)); // Simulate delay
+
+        // Mock backend improvement suggestions for weak capabilities
+        const suggestions = [
+            {
+                id: 'suggestion_1',
+                capability: 'Leadership',
+                currentScore: 60,
+                title: '리더십 역량 강화 방안',
+                description: '팀을 이끄는 경험이 부족합니다. 작은 프로젝트부터 리드 역할을 맡아보세요.',
+                actionItems: [
+                    '소규모 스터디 그룹이나 프로젝트에서 리더 역할 맡아보기',
+                    '멘토링 프로그램에 참여하여 후배 개발자 지도하기',
+                    '팀 회의에서 적극적으로 의견 제시하고 토론 주도하기',
+                    '리더십 관련 도서 읽기 (예: "The Five Dysfunctions of a Team")',
+                    '온라인 강의로 리더십 스킬 학습하기'
+                ]
+            },
+            {
+                id: 'suggestion_2',
+                capability: 'Creativity',
+                currentScore: 65,
+                title: '창의성 향상 전략',
+                description: '창의적인 문제 해결 능력을 더 발전시킬 필요가 있습니다.',
+                actionItems: [
+                    '다양한 분야의 기술 블로그와 케이스 스터디 읽기',
+                    '해커톤이나 아이디어톤에 참여하여 새로운 솔루션 제안하기',
+                    '기존 프로젝트를 다른 기술 스택으로 재구현해보기',
+                    'UX/UI 디자인 원칙 학습하여 사용자 중심 사고 기르기',
+                    '브레인스토밍 세션에 정기적으로 참여하기'
+                ]
+            }
+        ];
+
+        return {
+            success: true,
+            data: suggestions
+        };
+    },
+};
+
