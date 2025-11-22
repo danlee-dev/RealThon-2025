@@ -31,3 +31,6 @@ temp_img/
 third_party/
 backend/third_party/
 backend/third_party/**
+backend/venv/
+backend/.venv/
+backend/tmp/
