@@ -1,3 +1,31 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #FBFBFB;
+    color: #111111;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .glass-effect {
+    background-color: rgba(251, 251, 251, 0.95);
+    backdrop-filter: blur(12px);
+    border: 2px solid #111111;
+    box-shadow: 0 8px 32px rgb(0 0 0 / 0.15);
+  }
+
+  .neon-border {
+    border: 3px solid #CCFF00;
+    box-shadow: 0 0 20px rgba(204, 255, 0, 0.4), inset 0 0 20px rgba(204, 255, 0, 0.1);
+  }
+
+  .neon-glow {
+    box-shadow: 0 0 30px rgba(204, 255, 0, 0.6), 0 0 60px rgba(204, 255, 0, 0.3);
+  }
+}
