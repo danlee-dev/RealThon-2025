@@ -29,3 +29,5 @@ __pycache__/
 *.log
 temp_img/
 third_party/
+backend/third_party/
+backend/third_party/**

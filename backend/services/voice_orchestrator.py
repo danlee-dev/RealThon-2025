@@ -123,7 +123,8 @@ class VoiceInterviewOrchestrator:
                 text=next_question["text"],
                 type=next_question["question_type"],
                 source="llm" if next_question["question_type"] == "followup" else "predefined",
-                order=next_question["order"]
+                order=next_question["order"],
+                parent_question_id=next_question.get("parent_question_id")
             )
             self.db.add(question)
             next_question["id"] = question.id
@@ -225,7 +226,8 @@ class VoiceInterviewOrchestrator:
             "audio_url": audio_url,
             "type": "question",
             "question_type": "followup",
-            "order": 0  # 꼬리질문은 순서 없음
+            "order": current_question.order if current_question else 0,
+            "parent_question_id": current_question_id
         }
 
     async def _get_next_main_question(
@@ -270,5 +272,6 @@ class VoiceInterviewOrchestrator:
             "audio_url": audio_url,
             "type": "question",
             "question_type": "main",
-            "order": next_question_data["order"]
+            "order": next_question_data["order"],
+            "parent_question_id": None
         }

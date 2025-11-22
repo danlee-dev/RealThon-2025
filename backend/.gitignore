@@ -67,3 +67,6 @@ static/uploads/
 # Test outputs
 tests/*.txt
 extracted_text*.txt
+
+# Third-party model repositories
+third_party/
