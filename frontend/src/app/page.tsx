@@ -113,9 +113,11 @@ export default function Home() {
                       내 정보 관리
                     </Button>
                   </Link>
-                  <Button variant="primary" size="lg" className="shadow-lg shadow-primary/20">
-                    면접 시작하기
-                  </Button>
+                  <Link href="/interview">
+                    <Button variant="primary" size="lg" className="shadow-lg shadow-primary/20">
+                      면접 시작하기
+                    </Button>
+                  </Link>
                 </>
               ) : (
                 <>
