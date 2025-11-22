@@ -8,9 +8,11 @@ import Input from '@/components/Input';
 interface WaitingScreenProps {
     onStart: (jobPostingUrl?: string) => void;
     isLoading?: boolean;
+    isSignLanguageMode: boolean;
+    onSignLanguageModeToggle: () => void;
 }
 
-export default function WaitingScreen({ onStart, isLoading = false }: WaitingScreenProps) {
+export default function WaitingScreen({ onStart, isLoading = false, isSignLanguageMode, onSignLanguageModeToggle }: WaitingScreenProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [cameraReady, setCameraReady] = useState(false);
     const [micReady, setMicReady] = useState(false);
@@ -111,6 +113,25 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
                             <p className="text-base font-semibold text-gray-900">AI 분석</p>
                         </div>
                     </div>
+
+                    {/* Sign Language Toggle */}
+                    <button
+                        onClick={onSignLanguageModeToggle}
+                        className={`w-full flex items-center justify-between px-4 py-3 rounded-xl mb-4 transition-all border ${isSignLanguageMode
+                            ? 'bg-primary/5 border-primary text-primary'
+                            : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+                            }`}
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className={`w-10 h-6 rounded-full transition-colors relative ${isSignLanguageMode ? 'bg-primary' : 'bg-gray-300'}`}>
+                                <div className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${isSignLanguageMode ? 'translate-x-4' : 'translate-x-0'}`} />
+                            </div>
+                            <span className="font-medium">수화 모드</span>
+                        </div>
+                        <span className="text-xs opacity-70">
+                            {isSignLanguageMode ? '수화로 면접을 진행합니다' : '음성으로 면접을 진행합니다'}
+                        </span>
+                    </button>
 
                     {/* Job Posting URL Input */}
                     <div className="mb-4">

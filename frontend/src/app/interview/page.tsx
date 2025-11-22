@@ -14,6 +14,7 @@ import { InterviewQuestion, User } from '@/types';
 
 export default function InterviewPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSignLanguageMode, setIsSignLanguageMode] = useState(false);
   const [currentStage, setCurrentStage] = useState<InterviewStage>(InterviewStage.WAITING);
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
@@ -112,6 +113,8 @@ export default function InterviewPage() {
               key="waiting"
               onStart={handleStartInterview}
               isLoading={isLoadingQuestions}
+              isSignLanguageMode={isSignLanguageMode}
+              onSignLanguageModeToggle={() => setIsSignLanguageMode(!isSignLanguageMode)}
             />
           )}
           {currentStage === InterviewStage.INTERVIEWING && (
@@ -128,6 +131,7 @@ export default function InterviewPage() {
               onComplete={handleAnalysisComplete}
               videoId={videoId || undefined}
               sessionId={sessionId || undefined}
+              isSignLanguageMode={isSignLanguageMode}
             />
           )}
           {currentStage === InterviewStage.COMPLETE && analysisResults && (

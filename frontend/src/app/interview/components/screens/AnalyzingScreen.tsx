@@ -10,9 +10,10 @@ interface AnalyzingScreenProps {
     onComplete: (results: AnalysisResults) => void;
     videoId?: string;
     sessionId?: string;
+    isSignLanguageMode?: boolean;
 }
 
-export default function AnalyzingScreen({ onComplete, videoId, sessionId }: AnalyzingScreenProps) {
+export default function AnalyzingScreen({ onComplete, videoId, sessionId, isSignLanguageMode = false }: AnalyzingScreenProps) {
     const [status, setStatus] = useState<string>('initializing'); // initializing, analyzing, polling, completed, error
     const [error, setError] = useState<string | null>(null);
     const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -222,11 +223,13 @@ export default function AnalyzingScreen({ onComplete, videoId, sessionId }: Anal
                                                 <Lightbulb className="w-10 h-10 animate-pulse" />
                                             </div>
                                         </div>
-                                        <h3 className="text-2xl font-bold mb-2">AI가 면접을 분석하고 있습니다</h3>
+                                        <h3 className="text-2xl font-bold mb-2">
+                                            {isSignLanguageMode ? 'AI가 수화 면접을 분석하고 있습니다' : 'AI가 면접을 분석하고 있습니다'}
+                                        </h3>
                                         <p className="text-white/80 mb-8">
                                             {status === 'initializing' && '분석을 준비하고 있습니다...'}
                                             {status === 'analyzing' && '영상을 분석 서버로 전송 중입니다...'}
-                                            {status === 'polling' && 'AI가 답변 내용을 분석하고 피드백을 생성 중입니다...'}
+                                            {status === 'polling' && (isSignLanguageMode ? 'AI가 수화 동작을 분석하고 피드백을 생성 중입니다...' : 'AI가 답변 내용을 분석하고 피드백을 생성 중입니다...')}
                                             {status === 'completed' && '분석이 완료되었습니다!'}
                                         </p>
                                     </>
