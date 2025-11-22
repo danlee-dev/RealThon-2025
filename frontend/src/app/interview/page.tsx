@@ -139,7 +139,11 @@ export default function InterviewPage() {
             />
           )}
           {currentStage === InterviewStage.COMPLETE && analysisResults && (
-            <CompleteScreen key="complete" analysisResults={analysisResults} />
+            <CompleteScreen
+              key="complete"
+              analysisResults={analysisResults}
+              questionText={questions.find(q => q.id === analysisResults.detailedResult?.video.question_id)?.text}
+            />
           )}
         </AnimatePresence>
       </div>
