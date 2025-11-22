@@ -1,0 +1,52 @@
+.inputWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: hsl(var(--foreground));
+}
+
+.input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid hsl(var(--border));
+    background-color: hsl(var(--surface));
+    color: hsl(var(--foreground));
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.input:focus {
+    border-color: hsl(var(--primary));
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.1);
+}
+
+.input::placeholder {
+    color: hsl(var(--muted-foreground));
+}
+
+.input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: hsl(var(--muted));
+}
+
+.error {
+    border-color: hsl(var(--error));
+}
+
+.error:focus {
+    box-shadow: 0 0 0 2px hsl(var(--error) / 0.1);
+}
+
+.errorText {
+    color: hsl(var(--error));
+    font-size: 0.875rem;
+    margin-top: 0.375rem;
+}
