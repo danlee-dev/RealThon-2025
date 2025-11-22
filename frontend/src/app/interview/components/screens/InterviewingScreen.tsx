@@ -6,6 +6,24 @@ import { Mic, Volume2, PhoneOff, Video, Settings, X } from 'lucide-react';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
+// 수화 모드 하드코딩 질문
+const SIGN_LANGUAGE_QUESTIONS = [
+    {
+        id: 'sign-q1',
+        text: '안녕하세요 면접자님. 자기소개부터 해주세요',
+        order: 0,
+        type: 'main',
+        source: 'hardcoded'
+    },
+    {
+        id: 'sign-q2',
+        text: '교육 분야에 관심이 많다고 하셨는데 AI 개발자로 꿈을 키우신 이유가 궁금합니다.',
+        order: 1,
+        type: 'followup',
+        source: 'hardcoded'
+    }
+];
+
 interface Question {
     id: string;
     text: string;
@@ -18,16 +36,22 @@ interface InterviewingScreenProps {
     onEnd: () => void;
     questions: Question[];
     sessionId: string;
+    isSignLanguageMode: boolean;
 }
 
-export default function InterviewingScreen({ onEnd, questions: initialQuestions, sessionId }: InterviewingScreenProps) {
+export default function InterviewingScreen({ onEnd, questions: initialQuestions, sessionId, isSignLanguageMode }: InterviewingScreenProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const audioRecorderRef = useRef<MediaRecorder | null>(null);
+    const isFetchingTTSRef = useRef(false); // TTS 중복 호출 방지
+    const videoRecorderRef = useRef<MediaRecorder | null>(null); // 수화 모드용 비디오 녹화
     const [volume, setVolume] = useState(75);
     const [isRecording, setIsRecording] = useState(false);
     const [showProgress, setShowProgress] = useState(true);
-    const [questions, setQuestions] = useState<Question[]>(initialQuestions);
+    // 수화 모드일 때는 하드코딩된 질문 사용
+    const [questions, setQuestions] = useState<Question[]>(
+        isSignLanguageMode ? [SIGN_LANGUAGE_QUESTIONS[0]] : initialQuestions
+    );
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [isLoadingTTS, setIsLoadingTTS] = useState(false);
     const [isProcessingAnswer, setIsProcessingAnswer] = useState(false);
@@ -60,12 +84,25 @@ export default function InterviewingScreen({ onEnd, questions: initialQuestions,
         };
     }, []);
 
-    // TTS: 질문이 바뀔 때마다 음성 재생
+    // TTS: 질문이 바뀔 때마다 음성 재생 (수화 모드가 아닐 때만)
     useEffect(() => {
+        // 수화 모드에서는 TTS 비활성화
+        if (isSignLanguageMode) {
+            console.log('[TTS] Sign language mode enabled, skipping TTS');
+            return;
+        }
+
+        // React 18 Strict Mode 중복 호출 방지
+        if (isFetchingTTSRef.current) {
+            console.log('[TTS] Already fetching, skipping duplicate call');
+            return;
+        }
+
         const playQuestionAudio = async () => {
             if (questions.length === 0 || currentQuestionIndex >= questions.length) return;
 
             const currentQuestion = questions[currentQuestionIndex];
+            isFetchingTTSRef.current = true;
             setIsLoadingTTS(true);
 
             try {
@@ -102,17 +139,71 @@ export default function InterviewingScreen({ onEnd, questions: initialQuestions,
                 console.error('[TTS] Error:', error);
             } finally {
                 setIsLoadingTTS(false);
+                isFetchingTTSRef.current = false;
             }
         };
 
         playQuestionAudio();
-    }, [currentQuestionIndex, questions, volume]);
+
+        // cleanup: 오디오 중지
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+            isFetchingTTSRef.current = false;
+        };
+    }, [currentQuestionIndex, questions, volume, isSignLanguageMode]);
 
     // 음성 녹음 시작
     const startAudioRecording = () => {
         if (!videoRef.current?.srcObject) return;
 
         const stream = videoRef.current.srcObject as MediaStream;
+
+        // 수화 모드: 비디오 녹화
+        if (isSignLanguageMode) {
+            const videoRecorder = new MediaRecorder(stream, {
+                mimeType: 'video/webm'
+            });
+
+            const chunks: Blob[] = [];
+
+            videoRecorder.ondataavailable = (event) => {
+                if (event.data.size > 0) {
+                    chunks.push(event.data);
+                }
+            };
+
+            videoRecorder.onstop = async () => {
+                console.log('[SIGN LANGUAGE] Processing video answer...');
+
+                // 수화 모드: 백엔드 호출 없이 하드코딩된 로직
+                const newAnswerCount = answerCount + 1;
+                setAnswerCount(newAnswerCount);
+
+                // 첫 번째 답변 후 꼬리 질문 추가
+                if (newAnswerCount === 1) {
+                    console.log('[SIGN LANGUAGE] Adding hardcoded followup question');
+                    setQuestions(prev => [...prev, SIGN_LANGUAGE_QUESTIONS[1]]);
+                    setCurrentQuestionIndex(1);
+                } else {
+                    // 두 번째 답변 후 종료
+                    console.log('[SIGN LANGUAGE] Interview complete');
+                    setTimeout(() => {
+                        onEnd();
+                    }, 1000);
+                }
+            };
+
+            videoRecorderRef.current = videoRecorder;
+            videoRecorder.start();
+            setIsRecording(true);
+            console.log('[SIGN RECORDING] Started');
+            return;
+        }
+
+        // 일반 모드: 음성 녹음
         const audioStream = new MediaStream(stream.getAudioTracks());
 
         const audioRecorder = new MediaRecorder(audioStream, {
@@ -233,10 +324,20 @@ export default function InterviewingScreen({ onEnd, questions: initialQuestions,
 
     // 음성 녹음 중지
     const stopAudioRecording = () => {
-        if (audioRecorderRef.current && isRecording) {
-            audioRecorderRef.current.stop();
-            setIsRecording(false);
-            console.log('[RECORDING] Stopped');
+        if (isSignLanguageMode) {
+            // 수화 모드: 비디오 녹화 중지
+            if (videoRecorderRef.current && isRecording) {
+                videoRecorderRef.current.stop();
+                setIsRecording(false);
+                console.log('[SIGN RECORDING] Stopped');
+            }
+        } else {
+            // 일반 모드: 음성 녹음 중지
+            if (audioRecorderRef.current && isRecording) {
+                audioRecorderRef.current.stop();
+                setIsRecording(false);
+                console.log('[RECORDING] Stopped');
+            }
         }
     };
 
@@ -281,11 +382,13 @@ export default function InterviewingScreen({ onEnd, questions: initialQuestions,
                             <div className="flex items-center justify-between gap-4">
                                 <div className="flex items-center gap-3">
                                     <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded whitespace-nowrap">
-                                        질문 {currentQuestionIndex + 1} / {questions.length}
+                                        {isSignLanguageMode
+                                            ? `질문 ${currentQuestionIndex === 0 ? '1/3' : '2/4'}`
+                                            : `질문 ${currentQuestionIndex + 1} / ${questions.length}`}
                                     </span>
                                     <p className="text-gray-900 font-medium text-sm">
                                         {currentQuestion.text}
-                                        {isLoadingTTS && <span className="ml-2 text-xs text-gray-500">(음성 로딩 중...)</span>}
+                                        {!isSignLanguageMode && isLoadingTTS && <span className="ml-2 text-xs text-gray-500">(음성 로딩 중...)</span>}
                                     </p>
                                 </div>
                                 <div className="flex-shrink-0">
@@ -296,8 +399,17 @@ export default function InterviewingScreen({ onEnd, questions: initialQuestions,
                                             className="px-4 py-2 bg-primary text-white hover:bg-brand-purple transition-colors flex items-center gap-2 shadow-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                             style={{ borderRadius: '0.375rem' }}
                                         >
-                                            <Mic className="w-4 h-4" />
-                                            <span>녹음 시작</span>
+                                            {isSignLanguageMode ? (
+                                                <>
+                                                    <span className="text-lg">🤟</span>
+                                                    <span>수화 녹화</span>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Mic className="w-4 h-4" />
+                                                    <span>녹음 시작</span>
+                                                </>
+                                            )}
                                         </button>
                                     ) : (
                                         <button
@@ -343,29 +455,31 @@ export default function InterviewingScreen({ onEnd, questions: initialQuestions,
                                 />
                             </motion.div>
 
-                            {/* Volume Slider */}
-                            <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
-                                <div className="bg-gray-800/80 backdrop-blur-sm rounded-full p-3 shadow-lg">
-                                    <Volume2 className="w-5 h-5 text-white" />
-                                </div>
-                                <div
-                                    className="relative h-32 w-6 bg-gray-700 rounded-full overflow-hidden cursor-pointer"
-                                    onClick={(e) => {
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        const y = e.clientY - rect.top;
-                                        const newVolume = Math.max(0, Math.min(100, 100 - (y / rect.height) * 100));
-                                        setVolume(Math.round(newVolume));
-                                        if (audioRef.current) {
-                                            audioRef.current.volume = newVolume / 100;
-                                        }
-                                    }}
-                                >
+                            {/* Volume Slider - 수화 모드에서는 숨김 */}
+                            {!isSignLanguageMode && (
+                                <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
+                                    <div className="bg-gray-800/80 backdrop-blur-sm rounded-full p-3 shadow-lg">
+                                        <Volume2 className="w-5 h-5 text-white" />
+                                    </div>
                                     <div
-                                        className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-brand-purple-light rounded-full transition-all duration-150"
-                                        style={{ height: `${volume}%` }}
-                                    ></div>
+                                        className="relative h-32 w-6 bg-gray-700 rounded-full overflow-hidden cursor-pointer"
+                                        onClick={(e) => {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            const y = e.clientY - rect.top;
+                                            const newVolume = Math.max(0, Math.min(100, 100 - (y / rect.height) * 100));
+                                            setVolume(Math.round(newVolume));
+                                            if (audioRef.current) {
+                                                audioRef.current.volume = newVolume / 100;
+                                            }
+                                        }}
+                                    >
+                                        <div
+                                            className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-brand-purple-light rounded-full transition-all duration-150"
+                                            style={{ height: `${volume}%` }}
+                                        ></div>
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {/* Controls */}
                             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4">
@@ -414,12 +528,20 @@ export default function InterviewingScreen({ onEnd, questions: initialQuestions,
                         <div className="space-y-2 w-48">
                             <div className="flex justify-between text-xs">
                                 <span className="text-gray-600">현재 질문</span>
-                                <span className="font-semibold">{currentQuestionIndex + 1} / {questions.length}</span>
+                                <span className="font-semibold">
+                                    {isSignLanguageMode
+                                        ? (currentQuestionIndex === 0 ? '1/3' : '2/4')
+                                        : `${currentQuestionIndex + 1} / ${questions.length}`}
+                                </span>
                             </div>
                             <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-primary rounded-full transition-all"
-                                    style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}
+                                    style={{
+                                        width: isSignLanguageMode
+                                            ? `${currentQuestionIndex === 0 ? 33 : 50}%`
+                                            : `${((currentQuestionIndex + 1) / questions.length) * 100}%`
+                                    }}
                                 ></div>
                             </div>
                         </div>

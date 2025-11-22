@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -9,7 +9,7 @@ import InterviewingScreen from './components/screens/InterviewingScreen';
 import AnalyzingScreen from './components/screens/AnalyzingScreen';
 import CompleteScreen from './components/screens/CompleteScreen';
 import { InterviewStage, AnalysisResults } from './types';
-import { interviewApi, jobPostingApi } from '@/lib/auth-client';
+import { interviewApi, jobPostingApi, profileApi } from '@/lib/auth-client';
 
 export default function InterviewPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -19,6 +19,18 @@ export default function InterviewPage() {
   const [questions, setQuestions] = useState<any[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [userRole, setUserRole] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    // Load user profile to get role
+    const loadUserProfile = async () => {
+      const response = await profileApi.getProfile();
+      if (response.success && response.data) {
+        setUserRole(response.data.role);
+      }
+    };
+    loadUserProfile();
+  }, []);
 
   const handleStartInterview = async (jobPostingUrl?: string) => {
     console.log('[DEBUG] Starting interview, creating session and loading questions');
@@ -104,7 +116,7 @@ export default function InterviewPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden bg-white relative z-10">
         {/* Header */}
-        <Header stage={currentStage} />
+        <Header stage={currentStage} userRole={userRole} />
 
         {/* Content Area - Different screens based on stage */}
         <AnimatePresence mode="wait">
@@ -113,6 +125,7 @@ export default function InterviewPage() {
               key="waiting"
               onStart={handleStartInterview}
               isLoading={isLoadingQuestions}
+              isSignLanguageMode={isSignLanguageMode}
             />
           )}
           {currentStage === InterviewStage.INTERVIEWING && (
@@ -121,6 +134,7 @@ export default function InterviewPage() {
               onEnd={handleEndInterview}
               questions={questions}
               sessionId={sessionId || ''}
+              isSignLanguageMode={isSignLanguageMode}
             />
           )}
           {currentStage === InterviewStage.ANALYZING && (

@@ -2,18 +2,21 @@
 
 import { ChevronLeft } from 'lucide-react';
 import { InterviewStage } from '../../types';
+import { JOB_ROLE_TO_LABEL } from '@/constants/jobs';
 
 interface HeaderProps {
     stage: InterviewStage;
+    userRole?: string;
 }
 
-export default function Header({ stage }: HeaderProps) {
+export default function Header({ stage, userRole }: HeaderProps) {
     const getStageTitle = () => {
         switch (stage) {
             case InterviewStage.WAITING:
                 return '면접 준비';
             case InterviewStage.INTERVIEWING:
-                return 'Interview for UI/UX Designer';
+                const roleLabel = userRole ? JOB_ROLE_TO_LABEL[userRole] : 'Developer';
+                return `Interview for ${roleLabel}`;
             case InterviewStage.ANALYZING:
                 return '면접 분석 중...';
             case InterviewStage.COMPLETE:

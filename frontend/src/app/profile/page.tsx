@@ -43,8 +43,8 @@ export default function ProfilePage() {
             if (profileResponse.success && profileResponse.data) {
                 setUser(profileResponse.data);
                 // Convert role to display label
-                const displayJobTitle = profileResponse.data.jobTitle 
-                    ? JOB_ROLE_TO_LABEL[profileResponse.data.jobTitle] 
+                const displayJobTitle = profileResponse.data.role
+                    ? JOB_ROLE_TO_LABEL[profileResponse.data.role]
                     : '';
                 setFormData({
                     name: profileResponse.data.name || '',
@@ -74,10 +74,10 @@ export default function ProfilePage() {
         try {
             // Map display label to role
             const role = JOB_LABEL_TO_ROLE[formData.jobTitle];
-            
+
             const response = await profileApi.updateProfile({
                 name: formData.name,
-                jobTitle: role,
+                role: role,  // Send as 'role' to match backend
             });
 
             if (response.success && response.data) {
@@ -166,8 +166,8 @@ export default function ProfilePage() {
                                 {user?.name || '사용자'}
                             </h1>
                             <p className="text-muted-foreground">
-                                {user?.jobTitle 
-                                    ? JOB_ROLE_TO_LABEL[user.jobTitle] 
+                                {user?.role
+                                    ? JOB_ROLE_TO_LABEL[user.role]
                                     : '직무 미설정'}
                             </p>
                         </div>
