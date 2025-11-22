@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, Video, Play } from 'lucide-react';
+import Input from '@/components/Input';
 
 interface WaitingScreenProps {
-    onStart: () => void;
+    onStart: (jobPostingUrl?: string) => void;
     isLoading?: boolean;
 }
 
@@ -13,6 +14,7 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
     const videoRef = useRef<HTMLVideoElement>(null);
     const [cameraReady, setCameraReady] = useState(false);
     const [micReady, setMicReady] = useState(false);
+    const [jobPostingUrl, setJobPostingUrl] = useState('');
 
     useEffect(() => {
         const startCamera = async () => {
@@ -44,7 +46,7 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
 
     const handleStartClick = () => {
         console.log('[WaitingScreen] 면접 시작 버튼 클릭됨');
-        onStart();
+        onStart(jobPostingUrl.trim() || undefined);
     };
 
     return (
@@ -110,10 +112,25 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
                         </div>
                     </div>
 
+                    {/* Job Posting URL Input */}
+                    <div className="mb-4">
+                        <Input
+                            label="취업 공고 URL"
+                            placeholder="https://example.com/job-posting"
+                            value={jobPostingUrl}
+                            onChange={(e) => setJobPostingUrl(e.target.value)}
+                            type="url"
+                            required
+                        />
+                        <p className="text-xs text-gray-500 mt-1.5 ml-1">
+                            공고 URL을 입력하여 맞춤형 면접 질문을 받으세요.
+                        </p>
+                    </div>
+
                     {/* Start Button */}
                     <button
                         onClick={handleStartClick}
-                        disabled={!cameraReady || !micReady || isLoading}
+                        disabled={!cameraReady || !micReady || !jobPostingUrl.trim() || isLoading}
                         type="button"
                         className="w-full py-3 bg-primary hover:bg-brand-purple text-white rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >

@@ -256,13 +256,56 @@ export const portfolioApi = {
     },
 };
 
-// Interview API
-export const interviewApi = {
-    createSession: async (jobPostingId?: string): Promise<ApiResponse<InterviewSession>> => {
-        return apiCall<InterviewSession>('/api/interviews/sessions', {
+
+// Job Posting API
+export const jobPostingApi = {
+    submitJobPosting: async (url: string): Promise<ApiResponse<{ id: string }>> => {
+        // First, get the current user to obtain user_id
+        const userResponse = await apiCall<User>('/api/users/me', {
+            method: 'GET',
+        });
+
+        if (!userResponse.success || !userResponse.data) {
+            return {
+                success: false,
+                error: 'Failed to get user information',
+            };
+        }
+
+        const userId = userResponse.data.id;
+
+        // Submit job posting URL for crawling
+        return apiCall<{ id: string }>(`/api/job-postings/crawl?user_id=${userId}`, {
             method: 'POST',
             body: JSON.stringify({
-                job_posting_id: jobPostingId || null
+                url: url
+            }),
+        });
+    },
+};
+
+// Interview API
+export const interviewApi = {
+    createSession: async (jobPostingId: string): Promise<ApiResponse<InterviewSession>> => {
+        // Get the current user to obtain user_id
+        const userResponse = await apiCall<User>('/api/users/me', {
+            method: 'GET',
+        });
+
+        if (!userResponse.success || !userResponse.data) {
+            return {
+                success: false,
+                error: 'Failed to get user information',
+            };
+        }
+
+        const userId = userResponse.data.id;
+
+        // Create interview session with job_posting_id (required)
+        return apiCall<InterviewSession>(`/api/interviews/sessions?user_id=${userId}`, {
+            method: 'POST',
+            body: JSON.stringify({
+                job_posting_id: jobPostingId
             }),
         });
     },
