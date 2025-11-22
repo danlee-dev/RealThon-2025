@@ -143,6 +143,7 @@ class NonverbalMetrics(Base):
     center_gaze_ratio = Column(Float)
     smile_ratio = Column(Float)
     nod_count = Column(Integer)
+    nod_rate_per_min = Column(Float)  # NEW: normalized nod rate
     wpm = Column(Float)
     filler_count = Column(Integer)
     primary_emotion = Column(String)

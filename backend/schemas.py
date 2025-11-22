@@ -143,30 +143,92 @@ class InterviewTranscriptResponse(InterviewTranscriptBase):
 
 
 # NonverbalMetrics Schemas
+class ThresholdConfig(BaseModel):
+    """Threshold configuration with formula and actual value"""
+    type: Optional[str] = None  # e.g., "adaptive", "fixed"
+    formula: Optional[str] = None  # e.g., "mean + 0.5*std"
+    value: Optional[float] = None  # actual computed value
+
+
+class GazeConfig(BaseModel):
+    """Gaze detection configuration"""
+    method: str  # e.g., "mediapipe_center + iris_yaw_check"
+    center_range_deg: Optional[list] = None  # e.g., [-15, 15]
+
+
+class PoseOutlierThresholds(BaseModel):
+    """Head pose outlier detection thresholds"""
+    yaw: float
+    pitch: float
+    roll: float
+
+
+class ThresholdsMetadata(BaseModel):
+    """All thresholds used for metric computation"""
+    smile_threshold: ThresholdConfig
+    gaze: GazeConfig
+    nod_pitch_delta_threshold: float
+    nod_min_interval_sec: Optional[float] = None  # minimum interval between nods
+    pose_outlier_thresholds: PoseOutlierThresholds
+
+
+class ModelConfig(BaseModel):
+    """Model configuration with versions"""
+    vision_model: str
+    vision_version: Optional[str] = None
+    vision_config: dict
+    emotion_model: str
+    emotion_version: Optional[str] = None
+    stt_model: str
+    stt_version: str
+
+
+class ConfidenceMetrics(BaseModel):
+    """Confidence and quality metrics"""
+    valid_frame_ratio: float
+    face_presence_mean: Optional[float] = None
+    face_presence_std: Optional[float] = None
+    landmark_confidence_mean: Optional[float] = None
+    landmark_confidence_std: Optional[float] = None
+    gaze_confidence_mean: Optional[float] = None
+    gaze_confidence_std: Optional[float] = None
+    emotion_confidence_mean: Optional[float] = None
+    emotion_confidence_std: Optional[float] = None
+
+
+class OutlierFlags(BaseModel):
+    """Outlier detection results"""
+    pose_outlier_ratio: float
+    pose_outlier_rule: str
+
+
 class MetricsMetadata(BaseModel):
-    """Computation metadata for metrics transparency and debugging"""
-    # Frame analysis metadata
-    fps_analyzed: Optional[float] = None
-    frame_count_total: Optional[int] = None
-    frame_count_valid: Optional[int] = None
+    """Computation metadata for reproducibility and debugging"""
+    # Frame analysis info
+    fps_analyzed: float
+    duration_sec: float
+    frame_count_total: int  # actual frames extracted
+    frame_count_valid: int  # frames with successful analysis
+    frame_count_expected: int  # expected frames (duration * fps)
     
-    # Thresholds used
-    thresholds: Optional[dict] = None  # e.g., {"smile_threshold": 0.5, "gaze_center_range": [0.35, 0.65], ...}
+    # Computation thresholds and rules
+    thresholds: ThresholdsMetadata
     
     # Models and versions
-    models: Optional[dict] = None  # e.g., {"vision_model": "MediaPipe FaceMesh", "stt_model": "whisper-base", ...}
+    models: ModelConfig
     
-    # Confidence scores
-    confidence: Optional[dict] = None  # e.g., {"gaze_confidence_mean": 0.95, ...}
+    # Confidence and quality metrics
+    confidence: ConfidenceMetrics
     
     # Outlier detection
-    outlier_flags: Optional[dict] = None  # e.g., {"pose_outlier_ratio": 0.02, ...}
+    outlier_flags: OutlierFlags
 
 
 class NonverbalMetricsBase(BaseModel):
     center_gaze_ratio: Optional[float] = None
     smile_ratio: Optional[float] = None
     nod_count: Optional[int] = None
+    nod_rate_per_min: Optional[float] = None  # NEW: normalized nod rate
     wpm: Optional[float] = None
     filler_count: Optional[int] = None
     primary_emotion: Optional[str] = None

@@ -217,18 +217,24 @@ def analyze_interview(video_id: str, db: Session = Depends(get_db)):
         
         # Nod pitch threshold
         NOD_PITCH_THRESHOLD = 8.0
+        nod_count_val = nod_count(timeline, pitch_thresh_deg=NOD_PITCH_THRESHOLD)
+        
+        # NEW: Calculate nod_rate_per_min (normalized)
+        duration_min = duration_sec / 60.0
+        nod_rate_per_min = nod_count_val / duration_min if duration_min > 0 else 0.0
         
         metrics = {
             "center_gaze_ratio": center_gaze_ratio(timeline),
             "smile_ratio": smile_ratio_val,
-            "nod_count": nod_count(timeline, pitch_thresh_deg=NOD_PITCH_THRESHOLD),
+            "nod_count": nod_count_val,
+            "nod_rate_per_min": nod_rate_per_min,  # NEW
             "emotion_distribution": emotion_dist,
             "primary_emotion": primary_emo,
             "wpm": compute_wpm(text, duration_sec),
             "filler_count": compute_filler_count(text),
         }
         
-        # 5.5. 메타데이터 계산
+        # 5.5. 메타데이터 계산 (재현 가능성을 위한 구조화)
         print("📋 Computing metadata...")
         metadata = compute_metadata(
             timeline=timeline,
@@ -273,16 +279,17 @@ def analyze_interview(video_id: str, db: Session = Depends(get_db)):
         )
         db.add(transcript_record)
         
-        # 7-2. NonverbalMetrics 저장 (with metadata)
+        # 7-2. NonverbalMetrics 저장 (with metadata and nod_rate_per_min)
         metrics_record = NonverbalMetrics(
             video_id=video_id,
             center_gaze_ratio=metrics["center_gaze_ratio"],
             smile_ratio=metrics["smile_ratio"],
             nod_count=metrics["nod_count"],
+            nod_rate_per_min=metrics["nod_rate_per_min"],  # NEW
             wpm=metrics["wpm"],
             filler_count=metrics["filler_count"],
             primary_emotion=primary_emo,
-            metadata_json=json.dumps(metadata, ensure_ascii=False)  # Store metadata as JSON
+            metadata_json=json.dumps(metadata, ensure_ascii=False)  # Structured metadata
         )
         db.add(metrics_record)
         
@@ -416,12 +423,13 @@ def get_analysis_results(video_id: str, db: Session = Depends(get_db)):
             "center_gaze_ratio": metrics.center_gaze_ratio if metrics else None,
             "smile_ratio": metrics.smile_ratio if metrics else None,
             "nod_count": metrics.nod_count if metrics else None,
+            "nod_rate_per_min": metrics.nod_rate_per_min if metrics else None,  # NEW
             "wpm": metrics.wpm if metrics else None,
             "filler_count": metrics.filler_count if metrics else None,
             "primary_emotion": primary_emo,
-            "emotion_distribution": emotion_dist,
-            "metadata": metadata_dict  # Include computation metadata
+            "emotion_distribution": emotion_dist
         } if metrics else None,
+        "metadata": metadata_dict,  # NEW: metadata moved to top level for clarity
         "feedbacks": [
             {
                 "id": f.id,

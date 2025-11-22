@@ -267,106 +267,142 @@ GET /api/video/results/{video_id}
     
     "center_gaze_ratio": 0.93,
     // 🎯 의미: 전체 유효 프레임 중 카메라를 정면으로 응시한 비율 (0.0 ~ 1.0)
-    // 📊 평가: 0.7 이상 = 우수 (신뢰감, 자신감 전달)
-    //         0.5~0.7 = 보통 (개선 여지)
-    //         0.5 미만 = 개선 필요 (불안정한 인상)
-    // 💡 활용: 아이 컨택 능력 평가, 면접 준비도 측정
+    // 🔧 계산: valid 프레임 중 gaze=="CENTER"인 프레임 수 / 전체 valid 프레임 수
     
     "smile_ratio": 0.35,
     // 🎯 의미: 미소 점수가 임계값을 넘은 프레임의 비율 (0.0 ~ 1.0)
-    // 📊 평가: 0.25~0.5 = 자연스러움 (친근하고 긍정적 인상)
-    //         0.1~0.25 = 다소 부족 (표정 경직 가능성)
-    //         0.5 이상 = 과도 (부자연스러울 수 있음)
-    // 💡 활용: 표정 관리 능력, 친화력 평가
     // 🔧 계산: 적응형 임계값 (mean + 0.5*std) 사용하여 개인별 최적화
+    //         실제 임계값은 metadata.thresholds.smile_threshold에 기록
     
     "nod_count": 1,
     // 🎯 의미: 비디오 전체에서 감지된 고개 끄덕임 횟수 (정수)
-    // 📊 평가: 1~3회 = 적절함 (경청과 공감 표현)
-    //         0회 = 부족 (무반응으로 보일 수 있음)
-    //         4회 이상 = 과다 (산만한 인상)
-    // 💡 활용: 경청 자세, 비언어 소통 능력 평가
     // 🔧 계산: pitch 각도 변화를 평활화하여 8도 이상 변동 시 끄덕임으로 감지
+    //         알고리즘: EMA smoothing (alpha=0.2) + peak detection
+    
+    "nod_rate_per_min": 1.72,
+    // 🎯 의미: 분당 끄덕임 횟수 (nod_count / duration_min)
+    // 🔧 계산: 영상 길이에 따른 정규화된 지표
+    //         비교 가능성을 위해 추가
     
     "wpm": 119.1,
     // 🎯 의미: Words Per Minute - 분당 단어 수 (평균 말하기 속도)
-    // 📊 평가: 140~180 = 이상적 (명확하고 안정적인 템포)
-    //         120~140 = 다소 느림 (신중하지만 답답할 수 있음)
-    //         100 미만 = 매우 느림 (준비 부족으로 보일 수 있음)
-    //         180~200 = 다소 빠름 (긴장감 전달 가능)
-    //         200 이상 = 매우 빠름 (이해 어려움)
-    // 💡 활용: 발표 능력, 긴장도 측정
     // 🔧 계산: 전사된 텍스트의 단어 수 / (비디오 길이 / 60)
+    //         한국어의 경우 공백 기준 단어 분리
     
     "filler_count": 4,
     // 🎯 의미: 불필요한 채움말 사용 횟수 (음, 어, 그, uh, um, like 등)
-    // 📊 평가: 0~5회 = 우수 (유창하고 자신감 있는 답변)
-    //         6~10회 = 보통 (약간의 망설임)
-    //         11회 이상 = 개선 필요 (준비 부족 또는 긴장)
-    // 💡 활용: 답변 유창성, 준비도, 긴장도 평가
     // 🔧 계산: 정규식으로 한국어/영어 채움말 패턴 매칭 및 카운트
+    //         패턴 리스트: ["음", "어", "그", "저", "아", "뭐", "막", "uh", "um", "like", "you know"]
     
     "primary_emotion": "happy",
     // 🎯 의미: 전체 비디오에서 가장 많이 표현된 감정 (카테고리)
-    // 📊 감정 종류: 
-    //    - "happy": 행복/즐거움 (넓은 미소, 밝은 표정)
-    //    - "pleasant": 유쾌함/만족 (미소, 편안한 표정)
-    //    - "neutral": 중립 (무표정, 집중)
-    //    - "focused": 집중 (약간의 긴장, 진지함)
-    //    - "concerned": 우려/걱정 (미간 찌푸림, 긴장)
-    // 💡 활용: 전반적 감정 상태, 면접 태도 평가
+    // 감정 종류: "happy", "pleasant", "neutral", "focused", "concerned"
     // 🔧 계산: MediaPipe Blendshapes 기반 또는 기하학적 특징 기반 감정 분류
+    //         emotion_distribution에서 최빈값 선택
     
     "emotion_distribution": {
       "happy": 0.59,         // 59%의 프레임에서 행복한 표정
       "pleasant": 0.32,      // 32%의 프레임에서 유쾌한 표정
       "neutral": 0.06,       // 6%의 프레임에서 중립 표정
       "concerned": 0.02      // 2%의 프레임에서 우려 표정
-    },
+    }
     // 🎯 의미: 각 감정이 차지하는 비율 (합계 = 1.0)
-    // 📊 이상적 패턴: pleasant/happy 합산 50~70% (긍정적이지만 자연스러움)
-    //                neutral 20~30% (진지함과 집중력)
-    //                concerned 10% 미만 (과도한 긴장 방지)
-    // 💡 활용: 감정 안정성, 표정 다양성, 면접 태도 분석
+    // 🔧 계산: 각 프레임의 emotion 필드를 집계하여 비율 산출
     
-    // === 계산 메타데이터 (투명성 및 디버깅용) ===
+    // === 계산 메타데이터 (재현 가능성 및 디버깅용) ===
     "metadata": {
       // 프레임 분석 정보
       "fps_analyzed": 5.0,
       // 🎯 의미: 비디오에서 초당 추출/분석한 프레임 수
-      // 💡 활용: 분석 정밀도 파악 (5 FPS = 0.2초마다 1프레임 분석)
       
-      "frame_count_total": 404,
-      // 🎯 의미: 추출된 전체 프레임 수 (duration_sec * fps_analyzed)
-      // 💡 활용: 전체 데이터 포인트 수 확인
+      "duration_sec": 34.78,
+      // 🎯 의미: 실제 비디오 재생 시간 (초)
+      
+      "frame_count_total": 167,
+      // 🎯 의미: 실제 추출/분석한 프레임 수
       
       "frame_count_valid": 167,
       // 🎯 의미: 얼굴 감지 성공 + 유효한 특징 추출된 프레임 수
-      // 📊 평가: valid/total 비율이 낮으면 비디오 품질 문제 (조명, 각도, 흔들림)
-      // 💡 활용: 분석 신뢰도 평가, 재촬영 필요성 판단
       
-      "duration_sec": 37.5,
-      // 🎯 의미: 실제 비디오 재생 시간 (초)
+      "frame_count_expected": 174,
+      // 🎯 의미: 기대 프레임 수 (duration_sec * fps_analyzed)
+      // 차이가 있으면 프레임 추출 불안정성을 나타낼 수 있음
       
-      // 규칙 기반 임계값
+      // 규칙 기반 임계값 (재현 가능성)
       "thresholds": {
-        "smile_threshold": "adaptive (mean + 0.5*std)",
-        // 🎯 의미: 미소 감지에 사용된 임계값 (개인별 적응형)
-        // 💡 활용: 개인차 고려한 공정한 평가 확인
+        "smile_threshold": {
+          "type": "adaptive",
+          "formula": "mean + 0.5*std",
+          "value": 0.55
+        },
+        // 🎯 의미: 미소 감지에 사용된 실제 임계값 (개인별 적응형)
         
-        "gaze_center_range": "CENTER classification from MediaPipe",
-        // 🎯 의미: 중앙 응시 판정 기준 (MediaPipe 내부 분류 사용)
+        "gaze": {
+          "method": "mediapipe_center + iris_yaw_check",
+          "center_range_deg": [-15, 15]
+        },
+        // 🎯 의미: 중앙 응시 판정 방법 및 yaw 범위
         
         "nod_pitch_delta_threshold": 8.0,
         // 🎯 의미: 끄덕임 감지를 위한 최소 pitch 각도 변화 (도)
-        // 💡 활용: 미세한 움직임과 명확한 끄덕임 구분
+        
+        "nod_min_interval_sec": null,
+        // 🎯 의미: 끄덕임 사이 최소 간격 (초) - 현재 미구현
         
         "pose_outlier_thresholds": {
           "yaw": 60,    // 좌우 회전 한계 (도)
           "pitch": 45,  // 상하 회전 한계 (도)
           "roll": 40    // 좌우 기울임 한계 (도)
         }
-        // 🎯 의미: 물리적으로 불가능한 포즈 감지 기준
+        // 🎯 의미: 물리적으로 불가능한 포즈 감지 기준 (solvePnP 오류 감지)
+      },
+      
+      // 사용된 모델 정보 (버전 추적)
+      "models": {
+        "vision_model": "MediaPipe FaceMesh",
+        "vision_version": "0.10.14",
+        "vision_config": {
+          "refine_landmarks": true,
+          "min_detection_confidence": 0.5,
+          "min_tracking_confidence": 0.5
+        },
+        "emotion_model": "rule-based landmarks/blendshapes",
+        "emotion_version": "1.0",
+        "stt_model": "openai-whisper-base",
+        "stt_version": "20250625"
+      },
+      // 🎯 의미: 재현 가능성을 위한 모든 모델 버전 및 설정
+      
+      // 신뢰도 지표 (데이터 품질)
+      "confidence": {
+        "valid_frame_ratio": 1.0,
+        // 🎯 의미: 전체 프레임 중 유효 프레임 비율
+        //         낮으면 비디오 품질 문제 가능성
+        
+        "face_presence_mean": 0.92,
+        "face_presence_std": 0.04,
+        // 🎯 의미: MediaPipe 얼굴 감지 신뢰도 평균 및 표준편차
+        
+        "landmark_confidence_mean": 0.89,
+        "landmark_confidence_std": 0.06,
+        // 🎯 의미: 랜드마크 visibility 점수 평균 및 표준편차
+        
+        "gaze_confidence_mean": 0.95,
+        "gaze_confidence_std": 0.03
+        // 🎯 의미: 시선 추적 신뢰도 (현재는 valid_frame_ratio로 근사)
+      },
+      // 🎯 종합: confidence 값들이 낮거나 std가 크면 분석 결과 신뢰도 낮음
+      
+      // 이상치 플래그
+      "outlier_flags": {
+        "pose_outlier_ratio": 0.012,
+        // 🎯 의미: 물리적으로 불가능한 포즈를 가진 프레임 비율 (1.2%)
+        
+        "pose_outlier_rule": "abs(yaw)>60 or abs(pitch)>45 or abs(roll)>40"
+        // 🎯 의미: outlier 판정에 사용된 규칙 (재현 가능성)
+      }
+      // 🎯 종합: pose_outlier_ratio가 높으면 카메라 흔들림/조명 변화/solvePnP 오류 가능성
+    }
         // 💡 활용: solvePnP 오류 감지, 데이터 품질 평가
       },
       
@@ -458,17 +494,29 @@ GET /api/video/results/{video_id}
 }
 ```
 
-### 주요 메트릭 요약표
+### 주요 메트릭 계산 방법 요약
 
-| 메트릭 | 의미 | 이상적 범위 | 개선 필요 |
-|-------|------|-----------|----------|
-| **center_gaze_ratio** | 카메라 응시 비율 | 70% 이상 | 50% 미만 |
-| **smile_ratio** | 미소/긍정 표정 비율 | 25~50% | 10% 미만 or 60% 이상 |
-| **nod_count** | 끄덕임 횟수 | 1~3회 | 0회 or 5회 이상 |
-| **wpm** | 말하기 속도 | 140~180 | 120 미만 or 200 이상 |
-| **filler_count** | 채움말 횟수 | 5회 이하 | 11회 이상 |
-| **valid_frame_ratio** | 분석 신뢰도 | 50% 이상 | 30% 미만 |
-| **pose_outlier_ratio** | 포즈 안정성 | 5% 미만 | 15% 이상 |
+| 메트릭 | 의미 | 계산 방법 | 단위/범위 |
+|-------|------|----------|----------|
+| **center_gaze_ratio** | 카메라 응시 비율 | valid 프레임 중 gaze=="CENTER" 비율 | 0.0 ~ 1.0 |
+| **smile_ratio** | 미소 표정 비율 | adaptive threshold (mean+0.5*std) 초과 프레임 비율 | 0.0 ~ 1.0 |
+| **nod_count** | 끄덕임 횟수 | pitch 8도 이상 변화 (EMA smoothing) | 정수 |
+| **nod_rate_per_min** | 분당 끄덕임 횟수 | nod_count / (duration_sec / 60) | float |
+| **wpm** | 말하기 속도 | 단어 수 / (duration_sec / 60) | float |
+| **filler_count** | 채움말 횟수 | 정규식 패턴 매칭 카운트 | 정수 |
+| **primary_emotion** | 주요 감정 | emotion_distribution 최빈값 | 카테고리 |
+| **emotion_distribution** | 감정 분포 | 각 emotion 빈도 / 전체 valid 프레임 | dict (합계=1.0) |
+
+### 메타데이터 신뢰도 지표
+
+| 지표 | 의미 | 해석 |
+|-----|------|-----|
+| **valid_frame_ratio** | 유효 프레임 비율 | < 0.3: 재촬영 권장, 0.3~0.5: 보통, > 0.5: 양호 |
+| **pose_outlier_ratio** | 포즈 이상치 비율 | < 0.05: 정상, 0.05~0.15: 불안정, > 0.15: 매우 불안정 |
+| **landmark_confidence_mean** | 랜드마크 신뢰도 | MediaPipe visibility 점수 평균 (0~1) |
+| **frame_count_expected** | 기대 프레임 수 | duration * fps, total과 차이가 크면 추출 문제 |
+
+**참고**: 정책 및 평가 기준은 UI/서비스 레이어에서 관리합니다. JSON 로그에는 관측값과 계산 조건만 포함됩니다.
 
 ## 주의사항
 

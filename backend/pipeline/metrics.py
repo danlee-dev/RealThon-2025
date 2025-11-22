@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 import json
 import numpy as np
+import mediapipe
 
 def load_timeline(path: Path) -> List[Dict[str, Any]]:
     with open(path, "r", encoding="utf-8") as f:
@@ -100,7 +101,10 @@ def get_primary_emotion(timeline: List[Dict[str, Any]]) -> Optional[str]:
     return max(dist.items(), key=lambda x: x[1])[0]
 
 
-def compute_pose_outlier_ratio(timeline: List[Dict[str, Any]]) -> float:
+def compute_pose_outlier_ratio(timeline: List[Dict[str, Any]], 
+                                 yaw_thresh: float = 60, 
+                                 pitch_thresh: float = 45, 
+                                 roll_thresh: float = 40) -> float:
     """
     Compute proportion of frames with physically implausible head poses.
     Heuristic: extreme yaw/pitch/roll values likely indicate solvePnP instability.
@@ -119,26 +123,38 @@ def compute_pose_outlier_ratio(timeline: List[Dict[str, Any]]) -> float:
         if yaw is None or pitch is None or roll is None:
             continue
         
-        # Flag as outlier if any angle exceeds reasonable bounds
-        # Typical human head pose: yaw ±90°, pitch ±60°, roll ±45°
-        # Use more conservative thresholds to catch solvePnP failures
-        if abs(yaw) > 60 or abs(pitch) > 45 or abs(roll) > 40:
+        # Flag as outlier if any angle exceeds thresholds
+        if abs(yaw) > yaw_thresh or abs(pitch) > pitch_thresh or abs(roll) > roll_thresh:
             outliers += 1
     
     return outliers / len(valid) if valid else 0.0
 
 
-def compute_gaze_confidence(timeline: List[Dict[str, Any]]) -> Optional[float]:
+def compute_confidence_stats(timeline: List[Dict[str, Any]]) -> Dict[str, float]:
     """
-    Placeholder for gaze confidence.
-    Currently MediaPipe doesn't provide explicit confidence scores for gaze,
-    but we can infer from landmark detection stability.
-    Returns average "confidence" proxy (1.0 if valid, 0.0 otherwise).
+    Compute confidence statistics from timeline.
+    Returns mean and std for face_presence and landmark_confidence if available.
     """
-    if not timeline:
-        return None
-    valid_count = sum(1 for x in timeline if x.get("valid"))
-    return valid_count / len(timeline)
+    valid = [x for x in timeline if x.get("valid")]
+    
+    face_presence_scores = [x.get("face_presence") for x in valid if x.get("face_presence") is not None]
+    landmark_confidence_scores = [x.get("landmark_confidence") for x in valid if x.get("landmark_confidence") is not None]
+    
+    stats = {}
+    
+    if face_presence_scores:
+        stats["face_presence_mean"] = float(np.mean(face_presence_scores))
+        stats["face_presence_std"] = float(np.std(face_presence_scores))
+    
+    if landmark_confidence_scores:
+        stats["landmark_confidence_mean"] = float(np.mean(landmark_confidence_scores))
+        stats["landmark_confidence_std"] = float(np.std(landmark_confidence_scores))
+    
+    # Gaze and emotion confidence (proxy: valid frame ratio)
+    stats["gaze_confidence_mean"] = len(valid) / len(timeline) if timeline else 0.0
+    stats["gaze_confidence_std"] = 0.0  # Placeholder
+    
+    return stats
 
 
 def compute_metadata(
@@ -147,10 +163,14 @@ def compute_metadata(
     smile_threshold: Optional[float],
     nod_pitch_threshold: float,
     whisper_model_size: str = "base",
-    duration_sec: Optional[float] = None
+    duration_sec: Optional[float] = None,
+    yaw_thresh: float = 60,
+    pitch_thresh: float = 45,
+    roll_thresh: float = 40
 ) -> Dict[str, Any]:
     """
-    Compute comprehensive metadata for metrics transparency.
+    Compute comprehensive metadata for reproducibility.
+    REMOVES policy/evaluation criteria ("우수", "보통", etc.) - only logs observations.
     
     Args:
         timeline: Full frame-by-frame analysis results
@@ -159,45 +179,82 @@ def compute_metadata(
         nod_pitch_threshold: Pitch delta threshold for nod detection
         whisper_model_size: Whisper model size used for STT
         duration_sec: Video duration in seconds
+        yaw_thresh, pitch_thresh, roll_thresh: Pose outlier thresholds
     
     Returns:
-        Dictionary with all metadata fields
+        Dictionary with all metadata fields (structured for reproducibility)
     """
     valid = [x for x in timeline if x.get("valid")]
     
-    metadata = {
-        "fps_analyzed": fps_analyzed,
-        "frame_count_total": len(timeline),
-        "frame_count_valid": len(valid),
-        "thresholds": {
-            "smile_threshold": smile_threshold if smile_threshold is not None else "adaptive (mean + 0.5*std)",
-            "gaze_center_range": "CENTER classification from MediaPipe",  # Could be more specific
-            "nod_pitch_delta_threshold": nod_pitch_threshold,
-            "pose_outlier_thresholds": {"yaw": 60, "pitch": 45, "roll": 40}
+    # Frame counts
+    frame_count_total = len(timeline)
+    frame_count_valid = len(valid)
+    frame_count_expected = int(duration_sec * fps_analyzed) if duration_sec else frame_count_total
+    
+    # Thresholds (structured with formula + value)
+    thresholds = {
+        "smile_threshold": {
+            "type": "adaptive" if smile_threshold is not None else "none",
+            "formula": "mean + 0.5*std" if smile_threshold is not None else None,
+            "value": float(smile_threshold) if smile_threshold is not None else None
         },
-        "models": {
-            "vision_model": "MediaPipe FaceMesh",
-            "vision_config": {
-                "refine_landmarks": True,
-                "min_detection_confidence": 0.5,
-                "min_tracking_confidence": 0.5
-            },
-            "emotion_model": "rule-based from landmarks + blendshapes (if available)",
-            "stt_model": f"openai-whisper-{whisper_model_size}",
-            "stt_version": "20250625"  # From requirements.txt
+        "gaze": {
+            "method": "mediapipe_center + iris_yaw_check",
+            "center_range_deg": [-15, 15]  # Approximate range for CENTER classification
         },
-        "confidence": {
-            "gaze_confidence_mean": compute_gaze_confidence(timeline),
-            "valid_frame_ratio": len(valid) / len(timeline) if timeline else 0.0
-        },
-        "outlier_flags": {
-            "pose_outlier_ratio": compute_pose_outlier_ratio(timeline),
-            "pose_outlier_description": "Proportion of frames with extreme head pose angles (likely solvePnP errors)"
+        "nod_pitch_delta_threshold": float(nod_pitch_threshold),
+        "nod_min_interval_sec": None,  # Not implemented yet, placeholder
+        "pose_outlier_thresholds": {
+            "yaw": float(yaw_thresh),
+            "pitch": float(pitch_thresh),
+            "roll": float(roll_thresh)
         }
     }
     
-    # Add duration if available
-    if duration_sec is not None:
-        metadata["duration_sec"] = duration_sec
+    # Models and versions
+    try:
+        mediapipe_version = mediapipe.__version__
+    except:
+        mediapipe_version = "unknown"
+    
+    models = {
+        "vision_model": "MediaPipe FaceMesh",
+        "vision_version": mediapipe_version,
+        "vision_config": {
+            "refine_landmarks": True,
+            "min_detection_confidence": 0.5,
+            "min_tracking_confidence": 0.5
+        },
+        "emotion_model": "rule-based landmarks/blendshapes",
+        "emotion_version": "1.0",  # Internal version
+        "stt_model": f"openai-whisper-{whisper_model_size}",
+        "stt_version": "20250625"  # From requirements.txt
+    }
+    
+    # Confidence stats
+    confidence_stats = compute_confidence_stats(timeline)
+    confidence = {
+        "valid_frame_ratio": frame_count_valid / frame_count_total if frame_count_total > 0 else 0.0,
+        **confidence_stats
+    }
+    
+    # Outlier flags
+    outlier_ratio = compute_pose_outlier_ratio(timeline, yaw_thresh, pitch_thresh, roll_thresh)
+    outlier_flags = {
+        "pose_outlier_ratio": outlier_ratio,
+        "pose_outlier_rule": f"abs(yaw)>{yaw_thresh} or abs(pitch)>{pitch_thresh} or abs(roll)>{roll_thresh}"
+    }
+    
+    metadata = {
+        "fps_analyzed": float(fps_analyzed),
+        "duration_sec": float(duration_sec) if duration_sec else None,
+        "frame_count_total": frame_count_total,
+        "frame_count_valid": frame_count_valid,
+        "frame_count_expected": frame_count_expected,
+        "thresholds": thresholds,
+        "models": models,
+        "confidence": confidence,
+        "outlier_flags": outlier_flags
+    }
     
     return metadata
