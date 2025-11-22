@@ -118,3 +118,23 @@ export interface AnswerResponse {
   next_question?: InterviewQuestion;
   is_final?: boolean;
 }
+
+// CV Analysis types
+export interface SkillItem {
+  skill: string;
+  reason: string;
+}
+
+export interface CVAnalysisResult {
+  portfolio_id: string;
+  user_id: string;
+  role: string;
+  level: string;
+  extracted_text: string;
+  possessed_skills: string[];
+  missing_skills: string[];
+  strengths: SkillItem[];
+  weaknesses: SkillItem[];
+  overall_score: number;
+  summary: string;
+}
