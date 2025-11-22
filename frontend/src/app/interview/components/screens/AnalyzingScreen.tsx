@@ -63,12 +63,12 @@ export default function AnalyzingScreen({ onComplete }: AnalyzingScreenProps) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
         >
-            <div className="flex-[2] flex flex-col gap-6">
-                <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
+            <div className="flex-[2] flex flex-col gap-6 min-h-0">
+                <div className="bg-white rounded-3xl p-6 shadow-sm flex-1 min-h-0" style={{ border: '1px solid #E5E5EC' }}>
                     {/* Removed layoutId to disable 3->4 transition */}
                     <motion.div
                         layoutId="main-interview-area"
-                        className="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video"
+                        className="relative bg-gray-900 rounded-2xl overflow-hidden h-full"
                     >
                         <img
                             src="/avatar.png"

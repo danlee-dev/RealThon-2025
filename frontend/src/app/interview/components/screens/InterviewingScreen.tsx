@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Mic, Volume2, PhoneOff, Video, Settings, X } from 'lucide-react';
+import { saveVideoToIndexedDB } from '@/lib/indexedDB';
 
 interface InterviewingScreenProps {
     onEnd: () => void;
@@ -84,6 +85,10 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
     // Upload video to backend
     const uploadVideo = async (videoBlob: Blob) => {
         try {
+            // Save to IndexedDB first for local playback
+            await saveVideoToIndexedDB(videoBlob);
+            console.log('[DEBUG] Video saved to IndexedDB');
+
             const formData = new FormData();
             formData.append('video', videoBlob, 'interview-video.webm');
             formData.append('timestamp', new Date().toISOString());
