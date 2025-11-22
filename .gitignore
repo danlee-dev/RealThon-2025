@@ -1,6 +1,8 @@
 # OS
 .DS_Store
 Thumbs.db
+__pycache__/
+.claude/
 
 # IDE
 .vscode/
