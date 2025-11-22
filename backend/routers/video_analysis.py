@@ -13,7 +13,7 @@ from datetime import datetime
 from typing import Optional
 
 from database import get_db
-from models import InterviewVideo, InterviewTranscript, NonverbalMetrics, NonverbalTimeline, Feedback
+from models import InterviewVideo, InterviewTranscript, NonverbalMetrics, NonverbalTimeline, Feedback, InterviewSession, InterviewQuestion
 from pipeline.video_io import extract_frames_opencv, extract_audio_ffmpeg
 from pipeline.vision_mediapipe import build_timeline_from_frames, save_timeline
 from pipeline.metrics import (
@@ -21,7 +21,10 @@ from pipeline.metrics import (
 )
 from pipeline.audio_analysis import transcribe_whisper, compute_wpm, compute_filler_count
 from pipeline.feedback_generator import generate_feedback_with_gemini, generate_feedback_fallback
+from dotenv import load_dotenv
 
+# .env 파일 로드
+load_dotenv()
 
 router = APIRouter()
 
@@ -29,7 +32,7 @@ router = APIRouter()
 VIDEO_UPLOAD_DIR = Path("uploads/videos")
 VIDEO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-# Gemini API 사용 여부 확인
+# Gemini API 사용 여부 확인 (.env 로드 후)
 USE_GEMINI = bool(os.getenv("GEMINI_API_KEY"))
 
 
@@ -142,6 +145,28 @@ async def upload_video(
         )
     
     try:
+        # FK 검증: session_id와 question_id가 실제로 존재하는지 확인
+        session = db.query(InterviewSession).filter(InterviewSession.id == session_id).first()
+        if not session:
+            raise HTTPException(
+                status_code=404,
+                detail=f"InterviewSession not found: {session_id}. Please create a session first."
+            )
+        
+        question = db.query(InterviewQuestion).filter(InterviewQuestion.id == question_id).first()
+        if not question:
+            raise HTTPException(
+                status_code=404,
+                detail=f"InterviewQuestion not found: {question_id}. Please create a question first."
+            )
+        
+        # session_id가 해당 user_id에 속하는지 확인
+        if session.user_id != user_id:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Session {session_id} does not belong to user {user_id}"
+            )
+        
         # 고유 파일명 생성
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         unique_filename = f"{user_id}_{session_id}_{timestamp}{file_ext}"
@@ -179,9 +204,12 @@ async def upload_video(
             "created_at": video_record.created_at
         }
         
+    except HTTPException:
+        # HTTPException은 그대로 전달
+        raise
     except Exception as e:
         # 오류 발생시 업로드된 파일 삭제
-        if video_path.exists():
+        if 'video_path' in locals() and video_path.exists():
             video_path.unlink()
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
@@ -367,8 +395,10 @@ def get_analysis_results(video_id: str, db: Session = Depends(get_db)):
     if not video:
         raise HTTPException(status_code=404, detail=f"Video not found: {video_id}")
     
-    # 메트릭
-    metrics = db.query(NonverbalMetrics).filter(NonverbalMetrics.video_id == video_id).first()
+    # 메트릭 (가장 최신 것 조회)
+    metrics = db.query(NonverbalMetrics).filter(
+        NonverbalMetrics.video_id == video_id
+    ).order_by(NonverbalMetrics.created_at.desc()).first()
     
     # 피드백
     feedbacks = db.query(Feedback).filter(Feedback.video_id == video_id).all()
@@ -376,8 +406,25 @@ def get_analysis_results(video_id: str, db: Session = Depends(get_db)):
     # 전사
     transcript = db.query(InterviewTranscript).filter(InterviewTranscript.video_id == video_id).first()
     
-    # 타임라인
-    timeline = db.query(NonverbalTimeline).filter(NonverbalTimeline.video_id == video_id).first()
+    # 타임라인 (가장 최신 것 조회)
+    timeline = db.query(NonverbalTimeline).filter(
+        NonverbalTimeline.video_id == video_id
+    ).order_by(NonverbalTimeline.created_at.desc()).first()
+    
+    # 타임라인에서 emotion_distribution 계산
+    emotion_dist = {}
+    primary_emo = None
+    if timeline:
+        try:
+            timeline_data = json.loads(timeline.timeline_json)
+            emotion_dist = emotion_distribution(timeline_data)
+            primary_emo = get_primary_emotion(timeline_data)
+        except Exception as e:
+            print(f"⚠️ 타임라인 파싱 실패: {e}")
+    
+    # metrics의 primary_emotion이 있으면 우선 사용
+    if metrics and metrics.primary_emotion:
+        primary_emo = metrics.primary_emotion
     
     return {
         "video": {
@@ -394,7 +441,8 @@ def get_analysis_results(video_id: str, db: Session = Depends(get_db)):
             "nod_count": metrics.nod_count if metrics else None,
             "wpm": metrics.wpm if metrics else None,
             "filler_count": metrics.filler_count if metrics else None,
-            "primary_emotion": metrics.primary_emotion if metrics else None,
+            "primary_emotion": primary_emo,
+            "emotion_distribution": emotion_dist,
         } if metrics else None,
         "feedbacks": [
             {

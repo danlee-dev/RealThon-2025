@@ -146,6 +146,10 @@ class VisionAnalyzer:
         # Gaze
         gaze = self.estimate_gaze(pts, yaw)
         
+        # Blendshapes에서 감정을 못 찾았으면 랜드마크 기반으로 추론
+        if emotion is None:
+            emotion = self._detect_emotion_from_landmarks(smile_score, yaw, pitch, roll, gaze)
+        
         return FrameResult(
             t=t,
             valid=True,
@@ -173,6 +177,9 @@ class VisionAnalyzer:
         yaw, pitch, roll = self.estimate_head_pose(pts, w, h)
         gaze = self.estimate_gaze(pts, yaw)
         smile = self.estimate_smile(pts)
+        
+        # Blendshapes 없이도 감정 추론 (기존 데이터 활용)
+        emotion = self._detect_emotion_from_landmarks(smile, yaw, pitch, roll, gaze)
 
         return FrameResult(
             t=t,
@@ -182,7 +189,7 @@ class VisionAnalyzer:
             yaw=yaw,
             pitch=pitch,
             roll=roll,
-            emotion=None,
+            emotion=emotion,
             blendshapes=None
         )
     
@@ -222,6 +229,52 @@ class VisionAnalyzer:
         elif smile_avg > 0.1:
             return "pleasant"
         else:
+            return "neutral"
+    
+    def _detect_emotion_from_landmarks(
+        self, 
+        smile_score: float, 
+        yaw: float, 
+        pitch: float, 
+        roll: float, 
+        gaze: str
+    ) -> str:
+        """
+        Blendshapes 없이도 기존 랜드마크 데이터로 감정 추론.
+        smile score, head pose, gaze를 조합해서 감정 분류.
+        
+        Returns: 'happy', 'pleasant', 'neutral', 'focused', 'concerned'
+        """
+        # Smile score 기반 (0.4 이상이면 happy, 0.25 이상이면 pleasant)
+        # smile_score는 mouth_width / interocular_distance 비율
+        # 일반적으로 0.4~0.5가 평상시, 0.5 이상이면 미소
+        
+        # Head pose 기반
+        # pitch가 위로 올라가면 (양수) 놀람/집중
+        # pitch가 아래로 내려가면 (음수) 고개 숙임/부정적
+        # yaw가 크면 (절댓값 > 15) 집중/고민
+        
+        # Gaze 기반
+        # CENTER면 집중, LEFT/RIGHT면 불안/회피
+        
+        # 감정 분류 로직
+        if smile_score > 0.5:
+            # 미소가 크면 happy
+            return "happy"
+        elif smile_score > 0.35:
+            # 약간의 미소면 pleasant
+            return "pleasant"
+        elif abs(yaw) > 15 or abs(pitch) > 20:
+            # 고개를 많이 돌리면 focused (집중)
+            return "focused"
+        elif pitch < -10:
+            # 고개를 많이 숙이면 concerned (걱정/부정적)
+            return "concerned"
+        elif gaze != "CENTER" and abs(yaw) > 10:
+            # 시선이 많이 벗어나면 concerned
+            return "concerned"
+        else:
+            # 기본값은 neutral
             return "neutral"
 
 

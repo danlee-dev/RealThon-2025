@@ -4,7 +4,11 @@ AI를 활용한 면접 피드백 생성
 """
 import os
 from typing import Dict, List
+from dotenv import load_dotenv
 import google.generativeai as genai
+
+# .env 파일 로드
+load_dotenv()
 
 
 def configure_gemini():
@@ -29,8 +33,13 @@ def generate_feedback_with_gemini(metrics: Dict, transcript: str = "") -> List[s
     try:
         configure_gemini()
         
-        # Gemini 2.5 Flash Lite 모델 사용
-        model = genai.GenerativeModel('gemini-2.0-flash-lite')
+        # Gemini 2.0 Flash 모델 사용 (가장 빠르고 효율적)
+        # 사용 가능한 모델: gemini-2.0-flash-exp, gemini-1.5-flash, gemini-1.5-pro
+        try:
+            model = genai.GenerativeModel('gemini-2.0-flash-exp')
+        except Exception:
+            # Fallback to stable version
+            model = genai.GenerativeModel('gemini-1.5-flash')
         
         # 프롬프트 구성
         prompt = build_feedback_prompt(metrics, transcript)
