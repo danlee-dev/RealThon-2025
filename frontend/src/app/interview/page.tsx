@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   Bell,
   ChevronLeft,
@@ -204,6 +204,197 @@ function Header() {
 }
 
 function VideoSection() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioRecorderRef = useRef<MediaRecorder | null>(null);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [volume, setVolume] = useState(75);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isAudioRecording, setIsAudioRecording] = useState(false);
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [audioRecordings, setAudioRecordings] = useState<Blob[][]>([]);
+  const [interviewStarted, setInterviewStarted] = useState(false);
+  const isDev = process.env.NODE_ENV === 'development';
+
+  useEffect(() => {
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { width: 1280, height: 720 },
+          audio: true
+        });
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Camera access error:', error);
+        setCameraError('카메라 접근 권한이 필요합니다');
+      }
+    };
+
+    startCamera();
+
+    return () => {
+      if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+      if (mediaRecorderRef.current && isRecording) {
+        mediaRecorderRef.current.stop();
+      }
+    };
+  }, []);
+
+  const startRecording = () => {
+    if (!videoRef.current?.srcObject) return;
+
+    const stream = videoRef.current.srcObject as MediaStream;
+    const mediaRecorder = new MediaRecorder(stream, {
+      mimeType: 'video/webm;codecs=vp9'
+    });
+
+    const chunks: Blob[] = [];
+
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        chunks.push(event.data);
+      }
+    };
+
+    mediaRecorder.onstop = () => {
+      downloadRecording(chunks);
+    };
+
+    mediaRecorderRef.current = mediaRecorder;
+    mediaRecorder.start();
+    setIsRecording(true);
+    console.log('[DEBUG] Recording started');
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      console.log('[DEBUG] Recording stopped');
+    }
+  };
+
+  const downloadRecording = (chunks: Blob[]) => {
+    const blob = new Blob(chunks, { type: 'video/webm' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `interview-recording-${Date.now()}.webm`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    console.log('[DEBUG] Recording saved');
+  };
+
+  const startAudioRecording = () => {
+    if (!videoRef.current?.srcObject) return;
+
+    const stream = videoRef.current.srcObject as MediaStream;
+    const audioStream = new MediaStream(stream.getAudioTracks());
+
+    const audioRecorder = new MediaRecorder(audioStream, {
+      mimeType: 'audio/webm'
+    });
+
+    const chunks: Blob[] = [];
+
+    audioRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        chunks.push(event.data);
+      }
+    };
+
+    audioRecorder.onstop = () => {
+      setAudioRecordings(prev => {
+        const newRecordings = [...prev];
+        newRecordings[currentQuestionIndex] = chunks;
+        return newRecordings;
+      });
+
+      // 즉시 오디오 파일 다운로드
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `question-${currentQuestionIndex + 1}-audio-${Date.now()}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log(`[DEBUG] Question ${currentQuestionIndex + 1} audio saved and downloaded`);
+    };
+
+    audioRecorderRef.current = audioRecorder;
+    audioRecorder.start();
+    setIsAudioRecording(true);
+    console.log(`[DEBUG] Recording answer for question ${currentQuestionIndex + 1}`);
+  };
+
+  const stopAudioRecording = () => {
+    if (audioRecorderRef.current && isAudioRecording) {
+      audioRecorderRef.current.stop();
+      setIsAudioRecording(false);
+
+      // 마지막 질문이면 녹화도 종료
+      if (currentQuestionIndex === questions.length - 1) {
+        console.log('[DEBUG] Last question completed, stopping video recording');
+        stopRecording();
+        sendAllRecordings();
+      } else {
+        setCurrentQuestionIndex(prev => prev + 1);
+      }
+    }
+  };
+
+  const sendAllRecordings = async () => {
+    console.log('[DEBUG] Preparing to send all recordings to backend...');
+    console.log('[DEBUG] Total questions:', questions.length);
+    console.log('[DEBUG] Total audio recordings:', audioRecordings.length);
+
+    // TODO: 실제 백엔드 API 호출
+    // const formData = new FormData();
+    // audioRecordings.forEach((chunks, index) => {
+    //   const blob = new Blob(chunks, { type: 'audio/webm' });
+    //   formData.append(`question_${index}`, blob, `question_${index}.webm`);
+    // });
+    // await fetch('/api/analyze-interview', { method: 'POST', body: formData });
+
+    console.log('[DEBUG] All recordings would be sent to backend here');
+  };
+
+  const handleDebugUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      console.log('[DEBUG] Video uploaded:', file.name);
+
+      // Mock questions from backend
+      const mockQuestions = [
+        '자기소개를 해주세요.',
+        '이 회사에 지원한 동기는 무엇인가요?',
+        '본인의 강점과 약점을 말씀해주세요.',
+        '5년 후 자신의 모습은 어떨 것 같나요?'
+      ];
+
+      setQuestions(mockQuestions);
+      setCurrentQuestionIndex(0);
+      setAudioRecordings([]);
+      setInterviewStarted(true);
+
+      console.log('[DEBUG] Starting interview with', mockQuestions.length, 'questions');
+      console.log('[DEBUG] Auto-starting video recording...');
+      startRecording();
+    }
+  };
+
   return (
     <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
       <div className="flex items-center justify-between mb-4">
@@ -211,45 +402,124 @@ function VideoSection() {
           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
           <span className="text-sm text-gray-600">Digital Interview has Live</span>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-          <span className="text-sm text-primary">Also joined in this call</span>
+        <div className="flex items-center gap-3">
+          {isRecording && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-red-100 rounded-full">
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-red-600 font-medium">녹화 중</span>
+            </div>
+          )}
+          {isDev && (
+            <div className="flex items-center gap-2">
+              {!isRecording ? (
+                <label className="px-4 py-2 bg-blue-500 text-white text-sm rounded-lg cursor-pointer hover:bg-blue-600 transition-colors">
+                  디버그: 영상 업로드
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleDebugUpload}
+                    className="hidden"
+                  />
+                </label>
+              ) : (
+                <button
+                  onClick={stopRecording}
+                  className="px-4 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  녹화 중지
+                </button>
+              )}
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+            <span className="text-sm text-primary">Also joined in this call</span>
+          </div>
         </div>
       </div>
 
-      {/* Video Area */}
-      <div className="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video">
-        {/* Main Video - Richard Gomez */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-white text-center">
-            <div className="w-32 h-32 bg-gray-700 rounded-full mx-auto mb-4 flex items-center justify-center">
-              <span className="text-4xl">RG</span>
+      {/* Question and Recording Controls */}
+      {interviewStarted && questions.length > 0 && (
+        <div className="mb-4 p-4 bg-gradient-to-r from-primary/10 to-brand-purple-light/10 rounded-xl border-l-4 border-primary">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded">
+                  질문 {currentQuestionIndex + 1} / {questions.length}
+                </span>
+              </div>
+              <p className="text-gray-900 font-medium text-lg">
+                {questions[currentQuestionIndex]}
+              </p>
             </div>
-            <p className="text-lg font-medium">Richard Gomez</p>
+            <div className="ml-4">
+              {!isAudioRecording ? (
+                <button
+                  onClick={startAudioRecording}
+                  className="px-6 py-3 bg-primary text-white rounded-xl hover:bg-brand-purple transition-colors flex items-center gap-2 shadow-lg"
+                >
+                  <Mic className="w-5 h-5" />
+                  <span>답변 녹음 시작</span>
+                </button>
+              ) : (
+                <button
+                  onClick={stopAudioRecording}
+                  className="px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors flex items-center gap-2 shadow-lg animate-pulse"
+                >
+                  <div className="w-3 h-3 bg-white rounded-full"></div>
+                  <span>녹음 중지</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
+      )}
 
-        {/* PIP Videos */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
-          <div className="w-24 h-32 bg-gray-800 rounded-xl overflow-hidden">
-            <div className="w-full h-full flex items-center justify-center text-white text-xs">
-              <span>Interviewer 1</span>
+      {/* Video Area */}
+      <div className="relative bg-gray-900 rounded-2xl overflow-hidden aspect-video">
+        {/* Main Video - Avatar Background */}
+        <img
+          src="/avatar.png"
+          alt="Interview Avatar"
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+
+        {/* User Camera - Horizontal Card */}
+        <div className="absolute top-4 right-4 w-64 h-36 bg-gray-800 rounded-xl overflow-hidden shadow-lg border-2 border-gray-700">
+          {cameraError ? (
+            <div className="w-full h-full flex items-center justify-center text-white text-xs p-4 text-center">
+              <span>{cameraError}</span>
             </div>
-          </div>
-          <div className="w-24 h-32 bg-gray-800 rounded-xl overflow-hidden">
-            <div className="w-full h-full flex items-center justify-center text-white text-xs">
-              <span>Interviewer 2</span>
-            </div>
-          </div>
+          ) : (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full h-full object-cover"
+            />
+          )}
         </div>
 
         {/* Volume Slider */}
-        <div className="absolute left-4 bottom-20 flex flex-col items-center gap-2">
-          <input
-            type="range"
-            className="w-24 -rotate-90 origin-center"
-            style={{ transform: 'rotate(-90deg) translateY(-40px)' }}
-          />
+        <div className="absolute left-6 top-1/2 -translate-y-1/2 flex flex-col items-center gap-3">
+          <div className="bg-gray-800/80 backdrop-blur-sm rounded-full p-3 shadow-lg">
+            <Volume2 className="w-5 h-5 text-white" />
+          </div>
+          <div
+            className="relative h-32 w-6 bg-gray-700 rounded-full overflow-hidden cursor-pointer"
+            onClick={(e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const y = e.clientY - rect.top;
+              const newVolume = Math.max(0, Math.min(100, 100 - (y / rect.height) * 100));
+              setVolume(Math.round(newVolume));
+            }}
+          >
+            <div
+              className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-primary to-brand-purple-light rounded-full transition-all duration-150"
+              style={{ height: `${volume}%` }}
+            ></div>
+          </div>
         </div>
 
         {/* Controls */}
