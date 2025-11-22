@@ -168,7 +168,7 @@ class ThresholdsMetadata(BaseModel):
     smile_threshold: ThresholdConfig
     gaze: GazeConfig
     nod_pitch_delta_threshold: float
-    nod_min_interval_sec: Optional[float] = None  # minimum interval between nods
+    # nod_min_interval_sec removed - not implemented yet
     pose_outlier_thresholds: PoseOutlierThresholds
 
 
@@ -188,8 +188,6 @@ class ConfidenceMetrics(BaseModel):
     valid_frame_ratio: float
     face_presence_mean: Optional[float] = None
     face_presence_std: Optional[float] = None
-    landmark_confidence_mean: Optional[float] = None
-    landmark_confidence_std: Optional[float] = None
     gaze_confidence_mean: Optional[float] = None
     gaze_confidence_std: Optional[float] = None
     emotion_confidence_mean: Optional[float] = None

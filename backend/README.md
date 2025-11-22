@@ -199,16 +199,8 @@ GET /api/video/results/{video_id}
 ```
 응답에 포함되는 내용:
 - `video`: 비디오 메타데이터
-- `metrics`: 비언어 지표
-  - 핵심 지표: `center_gaze_ratio`, `smile_ratio`, `nod_count`, `wpm`, `filler_count`, `primary_emotion`, `emotion_distribution`
-  - **`metadata`**: 계산 메타데이터 (새로 추가) - 디버깅 및 투명성을 위한 정보
-    - `fps_analyzed`: 분석에 사용된 FPS (예: 5.0)
-    - `frame_count_total`: 추출된 총 프레임 수 (예: 404)
-    - `frame_count_valid`: 유효한 프레임 수 (예: 167)
-    - `thresholds`: 규칙 기반 임계값 (smile_threshold, nod_pitch_delta_threshold 등)
-    - `models`: 사용된 모델 버전/설정 (MediaPipe, Whisper 등)
-    - `confidence`: 신뢰도 집계 (gaze_confidence_mean, valid_frame_ratio)
-    - `outlier_flags`: 이상치 플래그 (pose_outlier_ratio - solvePnP 오류 비율)
+- `metrics`: 비언어 지표 (center_gaze_ratio, smile_ratio, nod_count, nod_rate_per_min, wpm, filler_count, primary_emotion, emotion_distribution)
+- `metadata`: 계산 메타데이터 (fps, frame counts, thresholds, models, confidence, outliers)
 - `feedbacks`: 피드백 목록
 - `transcript`: STT 전사 결과
 - `timeline`: 타임라인 JSON 배열 (각 프레임별 gaze, smile, emotion, pitch, yaw 등)
@@ -316,7 +308,8 @@ GET /api/video/results/{video_id}
       // 🎯 의미: 비디오에서 초당 추출/분석한 프레임 수
       
       "duration_sec": 34.78,
-      // 🎯 의미: 실제 비디오 재생 시간 (초)
+      // 🎯 의미: 실제 비디오 재생 시간 (초) - video.duration_sec과 동일 (source of truth)
+      // 📝 참고: video.duration_sec은 오디오 기반으로 계산됨 (len(audio) / sr)
       
       "frame_count_total": 167,
       // 🎯 의미: 실제 추출/분석한 프레임 수
@@ -345,9 +338,6 @@ GET /api/video/results/{video_id}
         
         "nod_pitch_delta_threshold": 8.0,
         // 🎯 의미: 끄덕임 감지를 위한 최소 pitch 각도 변화 (도)
-        
-        "nod_min_interval_sec": null,
-        // 🎯 의미: 끄덕임 사이 최소 간격 (초) - 현재 미구현
         
         "pose_outlier_thresholds": {
           "yaw": 60,    // 좌우 회전 한계 (도)
@@ -383,10 +373,6 @@ GET /api/video/results/{video_id}
         "face_presence_std": 0.04,
         // 🎯 의미: MediaPipe 얼굴 감지 신뢰도 평균 및 표준편차
         
-        "landmark_confidence_mean": 0.89,
-        "landmark_confidence_std": 0.06,
-        // 🎯 의미: 랜드마크 visibility 점수 평균 및 표준편차
-        
         "gaze_confidence_mean": 0.95,
         "gaze_confidence_std": 0.03
         // 🎯 의미: 시선 추적 신뢰도 (현재는 valid_frame_ratio로 근사)
@@ -402,54 +388,6 @@ GET /api/video/results/{video_id}
         // 🎯 의미: outlier 판정에 사용된 규칙 (재현 가능성)
       }
       // 🎯 종합: pose_outlier_ratio가 높으면 카메라 흔들림/조명 변화/solvePnP 오류 가능성
-    }
-        // 💡 활용: solvePnP 오류 감지, 데이터 품질 평가
-      },
-      
-      // 사용된 모델 정보
-      "models": {
-        "vision_model": "MediaPipe FaceMesh",
-        // 🎯 의미: 얼굴 특징 추출에 사용된 모델
-        
-        "vision_config": {
-          "refine_landmarks": true,
-          "min_detection_confidence": 0.5,
-          "min_tracking_confidence": 0.5
-        },
-        // 🎯 의미: 얼굴 감지 설정 파라미터
-        
-        "emotion_model": "rule-based from landmarks + blendshapes (if available)",
-        // 🎯 의미: 감정 분류 방식 (Blendshapes 52개 파라미터 또는 기하학적 규칙)
-        
-        "stt_model": "openai-whisper-base",
-        // 🎯 의미: 음성 인식 모델 (base = 74M 파라미터, 빠르고 정확)
-        
-        "stt_version": "20250625"
-        // 🎯 의미: Whisper 모델 버전 (requirements.txt 기준)
-      },
-      
-      // 신뢰도 지표
-      "confidence": {
-        "gaze_confidence_mean": 0.95,
-        // 🎯 의미: 시선 추적 신뢰도 평균 (유효 프레임 비율로 근사)
-        // 📊 평가: 0.9 이상 = 높은 신뢰도, 0.7 미만 = 낮은 신뢰도 (재분석 권장)
-        
-        "valid_frame_ratio": 0.41
-        // 🎯 의미: 전체 프레임 중 유효 프레임 비율 (167/404 = 0.41)
-        // 📊 평가: 0.5 이상 = 양호, 0.3~0.5 = 보통, 0.3 미만 = 비디오 품질 문제
-        // 💡 활용: 분석 결과 신뢰도 평가, UI에서 경고 표시 여부 결정
-      },
-      
-      // 이상치 플래그
-      "outlier_flags": {
-        "pose_outlier_ratio": 0.02,
-        // 🎯 의미: 물리적으로 불가능한 포즈를 가진 프레임 비율 (2%)
-        // 📊 평가: 0.05 미만 = 정상, 0.05~0.15 = 약간 불안정, 0.15 이상 = 매우 불안정
-        // 💡 활용: 카메라 흔들림, 조명 변화, solvePnP 오류 감지
-        
-        "pose_outlier_description": "Proportion of frames with extreme head pose angles (likely solvePnP errors)"
-        // 🎯 의미: 이상치 플래그 설명
-      }
     }
   },
   
@@ -513,7 +451,6 @@ GET /api/video/results/{video_id}
 |-----|------|-----|
 | **valid_frame_ratio** | 유효 프레임 비율 | < 0.3: 재촬영 권장, 0.3~0.5: 보통, > 0.5: 양호 |
 | **pose_outlier_ratio** | 포즈 이상치 비율 | < 0.05: 정상, 0.05~0.15: 불안정, > 0.15: 매우 불안정 |
-| **landmark_confidence_mean** | 랜드마크 신뢰도 | MediaPipe visibility 점수 평균 (0~1) |
 | **frame_count_expected** | 기대 프레임 수 | duration * fps, total과 차이가 크면 추출 문제 |
 
 **참고**: 정책 및 평가 기준은 UI/서비스 레이어에서 관리합니다. JSON 로그에는 관측값과 계산 조건만 포함됩니다.

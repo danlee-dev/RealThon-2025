@@ -44,7 +44,6 @@ class FrameResult:
     blendshapes: Optional[Dict[str, float]]
     # NEW: confidence scores for quality assessment
     face_presence: Optional[float] = None  # MediaPipe face presence score
-    landmark_confidence: Optional[float] = None  # Average landmark visibility/confidence
 
 class VisionAnalyzer:
     """
@@ -116,7 +115,7 @@ class VisionAnalyzer:
             return FrameResult(
                 t=t, valid=False, gaze=None, smile=None,
                 yaw=None, pitch=None, roll=None, emotion=None, blendshapes=None,
-                face_presence=0.0, landmark_confidence=0.0
+                face_presence=0.0
             )
         
         # Extract landmarks
@@ -124,17 +123,7 @@ class VisionAnalyzer:
         pts = np.array([(lm.x*w, lm.y*h, lm.z*w) for lm in landmarks], dtype=np.float32)
         
         # NEW: Compute confidence scores
-        # MediaPipe doesn't expose detection confidence directly in new API,
-        # but we can use landmark visibility as a proxy
-        landmark_confidences = []
-        for lm in landmarks:
-            # Use visibility if available, otherwise assume 1.0 (detected)
-            if hasattr(lm, 'visibility'):
-                landmark_confidences.append(lm.visibility)
-            else:
-                landmark_confidences.append(1.0)
-        
-        landmark_conf_mean = float(np.mean(landmark_confidences)) if landmark_confidences else 1.0
+        # MediaPipe doesn't expose detection confidence directly in new API
         face_presence = 1.0  # If face detected, assume high presence
         
         # Extract blendshapes
@@ -178,8 +167,7 @@ class VisionAnalyzer:
             roll=roll,
             emotion=emotion,
             blendshapes=blendshapes_dict if blendshapes_dict else None,
-            face_presence=face_presence,
-            landmark_confidence=landmark_conf_mean
+            face_presence=face_presence
         )
     
     def _analyze_legacy(self, t: float, rgb_frame, w: int, h: int) -> FrameResult:
@@ -190,15 +178,12 @@ class VisionAnalyzer:
             return FrameResult(
                 t=t, valid=False, gaze=None, smile=None,
                 yaw=None, pitch=None, roll=None, emotion=None, blendshapes=None,
-                face_presence=0.0, landmark_confidence=0.0
+                face_presence=0.0
             )
 
         pts = self._landmarks_to_np(out.multi_face_landmarks[0].landmark, w, h)
         
         # NEW: Extract confidence from legacy API
-        # Legacy FaceMesh provides visibility for each landmark
-        landmark_confidences = [lm.visibility for lm in out.multi_face_landmarks[0].landmark if hasattr(lm, 'visibility')]
-        landmark_conf_mean = float(np.mean(landmark_confidences)) if landmark_confidences else 1.0
         face_presence = 1.0  # If face detected, assume high presence
 
         yaw, pitch, roll = self.estimate_head_pose(pts, w, h)
@@ -218,8 +203,7 @@ class VisionAnalyzer:
             roll=roll,
             emotion=emotion,
             blendshapes=None,
-            face_presence=face_presence,
-            landmark_confidence=landmark_conf_mean
+            face_presence=face_presence
         )
     
     def _detect_emotion_from_blendshapes(self, blendshapes: Dict[str, float]) -> str:

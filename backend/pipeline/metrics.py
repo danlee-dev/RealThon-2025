@@ -133,24 +133,20 @@ def compute_pose_outlier_ratio(timeline: List[Dict[str, Any]],
 def compute_confidence_stats(timeline: List[Dict[str, Any]]) -> Dict[str, float]:
     """
     Compute confidence statistics from timeline.
-    Returns mean and std for face_presence and landmark_confidence if available.
+    Returns mean and std for face_presence if available.
     """
     valid = [x for x in timeline if x.get("valid")]
     
     face_presence_scores = [x.get("face_presence") for x in valid if x.get("face_presence") is not None]
-    landmark_confidence_scores = [x.get("landmark_confidence") for x in valid if x.get("landmark_confidence") is not None]
     
     stats = {}
     
+    # Only include if we have actual data
     if face_presence_scores:
         stats["face_presence_mean"] = float(np.mean(face_presence_scores))
         stats["face_presence_std"] = float(np.std(face_presence_scores))
     
-    if landmark_confidence_scores:
-        stats["landmark_confidence_mean"] = float(np.mean(landmark_confidence_scores))
-        stats["landmark_confidence_std"] = float(np.std(landmark_confidence_scores))
-    
-    # Gaze and emotion confidence (proxy: valid frame ratio)
+    # Gaze confidence (proxy: valid frame ratio)
     stats["gaze_confidence_mean"] = len(valid) / len(timeline) if timeline else 0.0
     stats["gaze_confidence_std"] = 0.0  # Placeholder
     
@@ -203,7 +199,7 @@ def compute_metadata(
             "center_range_deg": [-15, 15]  # Approximate range for CENTER classification
         },
         "nod_pitch_delta_threshold": float(nod_pitch_threshold),
-        "nod_min_interval_sec": None,  # Not implemented yet, placeholder
+        # nod_min_interval_sec removed - not implemented yet
         "pose_outlier_thresholds": {
             "yaw": float(yaw_thresh),
             "pitch": float(pitch_thresh),
