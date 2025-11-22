@@ -9,8 +9,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // --- System Colors (From 'nalgae' - matches CSS Variables) ---
         border: "hsl(var(--border))",
-        input: "hsl(var(--border))", // Mapping input to border for now
+        input: "hsl(var(--border))",
         ring: "hsl(var(--primary))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -30,10 +31,6 @@ const config: Config = {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
         },
-        accent: {
-          DEFAULT: "hsl(var(--secondary))", // Using secondary as accent for now
-          foreground: "hsl(var(--secondary-foreground))",
-        },
         popover: {
           DEFAULT: "hsl(var(--surface))",
           foreground: "hsl(var(--surface-foreground))",
@@ -42,11 +39,49 @@ const config: Config = {
           DEFAULT: "hsl(var(--surface))",
           foreground: "hsl(var(--surface-foreground))",
         },
-        // Custom aliases to match existing usage if needed
+
+        // --- Brand & Accent Colors (From 'dev') ---
+        // Preserving 'dev' unique identities while avoiding conflict with system keywords
+        brand: {
+          DEFAULT: '#CCFF00', // Neon Lime (Matches --neon-lime in CSS)
+          light: '#E0FF66',
+          dark: '#99CC00',
+        },
+        // Renamed conflicting 'dev' primary/secondary to preserve access
+        'brand-purple': { 
+          DEFAULT: '#7C5CFC', // Previously 'primary' in dev
+          light: '#9B7FFF',
+          dark: '#5D3DD9',
+        },
+        'brand-blue': {
+           DEFAULT: '#3B82F6', // Previously 'accent' in dev
+           light: '#60A5FA',
+           dark: '#2563EB',
+        },
+        
+        // --- Utility Colors (From 'dev') ---
+        sidebar: {
+          DEFAULT: '#1A2440',
+        },
+        ink: {
+          DEFAULT: '#111111',
+          light: '#333333',
+        },
+        'light-grey': '#F5F6FA',
+        orange: {
+          DEFAULT: '#FF8D68',
+        },
+
+        // --- Aliases & Fallbacks ---
         surface: "hsl(var(--surface))",
         error: "hsl(var(--error))",
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
+        // Mapping generic accent to brand-blue or secondary based on preference
+        accent: {
+          DEFAULT: "hsl(var(--secondary))", 
+          foreground: "hsl(var(--secondary-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

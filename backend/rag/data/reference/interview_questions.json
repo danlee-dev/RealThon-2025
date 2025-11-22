@@ -1,0 +1,528 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-11-22",
+    "description": "역량별 면접 질문 뱅크 - 포트폴리오 분석 후 맞춤 질문 생성에 활용",
+    "usage": "competency_id를 통해 역량과 매핑되며, 난이도와 카테고리로 필터링 가능"
+  },
+  "questions": {
+    "FE_JUNIOR": [
+      {
+        "id": "Q_FE_JR_001",
+        "competency_id": "FE_JR_TECH_002",
+        "category": "기술_언어",
+        "difficulty": "junior",
+        "question": "JavaScript의 호이스팅(Hoisting)에 대해 설명해주세요.",
+        "intent": "JavaScript 기본 개념 이해도 확인",
+        "expected_keywords": ["변수선언", "함수선언", "스코프", "var", "let", "const"],
+        "follow_up_questions": [
+          "var, let, const의 호이스팅 차이는 무엇인가요?",
+          "TDZ(Temporal Dead Zone)에 대해 알고 있나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "호이스팅 개념을 정확히 설명하고, var/let/const 차이와 TDZ까지 언급",
+          "good": "호이스팅 개념을 정확히 설명하고 var/let/const 차이 설명",
+          "fair": "호이스팅 개념만 설명",
+          "poor": "호이스팅 개념을 잘못 이해하고 있음"
+        }
+      },
+      {
+        "id": "Q_FE_JR_002",
+        "competency_id": "FE_JR_TECH_002",
+        "category": "기술_언어",
+        "difficulty": "junior",
+        "question": "이벤트 루프(Event Loop)에 대해 설명하고, 콜스택과 태스크 큐의 관계를 설명해주세요.",
+        "intent": "비동기 처리 원리 이해도 확인",
+        "expected_keywords": ["콜스택", "태스크큐", "마이크로태스크", "비동기", "실행컨텍스트"],
+        "follow_up_questions": [
+          "Promise와 setTimeout 중 어느 것이 먼저 실행되나요? 그 이유는?",
+          "마이크로태스크와 매크로태스크의 차이는?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "이벤트 루프를 정확히 설명하고 마이크로/매크로태스크 차이까지 설명",
+          "good": "이벤트 루프와 콜스택, 태스크큐 관계 정확히 설명",
+          "fair": "이벤트 루프 개념만 설명",
+          "poor": "이벤트 루프를 잘못 이해"
+        }
+      },
+      {
+        "id": "Q_FE_JR_003",
+        "competency_id": "FE_JR_TECH_003",
+        "category": "기술_프레임워크",
+        "difficulty": "junior",
+        "question": "React의 useState와 useEffect 훅에 대해 설명하고, 각각 언제 사용하는지 예를 들어주세요.",
+        "intent": "React 기본 훅 이해도 확인",
+        "expected_keywords": ["상태관리", "부수효과", "리렌더링", "의존성배열"],
+        "follow_up_questions": [
+          "useEffect의 의존성 배열이 빈 배열일 때와 없을 때 차이는?",
+          "useEffect에서 클린업 함수는 언제 사용하나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "useState, useEffect를 정확히 설명하고 의존성 배열과 클린업까지 언급",
+          "good": "useState, useEffect를 정확히 설명하고 사용 예시 제시",
+          "fair": "useState, useEffect 개념만 설명",
+          "poor": "훅 개념을 잘못 이해"
+        }
+      },
+      {
+        "id": "Q_FE_JR_004",
+        "competency_id": "FE_JR_EXP_001",
+        "category": "프로젝트_경험",
+        "difficulty": "junior",
+        "question": "포트폴리오 프로젝트에서 구현한 CRUD 기능에 대해 설명해주세요. 특히 어려웠던 부분과 해결 방법을 말씀해주세요.",
+        "intent": "실제 프로젝트 경험 및 문제 해결 능력 확인",
+        "expected_keywords": ["CRUD", "API호출", "상태관리", "에러처리", "유효성검증"],
+        "follow_up_questions": [
+          "API 호출 중 에러가 발생하면 어떻게 처리했나요?",
+          "낙관적 업데이트(Optimistic Update)를 고려해본 적 있나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "구현 과정을 상세히 설명하고 기술적 도전과 해결 방법을 명확히 제시",
+          "good": "CRUD 구현을 설명하고 어려웠던 점 언급",
+          "fair": "CRUD 구현만 설명",
+          "poor": "구현 과정을 명확히 설명하지 못함"
+        }
+      },
+      {
+        "id": "Q_FE_JR_005",
+        "competency_id": "FE_JR_TECH_005",
+        "category": "기술_스타일링",
+        "difficulty": "junior",
+        "question": "Flexbox와 Grid의 차이점은 무엇이고, 각각 어떤 상황에 사용하는 것이 적합한가요?",
+        "intent": "CSS 레이아웃 이해도 확인",
+        "expected_keywords": ["1차원", "2차원", "레이아웃", "정렬"],
+        "follow_up_questions": [
+          "실제 프로젝트에서 Flexbox와 Grid를 어떻게 활용했나요?",
+          "justify-content와 align-items의 차이는?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "Flexbox와 Grid의 본질적 차이를 이해하고 적절한 사용 사례 제시",
+          "good": "기본적인 차이점 설명 가능",
+          "fair": "둘 다 레이아웃에 사용된다는 것만 언급",
+          "poor": "차이를 설명하지 못함"
+        }
+      },
+      {
+        "id": "Q_FE_JR_006",
+        "competency_id": "FE_JR_SOFT_001",
+        "category": "소프트스킬",
+        "difficulty": "junior",
+        "question": "코드 리뷰를 받았을 때 피드백을 어떻게 반영했나요? 구체적인 사례를 말씀해주세요.",
+        "intent": "피드백 수용 및 개선 의지 확인",
+        "expected_keywords": ["코드리뷰", "피드백", "개선", "학습"],
+        "follow_up_questions": [
+          "피드백 내용 중 이해가 안 되는 부분이 있었다면 어떻게 했나요?",
+          "코드 리뷰를 통해 가장 많이 배운 점은?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "구체적 사례와 함께 피드백 반영 과정과 학습 내용 설명",
+          "good": "피드백 반영 사례 제시",
+          "fair": "코드 리뷰 경험만 언급",
+          "poor": "코드 리뷰 경험 부족 또는 피드백 수용 자세 부족"
+        }
+      }
+    ],
+    "FE_MID": [
+      {
+        "id": "Q_FE_MID_001",
+        "competency_id": "FE_MID_TECH_001",
+        "category": "기술_프레임워크",
+        "difficulty": "mid",
+        "question": "React의 가상 DOM(Virtual DOM)이 실제 DOM보다 빠른 이유를 설명하고, Reconciliation 과정에 대해 말씀해주세요.",
+        "intent": "React 내부 동작 원리 깊이 있는 이해도 확인",
+        "expected_keywords": ["가상DOM", "Reconciliation", "Diffing", "배치업데이트", "Fiber"],
+        "follow_up_questions": [
+          "React Fiber 아키텍처에 대해 알고 있나요?",
+          "key prop이 중요한 이유는 무엇인가요?",
+          "useMemo와 React.memo의 차이는?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "가상 DOM, Reconciliation, Fiber 아키텍처까지 상세히 설명",
+          "good": "가상 DOM과 Reconciliation 과정 정확히 설명",
+          "fair": "가상 DOM이 빠른 이유만 설명",
+          "poor": "내부 동작 원리를 이해하지 못함"
+        }
+      },
+      {
+        "id": "Q_FE_MID_002",
+        "competency_id": "FE_MID_TECH_003",
+        "category": "기술_상태관리",
+        "difficulty": "mid",
+        "question": "대규모 애플리케이션에서 상태 관리를 어떻게 설계하셨나요? 전역 상태와 로컬 상태를 어떻게 구분하셨는지 설명해주세요.",
+        "intent": "상태 관리 아키텍처 설계 능력 확인",
+        "expected_keywords": ["전역상태", "로컬상태", "정규화", "선택자", "성능"],
+        "follow_up_questions": [
+          "상태 정규화(normalization)를 적용해본 경험이 있나요?",
+          "Redux, Zustand, Recoil 중 선택 기준은?",
+          "서버 상태 관리는 어떻게 하셨나요? (React Query, SWR 등)"
+        ],
+        "evaluation_criteria": {
+          "excellent": "상태 관리 철학과 함께 구체적인 설계 패턴 및 트레이드오프 설명",
+          "good": "전역/로컬 상태 구분 기준과 사용 라이브러리 선택 이유 설명",
+          "fair": "사용한 상태 관리 도구만 언급",
+          "poor": "상태 관리 설계 경험 부족"
+        }
+      },
+      {
+        "id": "Q_FE_MID_003",
+        "competency_id": "FE_MID_TECH_005",
+        "category": "기술_성능",
+        "difficulty": "mid",
+        "question": "웹 성능 최적화 경험에 대해 말씀해주세요. Lighthouse 점수를 어떻게 개선했나요?",
+        "intent": "성능 최적화 실무 경험 및 측정 가능한 성과 확인",
+        "expected_keywords": ["성능최적화", "Lighthouse", "코드스플리팅", "레이지로딩", "번들사이즈"],
+        "follow_up_questions": [
+          "Core Web Vitals(LCP, FID, CLS) 각각을 어떻게 개선했나요?",
+          "이미지 최적화는 어떻게 하셨나요?",
+          "번들 사이즈 분석 도구는 무엇을 사용했나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "구체적 수치와 함께 최적화 방법과 비즈니스 임팩트 설명",
+          "good": "여러 최적화 기법 적용 경험과 결과 설명",
+          "fair": "기본적인 최적화 기법만 언급",
+          "poor": "성능 최적화 경험 부족"
+        }
+      },
+      {
+        "id": "Q_FE_MID_004",
+        "competency_id": "FE_MID_TECH_006",
+        "category": "기술_브라우저",
+        "difficulty": "mid",
+        "question": "브라우저 렌더링 과정(Critical Rendering Path)을 설명하고, Reflow와 Repaint를 최소화하기 위해 어떤 방법을 사용했나요?",
+        "intent": "브라우저 동작 원리 이해 및 최적화 경험 확인",
+        "expected_keywords": ["CRP", "DOM", "CSSOM", "렌더트리", "Reflow", "Repaint"],
+        "follow_up_questions": [
+          "layout thrashing은 무엇이고 어떻게 방지하나요?",
+          "transform과 opacity가 성능에 유리한 이유는?",
+          "requestAnimationFrame은 언제 사용하나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "CRP부터 Reflow/Repaint 최적화까지 상세히 설명하고 실제 적용 사례 제시",
+          "good": "렌더링 과정과 최적화 방법 설명",
+          "fair": "렌더링 과정만 설명",
+          "poor": "브라우저 동작 원리를 이해하지 못함"
+        }
+      },
+      {
+        "id": "Q_FE_MID_005",
+        "competency_id": "FE_MID_EXP_002",
+        "category": "프로젝트_경험",
+        "difficulty": "mid",
+        "question": "재사용 가능한 컴포넌트를 설계할 때 어떤 원칙을 따르시나요? 실제 사례를 들어 설명해주세요.",
+        "intent": "컴포넌트 설계 철학 및 실무 경험 확인",
+        "expected_keywords": ["단일책임", "합성", "Props", "커스터마이징", "확장성"],
+        "follow_up_questions": [
+          "Compound Component 패턴에 대해 알고 있나요?",
+          "Controlled vs Uncontrolled Component 중 언제 무엇을 선택하나요?",
+          "컴포넌트 API 설계 시 중요하게 생각하는 점은?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "설계 원칙과 패턴을 이해하고 구체적 사례로 설명",
+          "good": "재사용 가능한 컴포넌트 설계 경험 설명",
+          "fair": "재사용 컴포넌트를 만들어본 경험만 언급",
+          "poor": "컴포넌트 설계 경험 부족"
+        }
+      },
+      {
+        "id": "Q_FE_MID_006",
+        "competency_id": "FE_MID_SOFT_001",
+        "category": "소프트스킬",
+        "difficulty": "mid",
+        "question": "주니어 개발자를 멘토링한 경험에 대해 말씀해주세요. 어떤 방식으로 도움을 주셨나요?",
+        "intent": "멘토링 경험 및 리더십 확인",
+        "expected_keywords": ["멘토링", "코드리뷰", "페어프로그래밍", "성장지원"],
+        "follow_up_questions": [
+          "주니어 개발자가 성장하는데 가장 중요한 것은 무엇이라고 생각하나요?",
+          "코드 리뷰 시 어떤 점을 중점적으로 보시나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "구체적 멘토링 사례와 함께 주니어 성장을 위한 철학 제시",
+          "good": "멘토링 경험과 방법 설명",
+          "fair": "멘토링 경험만 언급",
+          "poor": "멘토링 경험 부족"
+        }
+      },
+      {
+        "id": "Q_FE_MID_007",
+        "competency_id": "FE_MID_NICE_001",
+        "category": "기술_프레임워크",
+        "difficulty": "mid",
+        "question": "Next.js를 사용한 경험이 있다면, SSR과 SSG를 언제 사용하는지 설명해주세요.",
+        "intent": "메타 프레임워크 이해도 및 적절한 렌더링 방식 선택 능력 확인",
+        "expected_keywords": ["SSR", "SSG", "ISR", "CSR", "렌더링"],
+        "follow_up_questions": [
+          "getServerSideProps와 getStaticProps의 차이는?",
+          "ISR(Incremental Static Regeneration)은 언제 사용하나요?",
+          "App Router와 Pages Router의 차이는?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "각 렌더링 방식의 특징과 적절한 사용 케이스를 명확히 설명",
+          "good": "SSR/SSG 차이 및 사용 경험 설명",
+          "fair": "Next.js 사용 경험만 언급",
+          "poor": "렌더링 방식 차이를 이해하지 못함"
+        }
+      }
+    ],
+    "BE_JUNIOR": [
+      {
+        "id": "Q_BE_JR_001",
+        "competency_id": "BE_JR_TECH_005",
+        "category": "기술_API",
+        "difficulty": "junior",
+        "question": "RESTful API 설계 원칙에 대해 설명하고, GET, POST, PUT, DELETE 메서드를 언제 사용하는지 말씀해주세요.",
+        "intent": "REST API 기본 개념 이해도 확인",
+        "expected_keywords": ["REST", "리소스", "HTTP메서드", "상태코드", "무상태성"],
+        "follow_up_questions": [
+          "PUT과 PATCH의 차이는 무엇인가요?",
+          "RESTful하지 않은 API 설계 사례를 들어주세요.",
+          "HTTP 상태 코드 200, 201, 400, 401, 404, 500의 의미는?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "REST 원칙을 정확히 이해하고 HTTP 메서드와 상태 코드까지 설명",
+          "good": "REST 원칙과 주요 HTTP 메서드 설명",
+          "fair": "HTTP 메서드만 설명",
+          "poor": "REST 개념을 이해하지 못함"
+        }
+      },
+      {
+        "id": "Q_BE_JR_002",
+        "competency_id": "BE_JR_TECH_003",
+        "category": "기술_데이터베이스",
+        "difficulty": "junior",
+        "question": "SQL의 JOIN 종류에 대해 설명하고, 각각 언제 사용하는지 예를 들어주세요.",
+        "intent": "SQL 기본 개념 이해도 확인",
+        "expected_keywords": ["INNER JOIN", "LEFT JOIN", "RIGHT JOIN", "OUTER JOIN"],
+        "follow_up_questions": [
+          "N+1 쿼리 문제에 대해 알고 있나요?",
+          "인덱스를 사용하면 JOIN 성능이 어떻게 달라지나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "모든 JOIN 타입을 이해하고 적절한 사용 사례 제시",
+          "good": "주요 JOIN 타입 설명",
+          "fair": "INNER JOIN만 설명",
+          "poor": "JOIN 개념을 이해하지 못함"
+        }
+      },
+      {
+        "id": "Q_BE_JR_003",
+        "competency_id": "BE_JR_EXP_002",
+        "category": "프로젝트_경험",
+        "difficulty": "junior",
+        "question": "데이터베이스 스키마를 설계한 경험에 대해 말씀해주세요. 테이블 간 관계는 어떻게 정의했나요?",
+        "intent": "DB 설계 경험 및 정규화 기초 이해 확인",
+        "expected_keywords": ["ERD", "1:1", "1:N", "N:M", "외래키", "정규화"],
+        "follow_up_questions": [
+          "정규화는 왜 필요한가요?",
+          "역정규화를 고려해본 적 있나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "ERD 설계 경험과 함께 정규화 개념까지 설명",
+          "good": "테이블 관계 설정 경험 설명",
+          "fair": "스키마 설계 경험만 언급",
+          "poor": "DB 설계 경험 부족"
+        }
+      },
+      {
+        "id": "Q_BE_JR_004",
+        "competency_id": "BE_JR_EXP_004",
+        "category": "프로젝트_경험",
+        "difficulty": "junior",
+        "question": "JWT 인증 방식을 구현한 경험이 있다면 설명해주세요. Access Token과 Refresh Token을 어떻게 관리했나요?",
+        "intent": "인증/인가 구현 경험 확인",
+        "expected_keywords": ["JWT", "AccessToken", "RefreshToken", "인증", "보안"],
+        "follow_up_questions": [
+          "JWT의 장단점은 무엇인가요?",
+          "세션 기반 인증과의 차이는?",
+          "토큰을 어디에 저장했나요? (쿠키 vs localStorage)"
+        ],
+        "evaluation_criteria": {
+          "excellent": "JWT 구현 경험과 함께 보안 고려사항까지 설명",
+          "good": "JWT 인증 구현 경험 설명",
+          "fair": "JWT 개념만 설명",
+          "poor": "인증 구현 경험 부족"
+        }
+      },
+      {
+        "id": "Q_BE_JR_005",
+        "competency_id": "BE_JR_SOFT_001",
+        "category": "소프트스킬",
+        "difficulty": "junior",
+        "question": "요구사항을 받았을 때 API 설계를 어떻게 진행하나요? 프로세스를 설명해주세요.",
+        "intent": "요구사항 분석 및 API 설계 능력 확인",
+        "expected_keywords": ["요구사항분석", "엔드포인트설계", "데이터모델", "API명세"],
+        "follow_up_questions": [
+          "API 명세서는 어떤 도구로 작성했나요?",
+          "프론트엔드 팀과 어떻게 협업했나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "체계적인 API 설계 프로세스와 협업 방법 설명",
+          "good": "기본적인 API 설계 과정 설명",
+          "fair": "API 설계 경험만 언급",
+          "poor": "체계적인 설계 프로세스 부족"
+        }
+      }
+    ],
+    "BE_MID": [
+      {
+        "id": "Q_BE_MID_001",
+        "competency_id": "BE_MID_TECH_003",
+        "category": "기술_데이터베이스",
+        "difficulty": "mid",
+        "question": "데이터베이스 쿼리 최적화 경험에 대해 말씀해주세요. 실행 계획(Explain Plan)을 어떻게 분석하셨나요?",
+        "intent": "쿼리 최적화 실무 능력 확인",
+        "expected_keywords": ["실행계획", "인덱스", "쿼리최적화", "성능", "슬로우쿼리"],
+        "follow_up_questions": [
+          "어떤 경우에 인덱스를 추가하셨나요?",
+          "복합 인덱스 설계 시 컬럼 순서는 어떻게 정하나요?",
+          "인덱스가 오히려 성능을 저하시키는 경우는?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "실행 계획 분석부터 최적화 전략까지 구체적으로 설명하고 성과 제시",
+          "good": "쿼리 최적화 경험과 방법 설명",
+          "fair": "인덱스 추가 경험만 언급",
+          "poor": "쿼리 최적화 경험 부족"
+        }
+      },
+      {
+        "id": "Q_BE_MID_002",
+        "competency_id": "BE_MID_TECH_006",
+        "category": "기술_캐싱",
+        "difficulty": "mid",
+        "question": "캐싱 전략을 어떻게 수립하셨나요? Cache-Aside, Write-Through 등의 패턴 중 어떤 것을 사용했고 그 이유는?",
+        "intent": "캐싱 설계 능력 및 패턴 이해도 확인",
+        "expected_keywords": ["캐싱", "Redis", "Cache-Aside", "Write-Through", "TTL", "캐시무효화"],
+        "follow_up_questions": [
+          "캐시 무효화(Cache Invalidation)는 어떻게 처리하셨나요?",
+          "캐시 스탬피드(Cache Stampede) 문제를 겪어본 적 있나요?",
+          "캐시 워밍(Cache Warming)은 언제 필요한가요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "캐싱 패턴을 이해하고 상황에 맞는 선택 이유와 트레이드오프 설명",
+          "good": "캐싱 전략과 사용 패턴 설명",
+          "fair": "Redis 사용 경험만 언급",
+          "poor": "캐싱 설계 경험 부족"
+        }
+      },
+      {
+        "id": "Q_BE_MID_003",
+        "competency_id": "BE_MID_TECH_004",
+        "category": "기술_데이터베이스",
+        "difficulty": "mid",
+        "question": "트랜잭션 격리 수준(Isolation Level)에 대해 설명하고, 어떤 수준을 선택했는지 그 이유를 말씀해주세요.",
+        "intent": "트랜잭션 이해도 및 적절한 선택 능력 확인",
+        "expected_keywords": ["격리수준", "READ UNCOMMITTED", "READ COMMITTED", "REPEATABLE READ", "SERIALIZABLE"],
+        "follow_up_questions": [
+          "Dirty Read, Non-Repeatable Read, Phantom Read의 차이는?",
+          "격리 수준을 높이면 어떤 문제가 발생하나요?",
+          "실무에서 가장 많이 사용하는 격리 수준은?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "격리 수준별 특징과 문제점을 이해하고 상황별 선택 기준 제시",
+          "good": "격리 수준 종류와 특징 설명",
+          "fair": "격리 수준 개념만 설명",
+          "poor": "트랜잭션 격리 수준을 이해하지 못함"
+        }
+      },
+      {
+        "id": "Q_BE_MID_004",
+        "competency_id": "BE_MID_TECH_005",
+        "category": "기술_동시성",
+        "difficulty": "mid",
+        "question": "동시성 제어가 필요했던 경험에 대해 말씀해주세요. Optimistic Lock과 Pessimistic Lock 중 어떤 것을 선택했고 그 이유는?",
+        "intent": "동시성 문제 해결 경험 및 전략 확인",
+        "expected_keywords": ["동시성", "락", "OptimisticLock", "PessimisticLock", "경쟁상태"],
+        "follow_up_questions": [
+          "재고 관리 시스템에서 동시성 문제를 어떻게 해결하나요?",
+          "분산 락(Distributed Lock)을 사용해본 적 있나요?",
+          "데드락(Deadlock)을 방지하는 방법은?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "동시성 문제를 명확히 이해하고 상황에 맞는 락 전략과 트레이드오프 설명",
+          "good": "락 종류와 사용 경험 설명",
+          "fair": "동시성 문제 경험만 언급",
+          "poor": "동시성 제어 경험 부족"
+        }
+      },
+      {
+        "id": "Q_BE_MID_005",
+        "competency_id": "BE_MID_EXP_001",
+        "category": "프로젝트_경험",
+        "difficulty": "mid",
+        "question": "대용량 트래픽을 처리한 경험이나 성능 테스트 경험에 대해 말씀해주세요. 어떤 병목 지점을 발견했고 어떻게 해결했나요?",
+        "intent": "성능 최적화 실무 경험 및 문제 해결 능력 확인",
+        "expected_keywords": ["대용량트래픽", "성능테스트", "병목지점", "최적화", "모니터링"],
+        "follow_up_questions": [
+          "성능 테스트 도구는 무엇을 사용했나요? (JMeter, k6 등)",
+          "어느 정도 TPS를 처리했나요?",
+          "APM 도구로 모니터링한 경험이 있나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "구체적 수치와 함께 병목 지점 분석 및 해결 과정, 성과 제시",
+          "good": "성능 테스트 및 최적화 경험 설명",
+          "fair": "성능 이슈 경험만 언급",
+          "poor": "대용량 트래픽 처리 경험 부족"
+        }
+      },
+      {
+        "id": "Q_BE_MID_006",
+        "competency_id": "BE_MID_TECH_007",
+        "category": "기술_메시징",
+        "difficulty": "mid",
+        "question": "메시지 큐를 도입한 이유와 어떤 시스템에 적용했는지 설명해주세요.",
+        "intent": "비동기 처리 아키텍처 설계 경험 확인",
+        "expected_keywords": ["메시지큐", "Kafka", "RabbitMQ", "비동기처리", "이벤트드리븐"],
+        "follow_up_questions": [
+          "메시지 유실을 방지하기 위해 어떤 방법을 사용했나요?",
+          "정확히 한 번(Exactly Once) 처리는 어떻게 보장하나요?",
+          "Dead Letter Queue는 어떻게 처리했나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "메시지 큐 도입 배경과 아키텍처, 안정성 확보 방법까지 설명",
+          "good": "메시지 큐 사용 경험과 적용 사례 설명",
+          "fair": "메시지 큐 사용 경험만 언급",
+          "poor": "메시지 큐 경험 부족"
+        }
+      },
+      {
+        "id": "Q_BE_MID_007",
+        "competency_id": "BE_MID_EXP_006",
+        "category": "프로젝트_경험",
+        "difficulty": "mid",
+        "question": "장애 대응 경험에 대해 말씀해주세요. 원인 분석과 재발 방지를 위해 어떤 조치를 취했나요?",
+        "intent": "장애 대응 능력 및 시스템 개선 능력 확인",
+        "expected_keywords": ["장애대응", "원인분석", "포스트모텀", "모니터링", "알람"],
+        "follow_up_questions": [
+          "포스트모텀 문서를 작성해본 적 있나요?",
+          "장애를 미리 감지하기 위한 모니터링 지표는?",
+          "장애 대응 프로세스가 정립되어 있나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "장애 대응 과정과 근본 원인 분석, 재발 방지 대책까지 체계적으로 설명",
+          "good": "장애 대응 경험과 해결 방법 설명",
+          "fair": "장애 경험만 언급",
+          "poor": "장애 대응 경험 부족"
+        }
+      },
+      {
+        "id": "Q_BE_MID_008",
+        "competency_id": "BE_MID_NICE_001",
+        "category": "기술_아키텍처",
+        "difficulty": "mid",
+        "question": "마이크로서비스 아키텍처(MSA) 경험이 있다면, 모놀리식과 비교했을 때 어떤 장단점이 있었나요?",
+        "intent": "MSA 이해도 및 실무 경험 확인",
+        "expected_keywords": ["MSA", "마이크로서비스", "모놀리식", "서비스분리", "API Gateway"],
+        "follow_up_questions": [
+          "서비스를 어떤 기준으로 분리했나요?",
+          "서비스 간 통신은 어떻게 했나요? (동기/비동기)",
+          "분산 트랜잭션 문제는 어떻게 해결했나요?"
+        ],
+        "evaluation_criteria": {
+          "excellent": "MSA 장단점을 이해하고 실제 적용 경험과 트레이드오프 설명",
+          "good": "MSA 경험과 모놀리식과의 차이 설명",
+          "fair": "MSA 개념만 설명",
+          "poor": "MSA 경험 부족"
+        }
+      }
+    ]
+  }
+}
