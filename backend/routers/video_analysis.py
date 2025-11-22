@@ -2,21 +2,35 @@
 Video Analysis Router
 면접 영상 분석 및 피드백 제공
 """
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Form
+from sqlalchemy.orm import Session
 from pathlib import Path
 import soundfile as sf
+import os
+import json
+import shutil
+from datetime import datetime
+from typing import Optional
 
+from database import get_db
+from models import InterviewVideo, InterviewTranscript, NonverbalMetrics, NonverbalTimeline, Feedback
 from pipeline.video_io import extract_frames_opencv, extract_audio_ffmpeg
 from pipeline.vision_mediapipe import build_timeline_from_frames, save_timeline
 from pipeline.metrics import (
     center_gaze_ratio, smile_ratio, nod_count, emotion_distribution, get_primary_emotion
 )
 from pipeline.audio_analysis import transcribe_whisper, compute_wpm, compute_filler_count
+from pipeline.feedback_generator import generate_feedback_with_gemini, generate_feedback_fallback
 
 
 router = APIRouter()
 
-VIDEO_PATH = Path("video/interview.mp4")
+# 비디오 저장 디렉토리
+VIDEO_UPLOAD_DIR = Path("uploads/videos")
+VIDEO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# Gemini API 사용 여부 확인
+USE_GEMINI = bool(os.getenv("GEMINI_API_KEY"))
 
 
 def generate_feedback(m: dict):
@@ -89,52 +103,145 @@ def generate_feedback(m: dict):
 
 @router.get("/status")
 def video_status():
-    """비디오 파일 상태 확인"""
+    """API 상태 확인"""
     return {
-        "video_exists": VIDEO_PATH.exists(),
-        "video_path": str(VIDEO_PATH.resolve())
+        "gemini_api_enabled": USE_GEMINI,
+        "feedback_mode": "AI-powered (Gemini 2.5 Flash Lite)" if USE_GEMINI else "Rule-based",
+        "upload_directory": str(VIDEO_UPLOAD_DIR.resolve())
     }
 
 
-@router.post("/analyze")
-def analyze_interview():
+@router.post("/upload")
+async def upload_video(
+    file: UploadFile = File(...),
+    user_id: str = Form(...),
+    session_id: str = Form(...),
+    question_id: str = Form(...),
+    db: Session = Depends(get_db)
+):
     """
-    면접 영상 분석 및 피드백 생성
+    비디오 파일 업로드 및 DB 저장
+    
+    Args:
+        file: 업로드할 비디오 파일 (.mp4, .webm, .mov)
+        user_id: 사용자 ID
+        session_id: 면접 세션 ID
+        question_id: 면접 질문 ID
     
     Returns:
-        - center_gaze_ratio: 카메라 응시 비율
-        - smile_ratio: 미소/긍정 표정 비율
-        - nod_count: 고개 끄덕임 횟수
-        - emotion_distribution: 감정 분포 (blendshapes 모델 사용시)
-        - primary_emotion: 주요 감정 (blendshapes 모델 사용시)
-        - wpm: 분당 단어 수
-        - filler_count: 필러 사용 횟수
-        - feedback: 한국어 피드백 목록
+        video_id, file_path 등
     """
-    if not VIDEO_PATH.exists():
+    # 파일 확장자 검증
+    allowed_extensions = {".mp4", ".webm", ".mov", ".avi"}
+    file_ext = Path(file.filename).suffix.lower()
+    
+    if file_ext not in allowed_extensions:
         raise HTTPException(
-            status_code=404,
-            detail=f"Video file not found: {VIDEO_PATH}"
+            status_code=400,
+            detail=f"Unsupported file format: {file_ext}. Allowed: {allowed_extensions}"
         )
     
     try:
-        # 1) Extract frames
+        # 고유 파일명 생성
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        unique_filename = f"{user_id}_{session_id}_{timestamp}{file_ext}"
+        video_path = VIDEO_UPLOAD_DIR / unique_filename
+        
+        # 파일 저장
+        with open(video_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # 비디오 길이 추출
+        import cv2
+        cap = cv2.VideoCapture(str(video_path))
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        duration_sec = frame_count / fps if fps > 0 else 0
+        cap.release()
+        
+        # DB에 저장
+        video_record = InterviewVideo(
+            user_id=user_id,
+            session_id=session_id,
+            question_id=question_id,
+            video_url=str(video_path),
+            duration_sec=float(duration_sec)
+        )
+        db.add(video_record)
+        db.commit()
+        db.refresh(video_record)
+        
+        return {
+            "video_id": video_record.id,
+            "filename": unique_filename,
+            "file_path": str(video_path),
+            "duration_sec": duration_sec,
+            "created_at": video_record.created_at
+        }
+        
+    except Exception as e:
+        # 오류 발생시 업로드된 파일 삭제
+        if video_path.exists():
+            video_path.unlink()
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+
+@router.post("/analyze/{video_id}")
+def analyze_interview(video_id: str, db: Session = Depends(get_db)):
+    """
+    업로드된 비디오 분석 및 AI 피드백 생성 + DB 저장
+    
+    Args:
+        video_id: InterviewVideo ID
+    
+    Environment Variables:
+        - GEMINI_API_KEY: Gemini API 키 (설정시 AI 피드백 사용)
+    
+    Returns:
+        - 분석 결과 + DB에 저장된 레코드 IDs
+    """
+    # 1. DB에서 비디오 정보 조회
+    video_record = db.query(InterviewVideo).filter(InterviewVideo.id == video_id).first()
+    if not video_record:
+        raise HTTPException(status_code=404, detail=f"Video not found: {video_id}")
+    
+    video_path = Path(video_record.video_url)
+    if not video_path.exists():
+        raise HTTPException(
+            status_code=404,
+            detail=f"Video file not found: {video_path}"
+        )
+    
+    try:
+        # 2. 비디오 분해
+        print(f"🎬 Processing video: {video_path}")
+        
+        artifacts_dir = Path("artifacts") / video_id
+        frames_dir = artifacts_dir / "frames"
+        
         frames = extract_frames_opencv(
-            VIDEO_PATH, fps=5.0, out_dir=Path("artifacts/frames")
+            video_path, fps=5.0, out_dir=frames_dir
         )
 
-        # 2) Build vision timeline
+        # 3. Vision timeline 생성
+        print("👁️ Analyzing facial features...")
         timeline = build_timeline_from_frames(frames)
-        save_timeline(timeline, Path("artifacts/timeline.json"))
+        timeline_path = artifacts_dir / "timeline.json"
+        save_timeline(timeline, timeline_path)
 
-        # 3) Extract and analyze audio
-        wav = extract_audio_ffmpeg(VIDEO_PATH, Path("artifacts/audio.wav"))
+        # 4. 오디오 분석
+        print("🎤 Analyzing audio...")
+        wav_path = artifacts_dir / "audio.wav"
+        wav = extract_audio_ffmpeg(video_path, wav_path)
         audio, sr = sf.read(str(wav))
         duration_sec = len(audio) / sr
+        
+        print("📝 Transcribing speech...")
         stt = transcribe_whisper(wav, model_size="base")
         text = stt["text"]
 
-        # 4) Compute metrics
+        # 5. 메트릭 계산
+        print("📊 Computing metrics...")
         emotion_dist = emotion_distribution(timeline)
         primary_emo = get_primary_emotion(timeline)
         
@@ -148,14 +255,156 @@ def analyze_interview():
             "filler_count": compute_filler_count(text),
         }
 
-        # 5) Generate feedback
-        feedback = generate_feedback(metrics)
+        # 6. 피드백 생성
+        if USE_GEMINI:
+            print("🤖 Generating feedback with Gemini 2.5 Flash Lite...")
+            try:
+                feedback_list = generate_feedback_with_gemini(metrics, transcript=text)
+                feedback_mode = "gemini"
+            except Exception as e:
+                print(f"⚠️ Gemini failed, using fallback: {e}")
+                feedback_list = generate_feedback_fallback(metrics)
+                feedback_mode = "rule-based"
+        else:
+            print("📝 Generating feedback with rule-based system...")
+            feedback_list = generate_feedback_fallback(metrics)
+            feedback_mode = "rule-based"
 
-        return {**metrics, "feedback": feedback}
+        # 7. DB에 저장
+        print("💾 Saving to database...")
+        
+        # 7-1. Transcript 저장
+        transcript_record = InterviewTranscript(
+            video_id=video_id,
+            text=text,
+            language="ko"  # Whisper가 자동 감지하지만 기본값
+        )
+        db.add(transcript_record)
+        
+        # 7-2. NonverbalMetrics 저장
+        metrics_record = NonverbalMetrics(
+            video_id=video_id,
+            center_gaze_ratio=metrics["center_gaze_ratio"],
+            smile_ratio=metrics["smile_ratio"],
+            nod_count=metrics["nod_count"],
+            wpm=metrics["wpm"],
+            filler_count=metrics["filler_count"],
+            primary_emotion=primary_emo
+        )
+        db.add(metrics_record)
+        
+        # 7-3. NonverbalTimeline 저장
+        timeline_record = NonverbalTimeline(
+            video_id=video_id,
+            timeline_json=json.dumps(timeline, ensure_ascii=False)
+        )
+        db.add(timeline_record)
+        
+        # 7-4. Feedback 저장
+        feedback_records = []
+        for idx, feedback_text in enumerate(feedback_list):
+            # 피드백 분류 (간단한 규칙)
+            if any(word in feedback_text for word in ["우수", "안정적", "자연스럽", "적절", "긍정적"]):
+                severity = "info"
+                title = "강점"
+            elif any(word in feedback_text for word in ["과다", "많", "딱딱", "낮", "긴장"]):
+                severity = "warning"
+                title = "개선 필요"
+            else:
+                severity = "suggestion"
+                title = "제안"
+            
+            feedback_rec = Feedback(
+                video_id=video_id,
+                level="video",
+                title=f"{title} #{idx+1}",
+                message=feedback_text,
+                severity=severity
+            )
+            feedback_records.append(feedback_rec)
+            db.add(feedback_rec)
+        
+        # 커밋
+        db.commit()
+        
+        print("✅ Analysis complete!")
+        
+        return {
+            "video_id": video_id,
+            "metrics": metrics,
+            "feedback": feedback_list,
+            "feedback_mode": feedback_mode,
+            "transcript": text,
+            "database_records": {
+                "transcript_id": transcript_record.id,
+                "metrics_id": metrics_record.id,
+                "timeline_id": timeline_record.id,
+                "feedback_ids": [f.id for f in feedback_records]
+            }
+        }
     
     except Exception as e:
+        db.rollback()
         raise HTTPException(
             status_code=500,
             detail=f"Video analysis failed: {str(e)}"
         )
 
+
+@router.get("/results/{video_id}")
+def get_analysis_results(video_id: str, db: Session = Depends(get_db)):
+    """
+    저장된 분석 결과 조회
+    
+    Args:
+        video_id: InterviewVideo ID
+    
+    Returns:
+        비디오, 메트릭, 피드백, 전사 등 모든 분석 결과
+    """
+    # 비디오 정보
+    video = db.query(InterviewVideo).filter(InterviewVideo.id == video_id).first()
+    if not video:
+        raise HTTPException(status_code=404, detail=f"Video not found: {video_id}")
+    
+    # 메트릭
+    metrics = db.query(NonverbalMetrics).filter(NonverbalMetrics.video_id == video_id).first()
+    
+    # 피드백
+    feedbacks = db.query(Feedback).filter(Feedback.video_id == video_id).all()
+    
+    # 전사
+    transcript = db.query(InterviewTranscript).filter(InterviewTranscript.video_id == video_id).first()
+    
+    # 타임라인
+    timeline = db.query(NonverbalTimeline).filter(NonverbalTimeline.video_id == video_id).first()
+    
+    return {
+        "video": {
+            "id": video.id,
+            "user_id": video.user_id,
+            "session_id": video.session_id,
+            "question_id": video.question_id,
+            "duration_sec": video.duration_sec,
+            "created_at": video.created_at
+        },
+        "metrics": {
+            "center_gaze_ratio": metrics.center_gaze_ratio if metrics else None,
+            "smile_ratio": metrics.smile_ratio if metrics else None,
+            "nod_count": metrics.nod_count if metrics else None,
+            "wpm": metrics.wpm if metrics else None,
+            "filler_count": metrics.filler_count if metrics else None,
+            "primary_emotion": metrics.primary_emotion if metrics else None,
+        } if metrics else None,
+        "feedbacks": [
+            {
+                "id": f.id,
+                "title": f.title,
+                "message": f.message,
+                "severity": f.severity,
+                "level": f.level
+            } for f in feedbacks
+        ],
+        "transcript": transcript.text if transcript else None,
+        "timeline_available": timeline is not None
+    }

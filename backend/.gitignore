@@ -50,3 +50,13 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Video Analysis Artifacts
+artifacts/
+uploads/
+video/
+MediaPipe/
+
+# Temporary files
+*.wav
+*.tmp
