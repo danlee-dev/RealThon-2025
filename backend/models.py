@@ -138,12 +138,19 @@ class NonverbalMetrics(Base):
 
     id = Column(String, primary_key=True, default=generate_uuid)
     video_id = Column(String, ForeignKey("interview_video.id", ondelete="CASCADE"), nullable=False)
+    
+    # Core metrics
     center_gaze_ratio = Column(Float)
     smile_ratio = Column(Float)
     nod_count = Column(Integer)
+    nod_rate_per_min = Column(Float)  # NEW: normalized nod rate
     wpm = Column(Float)
     filler_count = Column(Integer)
     primary_emotion = Column(String)
+    
+    # Computation metadata (JSON stored as Text)
+    metadata_json = Column(Text)  # Stores: fps, frame counts, thresholds, models, confidence, outliers
+    
     created_at = Column(String, nullable=False, default=lambda: datetime.utcnow().isoformat())
 
     # Relationships

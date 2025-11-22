@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from database import get_db, engine
 from models import Base
 import uvicorn
@@ -37,20 +38,21 @@ def read_root():
 def health_check(db: Session = Depends(get_db)):
     """Health check endpoint"""
     try:
-        # Test database connection
-        db.execute("SELECT 1")
+        # Test database connection (SQLAlchemy 2.0 syntax)
+        db.execute(text("SELECT 1"))
         return {"status": "healthy", "database": "connected"}
     except Exception as e:
         return {"status": "unhealthy", "error": str(e)}
 
 
 # Include routers
-from routers import users, portfolios, job_postings, interviews
+from routers import users, portfolios, job_postings, interviews, video_analysis
 
 app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(portfolios.router, prefix="/api/portfolios", tags=["portfolios"])
 app.include_router(job_postings.router, prefix="/api/job-postings", tags=["job-postings"])
 app.include_router(interviews.router, prefix="/api/interviews", tags=["interviews"])
+app.include_router(video_analysis.router, prefix="/api/video", tags=["video-analysis"])
 
 
 if __name__ == "__main__":
