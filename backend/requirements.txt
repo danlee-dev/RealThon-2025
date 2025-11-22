@@ -31,9 +31,14 @@ torch==2.9.1
 torchaudio==2.9.1
 soundfile==0.13.1
 
+# PDF Processing
+PyPDF2==3.0.1
+
 # LLM API
 google-generativeai==0.8.5
 
-# Additional dependencies (설치된 것들)
-praat-parselmouth==0.4.6
+# GitHub API & HTTP Requests
+requests==2.32.3
+
+# Additional dependencies
 scipy==1.16.3

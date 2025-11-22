@@ -1,0 +1,720 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-11-22",
+    "description": "면접 시나리오 템플릿 - 포트폴리오 분석 결과를 바탕으로 맞춤형 면접 대본 생성",
+    "usage": "포트폴리오 평가 결과와 함께 사용하여 개인화된 면접 시나리오 구성"
+  },
+  "scenario_structure": {
+    "description": "면접 시나리오 기본 구조",
+    "phases": [
+      {
+        "phase": "introduction",
+        "name": "도입 단계",
+        "duration": "5-10분",
+        "purpose": "긴장 완화 및 기본 정보 확인"
+      },
+      {
+        "phase": "portfolio_review",
+        "name": "포트폴리오 리뷰",
+        "duration": "15-20분",
+        "purpose": "프로젝트 경험 상세 확인 및 강점 파악"
+      },
+      {
+        "phase": "technical_deep_dive",
+        "name": "기술 심화 질문",
+        "duration": "20-30분",
+        "purpose": "기술 역량 검증 및 부족한 부분 확인"
+      },
+      {
+        "phase": "problem_solving",
+        "name": "문제 해결 능력",
+        "duration": "15-20분",
+        "purpose": "코딩 테스트 또는 시스템 디자인"
+      },
+      {
+        "phase": "cultural_fit",
+        "name": "조직 적합성",
+        "duration": "10-15분",
+        "purpose": "협업 능력 및 소프트 스킬 확인"
+      },
+      {
+        "phase": "closing",
+        "name": "마무리",
+        "duration": "5-10분",
+        "purpose": "질의응답 및 다음 단계 안내"
+      }
+    ]
+  },
+  "templates": {
+    "FE_JUNIOR": {
+      "id": "SCENARIO_FE_JUNIOR",
+      "level": "LEVEL_JUNIOR",
+      "role": "ROLE_FE",
+      "total_duration": "60-90분",
+      "introduction": {
+        "greeting": "안녕하세요, {이름}님. 만나서 반갑습니다. 편하게 면접 진행하도록 하겠습니다.",
+        "ice_breaker": [
+          "간단하게 자기소개 부탁드립니다.",
+          "프론트엔드 개발에 관심을 갖게 된 계기가 있나요?",
+          "최근에 관심있게 본 기술이나 트렌드가 있나요?"
+        ],
+        "portfolio_overview": "포트폴리오를 미리 잘 봤습니다. 전반적으로 {강점_요약}이 인상적이었어요. 오늘 면접에서는 프로젝트 경험을 좀 더 자세히 듣고, 몇 가지 기술 질문을 드리겠습니다."
+      },
+      "portfolio_review": {
+        "main_project_question": "포트폴리오에서 가장 중요하게 생각하는 프로젝트를 하나 선택해서 설명해주세요.",
+        "follow_up_template": [
+          {
+            "if": "프로젝트에서 React 사용",
+            "questions": [
+              "React를 선택한 이유가 있나요?",
+              "컴포넌트는 어떤 기준으로 분리하셨나요?",
+              "상태 관리는 어떻게 하셨나요?"
+            ]
+          },
+          {
+            "if": "API 연동 경험 언급",
+            "questions": [
+              "API 호출 시 에러는 어떻게 처리하셨나요?",
+              "로딩 상태는 어떻게 관리하셨나요?",
+              "비동기 처리에서 어려웠던 점이 있었나요?"
+            ]
+          },
+          {
+            "if": "스타일링 작업 언급",
+            "questions": [
+              "CSS는 어떻게 관리하셨나요?",
+              "반응형은 어떻게 구현하셨나요?",
+              "디자인 시스템이나 스타일 가이드가 있었나요?"
+            ]
+          }
+        ],
+        "challenge_question": "프로젝트 진행 중 가장 어려웠던 기술적 문제는 무엇이었고, 어떻게 해결하셨나요?",
+        "learning_question": "이 프로젝트를 통해 새롭게 배운 점이나 개선하고 싶은 부분이 있나요?"
+      },
+      "technical_deep_dive": {
+        "description": "포트폴리오 평가에서 부족한 역량 위주로 질문",
+        "question_selection_logic": {
+          "if_missing_critical": "필수 역량이 부족한 경우, 해당 역량 관련 기본 질문",
+          "if_has_all_critical": "필수 역량을 모두 갖춘 경우, 심화 질문",
+          "adaptive_difficulty": "답변 수준에 따라 난이도 조정"
+        },
+        "question_categories": [
+          {
+            "category": "JavaScript 기본",
+            "use_when": "FE_JR_TECH_002가 부족한 경우",
+            "sample_questions": [
+              "Q_FE_JR_001",
+              "Q_FE_JR_002"
+            ]
+          },
+          {
+            "category": "React 기본",
+            "use_when": "FE_JR_TECH_003이 부족한 경우",
+            "sample_questions": [
+              "Q_FE_JR_003"
+            ]
+          },
+          {
+            "category": "프로젝트 경험",
+            "use_when": "FE_JR_EXP_001이 부족한 경우",
+            "sample_questions": [
+              "Q_FE_JR_004"
+            ]
+          }
+        ]
+      },
+      "problem_solving": {
+        "type": "간단한 코딩 테스트",
+        "options": [
+          {
+            "problem": "To-Do 리스트 컴포넌트 구현",
+            "requirements": [
+              "할 일 추가/삭제 기능",
+              "완료 체크 기능",
+              "필터링 (전체/완료/미완료)"
+            ],
+            "evaluation_points": [
+              "컴포넌트 구조",
+              "상태 관리",
+              "이벤트 핸들링",
+              "코드 가독성"
+            ]
+          },
+          {
+            "problem": "API 데이터를 받아 리스트 렌더링",
+            "requirements": [
+              "API 호출",
+              "로딩 상태 표시",
+              "에러 처리",
+              "데이터 표시"
+            ],
+            "evaluation_points": [
+              "비동기 처리",
+              "에러 핸들링",
+              "사용자 경험 고려",
+              "코드 구조"
+            ]
+          }
+        ]
+      },
+      "cultural_fit": {
+        "questions": [
+          {
+            "question": "코드 리뷰를 받았을 때 어떻게 대응하시나요?",
+            "intent": "피드백 수용 능력 확인"
+          },
+          {
+            "question": "막히는 문제가 생겼을 때 어떻게 해결하시나요?",
+            "intent": "문제 해결 접근 방식 확인"
+          },
+          {
+            "question": "팀 프로젝트 경험이 있다면 어떤 역할을 맡으셨나요?",
+            "intent": "협업 경험 확인"
+          },
+          {
+            "question": "앞으로 어떤 개발자가 되고 싶으신가요?",
+            "intent": "성장 의지 및 목표 확인"
+          }
+        ]
+      },
+      "closing": {
+        "feedback_delivery": {
+          "positive_first": "오늘 면접에서 {강점} 부분이 인상적이었습니다.",
+          "growth_area": "앞으로 {부족한_역량}을 더 학습하시면 좋을 것 같습니다.",
+          "encouragement": "전반적으로 주니어 개발자로서 좋은 기본기를 갖추고 계신 것 같습니다."
+        },
+        "candidate_questions": "궁금하신 점이나 질문 있으시면 편하게 물어보세요.",
+        "next_steps": "면접 결과는 {기간} 내로 개별 연락드리겠습니다."
+      },
+      "evaluation_summary": {
+        "technical_skills": {
+          "criteria": [
+            "기본 개념 이해도",
+            "프로젝트 구현 능력",
+            "문제 해결 능력",
+            "코드 품질"
+          ],
+          "rating_scale": "1-5점"
+        },
+        "soft_skills": {
+          "criteria": [
+            "커뮤니케이션",
+            "학습 의지",
+            "협업 태도",
+            "성장 가능성"
+          ],
+          "rating_scale": "1-5점"
+        },
+        "overall_recommendation": {
+          "strong_hire": "필수 역량 90% 이상 + 우수한 문제 해결 능력",
+          "hire": "필수 역량 80% 이상 + 성장 가능성",
+          "maybe": "필수 역량 70% 이상 + 추가 면접 필요",
+          "no_hire": "필수 역량 70% 미만"
+        }
+      }
+    },
+    "FE_MID": {
+      "id": "SCENARIO_FE_MID",
+      "level": "LEVEL_MID",
+      "role": "ROLE_FE",
+      "total_duration": "90-120분",
+      "introduction": {
+        "greeting": "안녕하세요, {이름}님. {경력}년 경력의 프론트엔드 개발자시군요. 만나서 반갑습니다.",
+        "ice_breaker": [
+          "현재 회사에서는 어떤 업무를 주로 하고 계신가요?",
+          "최근에 가장 관심있는 프론트엔드 기술이나 트렌드가 있나요?",
+          "저희 회사에 지원하신 이유가 궁금합니다."
+        ],
+        "portfolio_overview": "포트폴리오를 보니 {주요_프로젝트}와 {기술_스택}이 인상적이었습니다. 특히 {강점_요약}이 눈에 띄었어요."
+      },
+      "portfolio_review": {
+        "main_project_question": "가장 기술적으로 도전적이었던 프로젝트를 하나 선택해서 설명해주세요. 프로젝트 배경, 기술 스택 선택 이유, 아키텍처, 그리고 성과를 중심으로 말씀해주시면 좋겠습니다.",
+        "architecture_questions": [
+          "프로젝트의 전체 아키텍처를 설명해주세요.",
+          "상태 관리는 어떻게 설계하셨나요? 전역 상태와 로컬 상태는 어떻게 구분하셨나요?",
+          "컴포넌트 구조는 어떻게 설계하셨나요? 설계 원칙이 있었나요?",
+          "폴더 구조는 어떻게 구성하셨나요?"
+        ],
+        "performance_questions": [
+          "성능 최적화를 어떻게 하셨나요?",
+          "Lighthouse 점수나 Core Web Vitals 지표를 측정하셨나요?",
+          "번들 사이즈는 어떻게 관리하셨나요?",
+          "렌더링 성능 개선을 위해 어떤 기법을 사용하셨나요?"
+        ],
+        "impact_questions": [
+          "이 프로젝트의 비즈니스 임팩트는 무엇이었나요?",
+          "성능 개선으로 인한 지표 변화가 있었나요? (예: 전환율, 이탈률)",
+          "이 프로젝트를 통해 팀이나 조직에 어떤 기여를 하셨나요?"
+        ],
+        "technical_decision": [
+          "기술 스택을 선택할 때 어떤 기준으로 결정하셨나요?",
+          "대안 기술들과 비교했을 때 선택한 기술의 장단점은 무엇이었나요?",
+          "만약 다시 한다면 어떤 부분을 다르게 하실 건가요?"
+        ]
+      },
+      "technical_deep_dive": {
+        "description": "미드레벨 개발자에게 기대되는 깊이 있는 기술 이해도 검증",
+        "question_categories": [
+          {
+            "category": "프레임워크 내부 동작",
+            "use_when": "FE_MID_TECH_001 검증 필요",
+            "sample_questions": [
+              "Q_FE_MID_001"
+            ]
+          },
+          {
+            "category": "상태 관리 아키텍처",
+            "use_when": "FE_MID_TECH_003 검증 필요",
+            "sample_questions": [
+              "Q_FE_MID_002"
+            ]
+          },
+          {
+            "category": "성능 최적화",
+            "use_when": "FE_MID_TECH_005 검증 필요",
+            "sample_questions": [
+              "Q_FE_MID_003"
+            ]
+          },
+          {
+            "category": "브라우저 동작 원리",
+            "use_when": "FE_MID_TECH_006 검증 필요",
+            "sample_questions": [
+              "Q_FE_MID_004"
+            ]
+          }
+        ],
+        "scenario_based_questions": [
+          {
+            "scenario": "대규모 리팩토링",
+            "question": "레거시 코드베이스를 React 18로 마이그레이션해야 한다면 어떤 전략을 사용하시겠습니까?",
+            "evaluation_points": [
+              "점진적 마이그레이션 전략",
+              "리스크 관리",
+              "테스트 전략",
+              "팀 협업"
+            ]
+          },
+          {
+            "scenario": "성능 문제 해결",
+            "question": "사용자가 페이지 로딩이 느리다고 불만을 제기했습니다. 어떻게 접근하시겠습니까?",
+            "evaluation_points": [
+              "문제 진단 방법",
+              "성능 측정 도구",
+              "최적화 전략",
+              "우선순위 결정"
+            ]
+          }
+        ]
+      },
+      "problem_solving": {
+        "type": "시스템 디자인 또는 고급 코딩 문제",
+        "options": [
+          {
+            "problem": "무한 스크롤 컴포넌트 설계",
+            "requirements": [
+              "페이지네이션 API 연동",
+              "성능 최적화 (가상 스크롤링)",
+              "로딩 상태 관리",
+              "에러 처리 및 재시도"
+            ],
+            "evaluation_points": [
+              "아키�ექ처 설계",
+              "성능 고려사항",
+              "사용자 경험",
+              "에지 케이스 처리"
+            ]
+          },
+          {
+            "problem": "디자인 시스템 컴포넌트 설계",
+            "requirements": [
+              "재사용 가능한 Button 컴포넌트",
+              "다양한 variant와 size",
+              "접근성 고려",
+              "TypeScript 타입 정의"
+            ],
+            "evaluation_points": [
+              "컴포넌트 API 설계",
+              "확장성",
+              "타입 안정성",
+              "접근성"
+            ]
+          },
+          {
+            "problem": "상태 관리 라이브러리 설계",
+            "requirements": [
+              "간단한 전역 상태 관리 라이브러리 구현",
+              "구독 패턴",
+              "성능 최적화"
+            ],
+            "evaluation_points": [
+              "설계 패턴",
+              "성능",
+              "사용성",
+              "확장성"
+            ]
+          }
+        ]
+      },
+      "leadership_and_collaboration": {
+        "questions": [
+          {
+            "question": "주니어 개발자를 멘토링한 경험에 대해 말씀해주세요.",
+            "intent": "리더십 및 멘토링 능력 확인"
+          },
+          {
+            "question": "기술 부채를 발견했을 때 어떻게 대응하시나요?",
+            "intent": "기술 부채 관리 능력 확인"
+          },
+          {
+            "question": "팀 내 기술 의사결정 과정에서 의견 충돌이 있었던 경험을 공유해주세요.",
+            "intent": "의사소통 및 협업 능력 확인"
+          },
+          {
+            "question": "코드 리뷰 시 어떤 부분을 중점적으로 보시나요?",
+            "intent": "코드 품질에 대한 관점 확인"
+          }
+        ]
+      },
+      "closing": {
+        "feedback_delivery": {
+          "positive_first": "{강점}과 {프로젝트_경험}이 인상적이었습니다.",
+          "growth_area": "앞으로 {부족한_역량}을 더 강화하시면 시니어로 성장하는데 도움이 될 것 같습니다.",
+          "fit_assessment": "우리 팀의 {특정_프로젝트}에 기여하실 수 있을 것 같습니다."
+        },
+        "candidate_questions": "회사, 팀, 기술 스택 등 궁금하신 점 편하게 질문해주세요.",
+        "next_steps": "다음 단계는 {다음_면접_또는_과제}이며, {기간} 내로 연락드리겠습니다."
+      },
+      "evaluation_summary": {
+        "technical_skills": {
+          "criteria": [
+            "기술 깊이",
+            "아키텍처 설계 능력",
+            "성능 최적화 경험",
+            "문제 해결 능력",
+            "코드 품질"
+          ],
+          "rating_scale": "1-5점"
+        },
+        "leadership_skills": {
+          "criteria": [
+            "멘토링 능력",
+            "기술 의사결정",
+            "코드 리뷰 품질",
+            "기술 부채 관리"
+          ],
+          "rating_scale": "1-5점"
+        },
+        "overall_recommendation": {
+          "strong_hire": "필수 역량 90% + 리더십 경험 + 비즈니스 임팩트",
+          "hire": "필수 역량 80% + 좋은 성장 곡선",
+          "maybe": "필수 역량 충족하나 경험 부족",
+          "no_hire": "필수 역량 미달 또는 레벨 불일치"
+        }
+      }
+    },
+    "BE_JUNIOR": {
+      "id": "SCENARIO_BE_JUNIOR",
+      "level": "LEVEL_JUNIOR",
+      "role": "ROLE_BE",
+      "total_duration": "60-90분",
+      "introduction": {
+        "greeting": "안녕하세요, {이름}님. 백엔드 개발자로 지원해주셔서 감사합니다.",
+        "ice_breaker": [
+          "간단하게 자기소개 부탁드립니다.",
+          "백엔드 개발에 관심을 갖게 된 계기가 있나요?",
+          "주로 어떤 언어와 프레임워크를 사용하셨나요?"
+        ],
+        "portfolio_overview": "포트폴리오를 미리 확인했습니다. {사용_기술_스택}으로 {프로젝트_개수}개의 프로젝트를 진행하셨네요."
+      },
+      "portfolio_review": {
+        "main_project_question": "가장 공들여 만든 프로젝트를 하나 선택해서 설명해주세요.",
+        "follow_up_template": [
+          {
+            "if": "데이터베이스 설계 언급",
+            "questions": [
+              "데이터베이스 스키마는 어떻게 설계하셨나요?",
+              "테이블 간 관계는 어떻게 정의하셨나요?",
+              "정규화는 고려하셨나요?"
+            ]
+          },
+          {
+            "if": "API 구현 언급",
+            "questions": [
+              "RESTful API 설계 원칙을 어떻게 적용하셨나요?",
+              "API 문서화는 어떻게 하셨나요?",
+              "에러 처리는 어떻게 하셨나요?"
+            ]
+          },
+          {
+            "if": "인증 구현 언급",
+            "questions": [
+              "어떤 인증 방식을 사용하셨나요?",
+              "JWT를 사용했다면 Access Token과 Refresh Token을 어떻게 관리하셨나요?",
+              "보안은 어떻게 고려하셨나요?"
+            ]
+          }
+        ],
+        "challenge_question": "개발 중 가장 어려웠던 기술적 문제는 무엇이었고, 어떻게 해결하셨나요?",
+        "learning_question": "이 프로젝트를 통해 배운 점이나 아쉬운 점이 있나요?"
+      },
+      "technical_deep_dive": {
+        "question_categories": [
+          {
+            "category": "REST API 설계",
+            "use_when": "BE_JR_TECH_005 검증 필요",
+            "sample_questions": [
+              "Q_BE_JR_001"
+            ]
+          },
+          {
+            "category": "SQL 기본",
+            "use_when": "BE_JR_TECH_003 검증 필요",
+            "sample_questions": [
+              "Q_BE_JR_002"
+            ]
+          },
+          {
+            "category": "데이터베이스 설계",
+            "use_when": "BE_JR_EXP_002 검증 필요",
+            "sample_questions": [
+              "Q_BE_JR_003"
+            ]
+          },
+          {
+            "category": "인증/인가",
+            "use_when": "BE_JR_EXP_004 검증 필요",
+            "sample_questions": [
+              "Q_BE_JR_004"
+            ]
+          }
+        ]
+      },
+      "problem_solving": {
+        "type": "간단한 API 설계 또는 SQL 작성",
+        "options": [
+          {
+            "problem": "간단한 블로그 API 설계",
+            "requirements": [
+              "게시글 CRUD",
+              "댓글 기능",
+              "사용자 인증"
+            ],
+            "evaluation_points": [
+              "엔드포인트 설계",
+              "HTTP 메서드 선택",
+              "상태 코드 사용",
+              "DB 스키마 설계"
+            ]
+          },
+          {
+            "problem": "SQL 쿼리 작성",
+            "requirements": [
+              "주어진 요구사항에 맞는 SELECT 쿼리",
+              "JOIN을 사용한 데이터 조회",
+              "집계 함수 활용"
+            ],
+            "evaluation_points": [
+              "쿼리 정확성",
+              "효율성",
+              "가독성"
+            ]
+          }
+        ]
+      },
+      "cultural_fit": {
+        "questions": [
+          {
+            "question": "코드 리뷰를 받았을 때 어떻게 대응하시나요?",
+            "intent": "피드백 수용 능력"
+          },
+          {
+            "question": "버그를 발견했을 때 어떻게 해결하시나요?",
+            "intent": "문제 해결 접근법"
+          },
+          {
+            "question": "팀 프로젝트 경험에 대해 말씀해주세요.",
+            "intent": "협업 경험"
+          }
+        ]
+      },
+      "closing": {
+        "feedback_delivery": {
+          "positive_first": "{강점}이 인상적이었습니다.",
+          "growth_area": "{부족한_역량}을 보완하시면 좋을 것 같습니다.",
+          "encouragement": "주니어 개발자로서 좋은 잠재력을 보여주셨습니다."
+        },
+        "candidate_questions": "궁금하신 점 있으시면 질문해주세요.",
+        "next_steps": "{기간} 내로 결과 연락드리겠습니다."
+      }
+    },
+    "BE_MID": {
+      "id": "SCENARIO_BE_MID",
+      "level": "LEVEL_MID",
+      "role": "ROLE_BE",
+      "total_duration": "90-120분",
+      "introduction": {
+        "greeting": "안녕하세요, {이름}님. {경력}년 경력의 백엔드 개발자시군요.",
+        "ice_breaker": [
+          "현재 담당하고 계신 서비스나 시스템에 대해 간단히 소개해주세요.",
+          "최근 해결한 기술적 챌린지가 있다면 공유해주세요.",
+          "우리 회사에 지원하신 이유가 궁금합니다."
+        ],
+        "portfolio_overview": "{주요_기술_스택}과 {프로젝트_규모}가 인상적이었습니다."
+      },
+      "portfolio_review": {
+        "main_project_question": "가장 기술적으로 도전적이었던 프로젝트를 선택해서 아키텍처, 기술 선택, 성과를 중심으로 설명해주세요.",
+        "architecture_questions": [
+          "시스템 아키텍처를 전반적으로 설명해주세요.",
+          "데이터베이스 설계는 어떻게 하셨나요?",
+          "확장성을 어떻게 고려하셨나요?",
+          "마이크로서비스 아키텍처를 적용하셨나요?"
+        ],
+        "performance_questions": [
+          "성능 최적화는 어떻게 하셨나요?",
+          "어느 정도의 트래픽을 처리했나요?",
+          "병목 지점은 어떻게 파악하고 해결하셨나요?",
+          "캐싱 전략은 어떻게 수립하셨나요?"
+        ],
+        "reliability_questions": [
+          "장애 대응 경험에 대해 말씀해주세요.",
+          "모니터링과 알람은 어떻게 구성하셨나요?",
+          "배포 전략은 어떻게 가져가셨나요?",
+          "데이터 정합성은 어떻게 보장하셨나요?"
+        ]
+      },
+      "technical_deep_dive": {
+        "question_categories": [
+          {
+            "category": "데이터베이스 최적화",
+            "sample_questions": [
+              "Q_BE_MID_001"
+            ]
+          },
+          {
+            "category": "캐싱 전략",
+            "sample_questions": [
+              "Q_BE_MID_002"
+            ]
+          },
+          {
+            "category": "트랜잭션 관리",
+            "sample_questions": [
+              "Q_BE_MID_003"
+            ]
+          },
+          {
+            "category": "동시성 제어",
+            "sample_questions": [
+              "Q_BE_MID_004"
+            ]
+          }
+        ],
+        "scenario_questions": [
+          {
+            "scenario": "대용량 트래픽",
+            "question": "갑자기 트래픽이 10배 증가한다면 어떻게 대응하시겠습니까?",
+            "evaluation_points": [
+              "확장 전략",
+              "병목 지점 파악",
+              "우선순위 결정",
+              "모니터링"
+            ]
+          },
+          {
+            "scenario": "데이터 마이그레이션",
+            "question": "무중단으로 대용량 데이터를 새로운 스키마로 마이그레이션해야 한다면?",
+            "evaluation_points": [
+              "마이그레이션 전략",
+              "리스크 관리",
+              "롤백 계획",
+              "검증 방법"
+            ]
+          }
+        ]
+      },
+      "problem_solving": {
+        "type": "시스템 디자인",
+        "options": [
+          {
+            "problem": "URL 단축 서비스 설계",
+            "requirements": [
+              "대규모 트래픽 처리",
+              "고가용성",
+              "데이터베이스 설계",
+              "API 설계"
+            ]
+          },
+          {
+            "problem": "실시간 채팅 시스템 설계",
+            "requirements": [
+              "실시간 메시징",
+              "확장성",
+              "메시지 저장",
+              "읽음 표시"
+            ]
+          }
+        ]
+      },
+      "closing": {
+        "feedback_delivery": {
+          "positive_first": "{강점}과 {경험}이 우수했습니다.",
+          "growth_area": "{부족한_역량} 부분을 강화하시면 좋겠습니다.",
+          "fit_assessment": "우리 팀의 {기술_스택}과 잘 맞을 것 같습니다."
+        }
+      }
+    }
+  },
+  "adaptive_scenario_generation": {
+    "description": "포트폴리오 분석 결과를 바탕으로 동적 시나리오 생성 로직",
+    "steps": [
+      {
+        "step": 1,
+        "action": "포트폴리오 평가 결과 로드",
+        "details": "portfolio_checklist.json의 분석 결과 활용"
+      },
+      {
+        "step": 2,
+        "action": "강점과 약점 파악",
+        "details": "보유 역량과 부족한 역량 분류"
+      },
+      {
+        "step": 3,
+        "action": "기본 시나리오 템플릿 선택",
+        "details": "연차와 직무에 맞는 템플릿 로드"
+      },
+      {
+        "step": 4,
+        "action": "강점 기반 포트폴리오 질문 생성",
+        "details": "보유 역량 중 우수한 부분을 더 깊이 탐색하는 질문"
+      },
+      {
+        "step": 5,
+        "action": "약점 기반 기술 질문 선택",
+        "details": "부족한 역량의 competency_id로 interview_questions.json에서 질문 추출"
+      },
+      {
+        "step": 6,
+        "action": "난이도 조정",
+        "details": "전체 역량 수준에 따라 질문 난이도 조정"
+      },
+      {
+        "step": 7,
+        "action": "최종 시나리오 생성",
+        "details": "템플릿에 구체적인 질문들을 삽입하여 완성"
+      }
+    ],
+    "personalization_variables": {
+      "이름": "지원자 이름",
+      "경력": "경력 연차",
+      "강점": "보유한 우수 역량",
+      "강점_요약": "강점 간단 요약",
+      "부족한_역량": "미보유 필수 역량",
+      "주요_프로젝트": "포트폴리오 주요 프로젝트명",
+      "사용_기술_스택": "사용한 기술 스택",
+      "프로젝트_개수": "프로젝트 수",
+      "프로젝트_규모": "프로젝트 규모 (팀 크기, 사용자 수 등)"
+    }
+  }
+}

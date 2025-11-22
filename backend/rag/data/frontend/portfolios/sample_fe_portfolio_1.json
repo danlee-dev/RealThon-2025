@@ -1,0 +1,70 @@
+{
+  "name": "김프론트",
+  "position": "Frontend Developer",
+  "experience_years": 3,
+  "skills": [
+    "React",
+    "TypeScript",
+    "Next.js",
+    "Tailwind CSS",
+    "Redux",
+    "React Query",
+    "Git",
+    "Figma"
+  ],
+  "projects": [
+    {
+      "name": "E-commerce 플랫폼 리뉴얼",
+      "duration": "6개월",
+      "role": "Frontend Lead",
+      "contribution_rate": 80,
+      "technologies": ["Next.js", "TypeScript", "Zustand", "React Query"],
+      "achievements": [
+        "초기 로딩 속도 40% 개선 (Lighthouse 성능 점수 65 → 92)",
+        "SEO 최적화로 자연 유입 트래픽 150% 증가",
+        "반응형 디자인 적용으로 모바일 전환율 25% 향상"
+      ]
+    },
+    {
+      "name": "사내 대시보드 시스템",
+      "duration": "4개월",
+      "role": "Frontend Developer",
+      "contribution_rate": 60,
+      "technologies": ["React", "TypeScript", "Recharts", "Styled-components"],
+      "achievements": [
+        "실시간 데이터 시각화 구현",
+        "웹소켓 기반 실시간 업데이트",
+        "사용자 맞춤 위젯 커스터마이징 기능"
+      ]
+    },
+    {
+      "name": "개인 프로젝트 - 할 일 관리 앱",
+      "duration": "2개월",
+      "role": "Full-stack",
+      "contribution_rate": 100,
+      "technologies": ["React", "Firebase", "Material-UI"],
+      "achievements": [
+        "드래그 앤 드롭 기능 구현",
+        "PWA 적용으로 오프라인 지원",
+        "500+ 다운로드"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "학사",
+      "major": "컴퓨터공학",
+      "university": "OO대학교",
+      "graduation_year": 2021
+    }
+  ],
+  "certifications": [],
+  "activities": [
+    {
+      "type": "스터디",
+      "name": "React 심화 스터디",
+      "duration": "6개월",
+      "description": "매주 React 공식 문서 및 심화 주제 학습"
+    }
+  ]
+}

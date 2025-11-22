@@ -60,3 +60,6 @@ MediaPipe/
 # Temporary files
 *.wav
 *.tmp
+
+# Static files
+static/uploads/
