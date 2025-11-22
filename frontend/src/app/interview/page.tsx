@@ -27,26 +27,12 @@ export default function InterviewPage() {
     setIsLoadingQuestions(true);
 
     try {
-      let jobPostingId: string | undefined = undefined;
-
-      // Submit job posting URL if provided
+      const formData = new FormData();
       if (jobPostingUrl && jobPostingUrl.trim()) {
-        console.log('[DEBUG] Submitting job posting URL:', jobPostingUrl);
-        const jobPostingResponse = await jobPostingApi.submitJobPosting(jobPostingUrl);
-
-        if (!jobPostingResponse.success || !jobPostingResponse.data) {
-          console.error('[ERROR] Failed to submit job posting URL:', jobPostingResponse.error);
-          alert('공고 URL 제출에 실패했습니다. 기본 질문으로 진행합니다.');
-          // Continue without job posting ID
-        } else {
-          jobPostingId = jobPostingResponse.data.id;
-          console.log('[DEBUG] Job posting ID received:', jobPostingId);
-        }
-      } else {
-        console.log('[DEBUG] No job posting URL provided, using default questions');
+        formData.append('job_posting_url', jobPostingUrl.trim());
       }
 
-      const sessionResponse = await interviewApi.createSession(jobPostingId);
+      const sessionResponse = await interviewApi.createSession(formData);
 
       if (!sessionResponse.success || !sessionResponse.data) {
         console.error('[ERROR] Failed to create interview session:', sessionResponse.error);

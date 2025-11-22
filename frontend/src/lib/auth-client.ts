@@ -294,7 +294,7 @@ export const jobPostingApi = {
 
 // Interview API
 export const interviewApi = {
-    createSession: async (jobPostingId?: string): Promise<ApiResponse<InterviewSession>> => {
+    createSession: async (data?: FormData | { jobPostingId?: string }): Promise<ApiResponse<InterviewSession>> => {
         // Get the current user to obtain user_id
         const userResponse = await apiCall<User>('/api/users/me', {
             method: 'GET',
@@ -309,16 +309,46 @@ export const interviewApi = {
 
         const userId = userResponse.data.id;
 
-        // Create interview session with optional job_posting_id
-        const body: any = {};
-        if (jobPostingId) {
-            body.job_posting_id = jobPostingId;
-        }
+        try {
+            const token = TokenStorage.getAccessToken();
+            let body: FormData;
 
-        return apiCall<InterviewSession>(`/api/interviews/sessions?user_id=${userId}`, {
-            method: 'POST',
-            body: JSON.stringify(body),
-        });
+            if (data instanceof FormData) {
+                body = data;
+            } else {
+                body = new FormData();
+                if (data?.jobPostingId) {
+                    body.append('job_posting_id', data.jobPostingId);
+                }
+            }
+
+            const response = await fetch(`${API_URL}/api/interviews/sessions?user_id=${userId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: body,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                return {
+                    success: false,
+                    error: errorData.detail || 'Session creation failed',
+                };
+            }
+
+            const responseData = await response.json();
+            return {
+                success: true,
+                data: responseData,
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Network error',
+            };
+        }
     },
 
     getSessionQuestions: async (sessionId: string): Promise<ApiResponse<InterviewQuestion[]>> => {
