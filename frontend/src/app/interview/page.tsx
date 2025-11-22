@@ -19,21 +19,28 @@ import {
   MessageCircle,
   SettingsIcon,
   LogOut,
-  ChevronRight
+  ChevronRight,
+  Hand
 } from 'lucide-react';
 import { ResponsiveRadar } from '@nivo/radar';
 import { ResponsivePie } from '@nivo/pie';
 
 export default function InterviewPage() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSignLanguageMode, setIsSignLanguageMode] = useState(false);
 
   return (
     <div className="flex h-screen bg-sidebar">
       {/* Sidebar */}
-      <Sidebar isCollapsed={isSidebarCollapsed} onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)} />
+      <Sidebar
+        isCollapsed={isSidebarCollapsed}
+        onToggle={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        isSignLanguageMode={isSignLanguageMode}
+        onSignLanguageToggle={() => setIsSignLanguageMode(!isSignLanguageMode)}
+      />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden rounded-l-3xl bg-white relative z-10" style={{ boxShadow: '-16px 0 40px rgba(255, 255, 255, 0.15), -8px 0 20px rgba(255, 255, 255, 0.1), -4px 0 8px rgba(255, 255, 255, 0.05)' }}>
+      <div className="flex-1 flex flex-col overflow-hidden bg-white relative z-10">
         {/* Header */}
         <Header />
 
@@ -62,7 +69,12 @@ export default function InterviewPage() {
   );
 }
 
-function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean, onToggle: () => void }) {
+function Sidebar({ isCollapsed, onToggle, isSignLanguageMode, onSignLanguageToggle }: {
+  isCollapsed: boolean,
+  onToggle: () => void,
+  isSignLanguageMode: boolean,
+  onSignLanguageToggle: () => void
+}) {
   const mainMenuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', active: false },
     { icon: VideoIcon, label: 'Interview', active: true },
@@ -71,7 +83,6 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean, onToggle: ()
   ];
 
   const generalItems = [
-    { icon: MessageCircle, label: 'FAQ', active: false },
     { icon: SettingsIcon, label: 'Setting', active: false },
   ];
 
@@ -108,6 +119,35 @@ function Sidebar({ isCollapsed, onToggle }: { isCollapsed: boolean, onToggle: ()
       {/* General */}
       <div className={`${isCollapsed ? 'px-2' : 'px-4'} mt-6`}>
         {!isCollapsed && <div className="text-xs text-gray-500 mb-3 px-3">General</div>}
+
+        {/* Sign Language Mode Toggle */}
+        <button
+          onClick={onSignLanguageToggle}
+          className={`w-full flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2.5 rounded-xl mb-1 transition-all ${
+            isSignLanguageMode
+              ? 'bg-primary text-white shadow-lg'
+              : 'text-gray-400 hover:text-white hover:bg-white/5'
+          }`}
+          title={isCollapsed ? 'Sign Language Mode' : ''}
+        >
+          {/* Custom Toggle Switch */}
+          <div className="relative flex-shrink-0">
+            <div className={`w-11 h-6 rounded-full transition-colors ${
+              isSignLanguageMode ? 'bg-gray-400' : 'bg-gray-400'
+            }`}>
+              <div
+                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full transition-all duration-300 ${
+                  isSignLanguageMode
+                    ? 'translate-x-5'
+                    : 'translate-x-0 bg-white'
+                }`}
+                style={isSignLanguageMode ? { backgroundColor: '#9A00ED' } : {}}
+              />
+            </div>
+          </div>
+          {!isCollapsed && <span>수화 모드</span>}
+        </button>
+
         {generalItems.map((item) => (
           <SidebarItem key={item.label} {...item} isCollapsed={isCollapsed} />
         ))}
