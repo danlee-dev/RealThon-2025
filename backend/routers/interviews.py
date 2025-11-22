@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime
 from database import get_db
+from auth import get_current_user
 from models import (
     InterviewSession,
     InterviewQuestion,
@@ -41,22 +42,14 @@ llm_analyzer = LLMAnalyzer()
 @router.post("/sessions", response_model=InterviewSessionResponse, status_code=status.HTTP_201_CREATED)
 def create_interview_session(
     session: InterviewSessionCreate,
-    user_id: str,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
     Create a new interview session and generate initial questions automatically.
     """
-    # Verify user exists
-    db_user = db.query(User).filter(User.id == user_id).first()
-    if not db_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-
     db_session = InterviewSession(
-        user_id=user_id,
+        user_id=current_user.id,
         title=session.title,
         portfolio_id=session.portfolio_id,
         job_posting_id=session.job_posting_id,
@@ -259,8 +252,8 @@ def list_session_questions(session_id: str, db: Session = Depends(get_db)):
 @router.post("/sessions/{session_id}/videos", response_model=InterviewVideoResponse, status_code=status.HTTP_201_CREATED)
 def create_interview_video(
     session_id: str,
-    user_id: str,
     video: InterviewVideoCreate,
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Create a new interview video"""
@@ -273,7 +266,7 @@ def create_interview_video(
         )
 
     db_video = InterviewVideo(
-        user_id=user_id,
+        user_id=current_user.id,
         session_id=session_id,
         question_id=video.question_id,
         video_url=video.video_url,

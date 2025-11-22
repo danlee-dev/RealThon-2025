@@ -6,21 +6,17 @@ import { Mic, Volume2, PhoneOff, Video, Settings } from 'lucide-react';
 
 interface InterviewingScreenProps {
     onEnd: () => void;
+    questions: string[];
+    sessionId: string;
 }
 
-export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
+export default function InterviewingScreen({ onEnd, questions, sessionId }: InterviewingScreenProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const audioRecorderRef = useRef<MediaRecorder | null>(null);
     const [volume, setVolume] = useState(75);
     const [isRecording, setIsRecording] = useState(false);
     const [isAudioRecording, setIsAudioRecording] = useState(false);
-    const [questions, setQuestions] = useState<string[]>([
-        '자기소개를 해주세요.',
-        '이 회사에 지원한 동기는 무엇인가요?',
-        '본인의 강점과 약점을 말씀해주세요.',
-        '5년 후 자신의 모습은 어떨 것 같나요?'
-    ]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [audioRecordings, setAudioRecordings] = useState<Blob[][]>([]);
 
@@ -98,6 +94,28 @@ export default function InterviewingScreen({ onEnd }: InterviewingScreenProps) {
             }
         }
     };
+
+    // 질문이 없는 경우 처리
+    if (questions.length === 0) {
+        return (
+            <motion.div
+                className="flex-1 flex items-center justify-center"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+            >
+                <div className="text-center">
+                    <p className="text-gray-600">질문을 불러오는 중 오류가 발생했습니다.</p>
+                    <button
+                        onClick={onEnd}
+                        className="mt-4 px-6 py-2 bg-primary text-white rounded-xl hover:bg-brand-purple transition-colors"
+                    >
+                        돌아가기
+                    </button>
+                </div>
+            </motion.div>
+        );
+    }
 
     return (
         <motion.div

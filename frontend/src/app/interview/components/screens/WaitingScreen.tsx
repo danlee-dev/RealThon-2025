@@ -6,9 +6,10 @@ import { Mic, Video, Play } from 'lucide-react';
 
 interface WaitingScreenProps {
     onStart: () => void;
+    isLoading?: boolean;
 }
 
-export default function WaitingScreen({ onStart }: WaitingScreenProps) {
+export default function WaitingScreen({ onStart, isLoading = false }: WaitingScreenProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [cameraReady, setCameraReady] = useState(false);
     const [micReady, setMicReady] = useState(false);
@@ -111,12 +112,21 @@ export default function WaitingScreen({ onStart }: WaitingScreenProps) {
                     {/* Start Button */}
                     <button
                         onClick={handleStartClick}
-                        disabled={!cameraReady || !micReady}
+                        disabled={!cameraReady || !micReady || isLoading}
                         type="button"
                         className="w-full py-3 bg-primary hover:bg-brand-purple text-white rounded-xl font-semibold text-base flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <Play className="w-5 h-5" />
-                        면접 시작하기
+                        {isLoading ? (
+                            <>
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                질문 로드 중...
+                            </>
+                        ) : (
+                            <>
+                                <Play className="w-5 h-5" />
+                                면접 시작하기
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
