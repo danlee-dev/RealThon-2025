@@ -232,6 +232,11 @@ export default function OnboardingPage() {
                                     placeholder="홍길동"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            handleNext();
+                                        }
+                                    }}
                                     required
                                     autoFocus
                                 />
@@ -240,7 +245,7 @@ export default function OnboardingPage() {
 
                         {/* Step 2: Job Title */}
                         {step === 2 && (
-                            <div className="space-y-4 animate-fade-in">
+                            <div className="space-y-4 animate-fade-in relative z-50">
                                 <Combobox
                                     label="희망 직무"
                                     options={JOB_POSITIONS}
