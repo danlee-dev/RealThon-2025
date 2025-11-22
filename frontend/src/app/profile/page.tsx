@@ -4,8 +4,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
+import Combobox from '@/components/Combobox';
 import { authApi, profileApi, portfolioApi } from '@/lib/auth-client';
 import { User, Portfolio } from '@/types';
+import { JOB_POSITIONS, JOB_LABEL_TO_ROLE, JOB_ROLE_TO_LABEL } from '@/constants/jobs';
 import styles from './page.module.css';
 
 export default function ProfilePage() {
@@ -40,9 +42,13 @@ export default function ProfilePage() {
             const profileResponse = await profileApi.getProfile();
             if (profileResponse.success && profileResponse.data) {
                 setUser(profileResponse.data);
+                // Convert role to display label
+                const displayJobTitle = profileResponse.data.jobTitle 
+                    ? JOB_ROLE_TO_LABEL[profileResponse.data.jobTitle] 
+                    : '';
                 setFormData({
                     name: profileResponse.data.name || '',
-                    jobTitle: profileResponse.data.jobTitle || '',
+                    jobTitle: displayJobTitle || '',
                 });
             }
 
@@ -66,7 +72,13 @@ export default function ProfilePage() {
         setSaving(true);
 
         try {
-            const response = await profileApi.updateProfile(formData);
+            // Map display label to role
+            const role = JOB_LABEL_TO_ROLE[formData.jobTitle];
+            
+            const response = await profileApi.updateProfile({
+                name: formData.name,
+                jobTitle: role,
+            });
 
             if (response.success && response.data) {
                 setUser(response.data);
@@ -97,7 +109,8 @@ export default function ProfilePage() {
             const response = await portfolioApi.uploadPortfolio(file);
 
             if (response.success && response.data) {
-                setPortfolios(prev => [...prev, response.data!]);
+                // Replace with new portfolio (only keep one)
+                setPortfolios([response.data]);
                 setSuccess('포트폴리오가 업로드되었습니다.');
             } else {
                 setError(response.error || '업로드에 실패했습니다.');
@@ -109,6 +122,20 @@ export default function ProfilePage() {
             setUploading(false);
             // Clear the input field value to allow re-uploading the same file
             e.target.value = '';
+        }
+    };
+
+    const handleDeletePortfolio = async (portfolioId: string) => {
+        setError('');
+        setSuccess('');
+        try {
+            // TODO: Implement delete endpoint in backend if needed
+            // For now, just remove from state
+            setPortfolios(prev => prev.filter(p => p.id !== portfolioId));
+            setSuccess('포트폴리오가 삭제되었습니다.');
+        } catch (err) {
+            setError('삭제에 실패했습니다.');
+            console.error('Delete error:', err);
         }
     };
 
@@ -139,7 +166,9 @@ export default function ProfilePage() {
                                 {user?.name || '사용자'}
                             </h1>
                             <p className="text-muted-foreground">
-                                {user?.jobTitle || '직무 미설정'}
+                                {user?.jobTitle 
+                                    ? JOB_ROLE_TO_LABEL[user.jobTitle] 
+                                    : '직무 미설정'}
                             </p>
                         </div>
                     </div>
@@ -162,12 +191,14 @@ export default function ProfilePage() {
                                 <Input
                                     label="이름"
                                     value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                    disabled
                                 />
-                                <Input
+                                <Combobox
                                     label="직무"
+                                    options={JOB_POSITIONS}
                                     value={formData.jobTitle}
-                                    onChange={(e) => setFormData({ ...formData, jobTitle: e.target.value })}
+                                    onChange={(value) => setFormData({ ...formData, jobTitle: value })}
+                                    placeholder="직무를 선택하거나 입력하세요"
                                 />
                                 {error && (
                                     <div className="bg-error/10 border border-error rounded-xl p-3">
@@ -197,35 +228,27 @@ export default function ProfilePage() {
                         {/* Portfolio Upload */}
                         <div className="glass-card rounded-3xl p-6">
                             <h2 className="text-lg font-bold text-foreground mb-4">포트폴리오 업로드</h2>
-                            <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
-                                <input
-                                    type="file"
-                                    id="portfolio-upload"
-                                    className="hidden"
-                                    accept=".pdf"
-                                    onChange={handleFileUpload}
-                                    disabled={uploading}
-                                />
-                                <label htmlFor="portfolio-upload" className="cursor-pointer flex flex-col items-center gap-3">
-                                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                                        📄
-                                    </div>
-                                    <div>
-                                        <p className="font-medium text-foreground">PDF 파일 업로드</p>
-                                        <p className="text-sm text-muted-foreground">최대 10MB</p>
-                                    </div>
-                                    {uploading && <p className="text-sm text-primary">업로드 중...</p>}
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* Portfolio List */}
-                        <div className="glass-card rounded-3xl p-6">
-                            <h2 className="text-lg font-bold text-foreground mb-4">내 포트폴리오</h2>
                             {portfolios.length === 0 ? (
-                                <p className="text-muted-foreground text-center py-8">
-                                    등록된 포트폴리오가 없습니다.
-                                </p>
+                                <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
+                                    <input
+                                        type="file"
+                                        id="portfolio-upload"
+                                        className="hidden"
+                                        accept=".pdf"
+                                        onChange={handleFileUpload}
+                                        disabled={uploading}
+                                    />
+                                    <label htmlFor="portfolio-upload" className="cursor-pointer flex flex-col items-center gap-3">
+                                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                            📄
+                                        </div>
+                                        <div>
+                                            <p className="font-medium text-foreground">PDF 파일 업로드</p>
+                                            <p className="text-sm text-muted-foreground">최대 10MB</p>
+                                        </div>
+                                        {uploading && <p className="text-sm text-primary">업로드 중...</p>}
+                                    </label>
+                                </div>
                             ) : (
                                 <div className="space-y-3">
                                     {portfolios.map((portfolio) => (
@@ -241,11 +264,40 @@ export default function ProfilePage() {
                                                     </p>
                                                 </div>
                                             </div>
-                                            <Button variant="outline" size="sm">
-                                                분석 보기
-                                            </Button>
+                                            <div className="flex gap-2">
+                                                <Button variant="outline" size="sm">
+                                                    분석 보기
+                                                </Button>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm"
+                                                    onClick={() => handleDeletePortfolio(portfolio.id)}
+                                                >
+                                                    삭제
+                                                </Button>
+                                            </div>
                                         </div>
                                     ))}
+                                    <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
+                                        <input
+                                            type="file"
+                                            id="portfolio-upload-replace"
+                                            className="hidden"
+                                            accept=".pdf"
+                                            onChange={handleFileUpload}
+                                            disabled={uploading}
+                                        />
+                                        <label htmlFor="portfolio-upload-replace" className="cursor-pointer flex flex-col items-center gap-3">
+                                            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                                🔄
+                                            </div>
+                                            <div>
+                                                <p className="font-medium text-foreground">파일 변경</p>
+                                                <p className="text-sm text-muted-foreground">새 PDF를 업로드하면 기존 파일이 대체됩니다</p>
+                                            </div>
+                                            {uploading && <p className="text-sm text-primary">업로드 중...</p>}
+                                        </label>
+                                    </div>
                                 </div>
                             )}
                         </div>

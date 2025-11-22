@@ -54,6 +54,7 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
         >
             <div className="max-w-3xl w-full my-auto">
                 <div className="bg-white rounded-3xl p-6 shadow-sm" style={{ border: '1px solid #E5E5EC' }}>
@@ -68,7 +69,7 @@ export default function WaitingScreen({ onStart, isLoading = false }: WaitingScr
                         layoutId="user-camera"
                         className="relative bg-gray-900 rounded-2xl overflow-hidden mb-4"
                         style={{ aspectRatio: '16/9' }}
-                        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                        transition={{ type: "spring", stiffness: 120, damping: 30 }}
                     >
                         <video
                             ref={videoRef}
