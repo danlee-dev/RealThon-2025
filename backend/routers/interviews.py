@@ -12,7 +12,9 @@ from models import (
     NonverbalMetrics,
     NonverbalTimeline,
     Feedback,
-    User
+    User,
+    Portfolio,
+    JobPosting
 )
 from schemas import (
     InterviewSessionCreate,
@@ -30,8 +32,10 @@ from schemas import (
     FeedbackCreate,
     FeedbackResponse
 )
+from services.llm_analyzer import LLMAnalyzer
 
 router = APIRouter()
+llm_analyzer = LLMAnalyzer()
 
 
 # Interview Session endpoints
@@ -41,7 +45,9 @@ def create_interview_session(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Create a new interview session"""
+    """
+    Create a new interview session and generate initial questions automatically.
+    """
     db_session = InterviewSession(
         user_id=current_user.id,
         title=session.title,
@@ -52,6 +58,49 @@ def create_interview_session(
     db.add(db_session)
     db.commit()
     db.refresh(db_session)
+
+    # --- 초기 질문 자동 생성 로직 시작 ---
+    try:
+        # 포트폴리오 조회
+        portfolio_text = "포트폴리오 없음"
+        if session.portfolio_id:
+            portfolio = db.query(Portfolio).filter(Portfolio.id == session.portfolio_id).first()
+            if portfolio:
+                portfolio_text = portfolio.parsed_text or portfolio.summary or "내용 없음"
+
+        # 직무 공고 조회
+        job_posting_text = "직무 공고 없음"
+        if session.job_posting_id:
+            job_posting = db.query(JobPosting).filter(JobPosting.id == session.job_posting_id).first()
+            if job_posting:
+                job_posting_text = job_posting.raw_text
+
+        # LLM으로 질문 생성
+        generated_questions = llm_analyzer.generate_initial_questions(portfolio_text, job_posting_text)
+        
+        # 생성된 질문을 DB에 저장
+        for idx, q in enumerate(generated_questions):
+            question_type = q.get("type", "general")
+            question_text = q.get("text", "")
+            
+            db_question = InterviewQuestion(
+                session_id=db_session.id,
+                text=question_text,
+                type=question_type,
+                source="llm",  # Unified with followup questions
+                order=idx + 1
+            )
+            db.add(db_question)
+        
+        db.commit()
+        
+    except Exception as e:
+        print(f"⚠️ Failed to generate initial questions automatically: {e}")
+        # 질문 생성 실패가 세션 생성 실패로 이어지지 않도록 함 (선택 사항)
+        # 필요하다면 여기서 기본 질문을 넣거나, 에러를 로깅만 하고 넘어감
+
+    # --- 초기 질문 자동 생성 로직 끝 ---
+
     return db_session
 
 
@@ -95,6 +144,70 @@ def complete_interview_session(session_id: str, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_session)
     return db_session
+
+
+@router.post("/sessions/{session_id}/questions/generate", response_model=List[InterviewQuestionResponse])
+def generate_initial_questions(session_id: str, db: Session = Depends(get_db)):
+    """
+    세션의 포트폴리오와 직무 공고를 기반으로 초기 질문 3개를 생성합니다.
+    """
+    # 세션 조회
+    session = db.query(InterviewSession).filter(InterviewSession.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Interview session not found")
+
+    # 포트폴리오 조회
+    portfolio_text = "포트폴리오 없음"
+    if session.portfolio_id:
+        portfolio = db.query(Portfolio).filter(Portfolio.id == session.portfolio_id).first()
+        if portfolio:
+            # 파싱된 텍스트나 요약 사용
+            portfolio_text = portfolio.parsed_text or portfolio.summary or "내용 없음"
+
+    # 직무 공고 조회
+    job_posting_text = "직무 공고 없음"
+    if session.job_posting_id:
+        job_posting = db.query(JobPosting).filter(JobPosting.id == session.job_posting_id).first()
+        if job_posting:
+            job_posting_text = job_posting.raw_text
+
+    # LLM으로 질문 생성
+    try:
+        generated_questions = llm_analyzer.generate_initial_questions(portfolio_text, job_posting_text)
+    except Exception as e:
+        print(f"Failed to generate questions: {e}")
+        # 실패 시 기본 질문 반환 로직은 LLMAnalyzer 내부에 있음
+        generated_questions = []
+
+    # 생성된 질문을 DB에 저장
+    saved_questions = []
+    for idx, q in enumerate(generated_questions):
+        question_type = q.get("type", "general")
+        question_text = q.get("text", "")
+        
+        # 같은 세션, 같은 order가 있으면 삭제 (재생성 시)
+        existing = db.query(InterviewQuestion).filter(
+            InterviewQuestion.session_id == session_id,
+            InterviewQuestion.order == idx + 1
+        ).first()
+        if existing:
+            db.delete(existing)
+        
+        db_question = InterviewQuestion(
+            session_id=session_id,
+            text=question_text,
+            type=question_type,
+            source="llm",
+            order=idx + 1
+        )
+        db.add(db_question)
+        saved_questions.append(db_question)
+    
+    db.commit()
+    for q in saved_questions:
+        db.refresh(q)
+        
+    return saved_questions
 
 
 # Interview Question endpoints
