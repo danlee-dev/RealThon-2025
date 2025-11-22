@@ -101,6 +101,7 @@ class InterviewQuestion(Base):
     # Relationships
     session = relationship("InterviewSession", back_populates="questions")
     videos = relationship("InterviewVideo", back_populates="question", cascade="all, delete-orphan")
+    answers = relationship("InterviewAnswer", back_populates="question", cascade="all, delete-orphan")
     parent_question = relationship(
         "InterviewQuestion",
         remote_side=[id],
@@ -195,6 +196,19 @@ class Feedback(Base):
 
     # Relationships
     video = relationship("InterviewVideo", back_populates="feedbacks")
+
+
+class InterviewAnswer(Base):
+    __tablename__ = "interview_answer"
+
+    id = Column(String, primary_key=True, default=generate_uuid)
+    question_id = Column(String, ForeignKey("interview_question.id", ondelete="CASCADE"), nullable=False)
+    text = Column(Text, nullable=False)  # STT로 변환된 답변 텍스트
+    audio_url = Column(String)  # 답변 오디오 파일 URL (선택)
+    created_at = Column(String, nullable=False, default=lambda: datetime.utcnow().isoformat())
+
+    # Relationships
+    question = relationship("InterviewQuestion", back_populates="answers")
 
 
 class CapabilityEvaluation(Base):

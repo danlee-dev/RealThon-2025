@@ -322,6 +322,58 @@ class LLMAnalyzer:
                 {"type": "job", "text": "이 직무에 지원하게 된 동기와 본인이 이 직무에 적합하다고 생각하는 이유는 무엇인가요?"}
             ]
 
+    def generate_followup_question(
+        self,
+        original_question: str,
+        answer_text: str
+    ) -> str:
+        """
+        원래 질문과 답변을 기반으로 꼬리 질문을 생성합니다.
+
+        Args:
+            original_question: 원래 질문
+            answer_text: 지원자의 답변
+
+        Returns:
+            꼬리 질문 텍스트
+        """
+        prompt = f"""
+당신은 전문 기술 면접관입니다.
+지원자의 답변을 듣고 더 깊이 있게 물어볼 수 있는 꼬리 질문 1개를 생성해주세요.
+
+# 원래 질문
+{original_question}
+
+# 지원자의 답변
+{answer_text}
+
+# 꼬리 질문 생성 규칙
+1. 답변에서 모호하거나 구체적이지 않은 부분을 깊이 파고드세요.
+2. 답변에서 언급된 기술이나 경험에 대해 더 자세히 물어보세요.
+3. 답변의 진위를 검증할 수 있는 질문을 하세요.
+4. 질문은 한국어로 작성하세요.
+5. 질문만 반환하세요 (JSON이나 다른 형식 없이).
+
+# 예시
+원래 질문: "가장 어려웠던 프로젝트 경험은 무엇인가요?"
+답변: "React로 대시보드를 만들었는데 성능 최적화가 어려웠습니다."
+꼬리 질문: "React 대시보드의 성능 최적화를 위해 구체적으로 어떤 기법들을 적용하셨나요?"
+"""
+        try:
+            response = self._generate_content(prompt)
+            followup = response.text.strip()
+
+            # 마크다운 코드블록 제거
+            if "```" in followup:
+                followup = followup.split("```")[0].strip()
+
+            return followup
+
+        except Exception as e:
+            print(f"Followup question generation failed: {e}")
+            # 실패 시 기본 질문 반환
+            return "방금 말씀하신 부분에 대해 좀 더 구체적으로 설명해주시겠어요?"
+
     def _build_cv_analysis_prompt(
         self,
         cv_text: str,

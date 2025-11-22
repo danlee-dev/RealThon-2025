@@ -16,7 +16,7 @@ export default function InterviewPage() {
   const [isSignLanguageMode, setIsSignLanguageMode] = useState(false);
   const [currentStage, setCurrentStage] = useState<InterviewStage>(InterviewStage.WAITING);
   const [analysisResults, setAnalysisResults] = useState<AnalysisResults | null>(null);
-  const [questions, setQuestions] = useState<string[]>([]);
+  const [questions, setQuestions] = useState<any[]>([]);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
 
@@ -67,8 +67,7 @@ export default function InterviewPage() {
       }
 
       const loadedQuestions = questionsResponse.data
-        .sort((a, b) => a.order - b.order)
-        .map(q => q.text);
+        .sort((a, b) => a.order - b.order);
 
       setQuestions(loadedQuestions);
       console.log('[DEBUG] Questions loaded:', loadedQuestions.length);
