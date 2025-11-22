@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+
+opencv-python
+numpy
+pydantic
+python-dotenv
+
+mediapipe
+
+ffmpeg-python
+openai-whisper
+torch
+torchaudio
+
+praat-parselmouth
