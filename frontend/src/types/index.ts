@@ -77,3 +77,24 @@ export interface ImprovementSuggestion {
   actionItems: string[];
 }
 
+// Interview Session types
+export interface InterviewSession {
+  id: string;
+  user_id: string;
+  job_posting_id?: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  created_at: string;
+  completed_at?: string;
+}
+
+export interface InterviewQuestion {
+  id: string;
+  session_id: string;
+  text: string;
+  type: string;
+  source: string;
+  order: number;
+  created_at: string;
+  parent_question_id?: string;
+}
+

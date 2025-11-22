@@ -42,7 +42,7 @@ PERSONAS = [
         "password": "password123",
         "role": "ROLE_AI",
         "level": "LEVEL_JUNIOR",
-        "github_username": "thdwogjs",
+        "github_username": "dreameerbb",
         "github_token": "FROM_ENV",  # Will be replaced from .env
         "cv_file": "my_cv.pdf"  # AI developer CV
     }

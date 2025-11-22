@@ -1,4 +1,4 @@
-import { ApiResponse, AuthResponse, User, Portfolio } from '@/types';
+import { ApiResponse, AuthResponse, User, Portfolio, InterviewSession, InterviewQuestion } from '@/types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
@@ -35,12 +35,12 @@ async function apiCall<T>(
 ): Promise<ApiResponse<T>> {
     try {
         const token = TokenStorage.getAccessToken();
-        const headers: HeadersInit = {
+        const headers: Record<string, string> = {
             'Content-Type': 'application/json',
-            ...options.headers,
+            ...(options.headers as Record<string, string> || {}),
         };
 
-        if (token && !options.headers?.['Authorization']) {
+        if (token && !headers['Authorization']) {
             headers['Authorization'] = `Bearer ${token}`;
         }
 
@@ -54,6 +54,14 @@ async function apiCall<T>(
             return {
                 success: false,
                 error: errorData.detail || `Request failed with status ${response.status}`,
+            };
+        }
+
+        // Handle 204 No Content responses
+        if (response.status === 204) {
+            return {
+                success: true,
+                data: undefined as any,
             };
         }
 
@@ -237,6 +245,30 @@ export const portfolioApi = {
 
     getPortfolios: async (): Promise<ApiResponse<Portfolio[]>> => {
         return apiCall<Portfolio[]>('/api/portfolios', {
+            method: 'GET',
+        });
+    },
+
+    deletePortfolio: async (portfolioId: string): Promise<ApiResponse<void>> => {
+        return apiCall<void>(`/api/portfolios/${portfolioId}`, {
+            method: 'DELETE',
+        });
+    },
+};
+
+// Interview API
+export const interviewApi = {
+    createSession: async (jobPostingId?: string): Promise<ApiResponse<InterviewSession>> => {
+        return apiCall<InterviewSession>('/api/interviews/sessions', {
+            method: 'POST',
+            body: JSON.stringify({
+                job_posting_id: jobPostingId || null
+            }),
+        });
+    },
+
+    getSessionQuestions: async (sessionId: string): Promise<ApiResponse<InterviewQuestion[]>> => {
+        return apiCall<InterviewQuestion[]>(`/api/interviews/sessions/${sessionId}/questions`, {
             method: 'GET',
         });
     },
