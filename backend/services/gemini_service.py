@@ -13,9 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Gemini API 설정
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+# GEMINI_API_KEY는 이제 동적으로 로드하여 사용합니다.
 
 
 class GeminiService:
@@ -24,11 +22,54 @@ class GeminiService:
     def __init__(self, model_name: str = None):
         """
         Args:
-            model_name: 사용할 Gemini 모델 이름 (기본값: 환경변수 또는 gemini-2.5-flash)
+            model_name: 사용할 Gemini 모델 이름 (기본값: 환경변수 또는 gemini-1.5-flash)
         """
         if model_name is None:
+            # 모델명 업데이트: 2.0-flash-exp -> 1.5-flash (안정성 및 쿼터 확보)
             model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
-        self.model = genai.GenerativeModel(model_name)
+        self.model_name = model_name
+
+    def get_api_keys(self) -> List[str]:
+        """환경변수에서 사용 가능한 모든 Gemini API 키를 가져옵니다."""
+        keys = []
+        # GEMINI_API_KEY1 ~ 3 확인
+        for i in range(1, 4):
+            key = os.getenv(f"GEMINI_API_KEY{i}")
+            if key:
+                keys.append(key)
+        
+        # 레거시 키 확인
+        legacy_key = os.getenv("GEMINI_API_KEY")
+        if legacy_key and legacy_key not in keys:
+            keys.append(legacy_key)
+            
+        return keys
+
+    def _generate_content(self, prompt: str) -> Any:
+        """
+        여러 API 키를 순차적으로 시도하여 컨텐츠를 생성합니다.
+        """
+        api_keys = self.get_api_keys()
+        if not api_keys:
+            raise Exception("No Gemini API keys found in environment variables.")
+
+        last_error = None
+        for i, api_key in enumerate(api_keys):
+            try:
+                # API 키 설정
+                genai.configure(api_key=api_key)
+                model = genai.GenerativeModel(self.model_name)
+                
+                # 생성 요청
+                return model.generate_content(prompt)
+                
+            except Exception as e:
+                last_error = e
+                print(f"⚠️ Gemini API Key #{i+1} failed: {str(e)[:200]}...")
+                continue
+        
+        # 모든 키 실패 시 마지막 에러 발생
+        raise last_error or Exception("All Gemini API keys failed.")
 
     def analyze_cv_with_competency(
         self,
@@ -49,7 +90,7 @@ class GeminiService:
         """
         prompt = self._build_cv_analysis_prompt(cv_text, role, competency_matrix)
 
-        response = self.model.generate_content(prompt)
+        response = self._generate_content(prompt)
         result_text = response.text
 
         # JSON 파싱 (마크다운 코드블록 제거)
@@ -91,7 +132,7 @@ class GeminiService:
         """
         prompt = self._build_github_analysis_prompt(github_data, role, competency_matrix)
 
-        response = self.model.generate_content(prompt)
+        response = self._generate_content(prompt)
         result_text = response.text
 
         # JSON 파싱
@@ -111,6 +152,97 @@ class GeminiService:
                 "weaknesses": [],
                 "overall_score": 0,
                 "analysis": result_text
+            }
+
+    def parse_job_posting(self, raw_text: str, company_name: str, position: str, source_url: str = "") -> Dict[str, Any]:
+        """
+        직무 공고 텍스트를 분석하여 구조화된 JSON으로 변환
+        
+        Args:
+            raw_text: 크롤링된 공고 텍스트
+            company_name: 회사명
+            position: 직무명
+            source_url: 원본 URL (선택)
+            
+        Returns:
+            구조화된 공고 정보 JSON
+        """
+        prompt = f"""
+당신은 채용 공고 분석 전문가입니다.
+아래의 채용 공고 텍스트를 분석하여 구조화된 JSON 형식으로 변환해주세요.
+
+# 회사 정보
+회사명: {company_name}
+직무명: {position}
+원본 URL: {source_url}
+
+# 공고 내용
+{raw_text}
+
+# 요구사항
+1. 공고 내용에서 핵심 정보를 추출하여 아래 JSON 구조에 맞춰 정리해주세요.
+2. 경력 연차는 "N년 이상" 또는 "신입", "무관" 등으로 통일해주세요.
+3. 고용 형태는 "정규직", "계약직", "인턴" 등으로 명시해주세요.
+4. 기술 스택은 영어 원문 그대로(예: Python, AWS) 추출해주세요.
+5. 주요 업무(responsibilities), 자격 요건(qualifications), 우대 사항(preferred_qualifications)은 리스트 형태로 정리해주세요.
+6. 입력받은 원본 URL을 "url" 필드에 그대로 포함시켜주세요.
+
+# 출력 형식 (반드시 JSON으로만 응답)
+{{
+  "company": "{company_name}",
+  "position": "{position}",
+  "url": "{source_url}",
+  "experience_years": "3년 이상",
+  "employment_type": "정규직",
+  "required_skills": [
+    "Python",
+    "Django"
+  ],
+  "preferred_skills": [
+    "AWS",
+    "Docker"
+  ],
+  "responsibilities": [
+    "서버 개발",
+    "API 설계"
+  ],
+  "qualifications": [
+    "Python 개발 경험",
+    "CS 지식 보유"
+  ],
+  "preferred_qualifications": [
+    "관련 학과 전공",
+    "정보처리기사 자격증"
+  ]
+}}
+"""
+        try:
+            response = self._generate_content(prompt)
+            result_text = response.text.strip()
+            
+            # JSON 파싱 (마크다운 코드블록 제거)
+            if "```json" in result_text:
+                result_text = result_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in result_text:
+                result_text = result_text.split("```")[1].split("```")[0].strip()
+                
+            return json.loads(result_text)
+        except Exception as e:
+            print(f"Job posting parsing error: {e}")
+            # 실패 시 기본 구조 반환 (프론트엔드 호환성 유지)
+            return {
+                "company": company_name,
+                "position": position,
+                "url": source_url,
+                "experience_years": "공백",
+                "employment_type": "공백",
+                "required_skills": ["공백"],
+                "preferred_skills": ["공백"],
+                "responsibilities": ["공백"],
+                "qualifications": ["공백"],
+                "preferred_qualifications": ["공백"],
+                "raw_text_summary": raw_text[:500] + "...",
+                "error": str(e)
             }
 
     def _build_cv_analysis_prompt(

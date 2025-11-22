@@ -1,5 +1,6 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional, List
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
+from typing import Optional, List, Any, Dict
+import json
 from datetime import datetime
 
 
@@ -56,10 +57,20 @@ class JobPostingCreate(JobPostingBase):
 class JobPostingResponse(JobPostingBase):
     id: str
     user_id: str
-    parsed_skills: Optional[str] = None
+    parsed_skills: Optional[Dict[str, Any]] = None
     created_at: str
 
     model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('parsed_skills', mode='before')
+    @classmethod
+    def parse_parsed_skills(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return None
+        return v
 
 
 # InterviewSession Schemas
