@@ -201,3 +201,23 @@ class FeedbackResponse(FeedbackBase):
     created_at: str
 
     model_config = ConfigDict(from_attributes=True)
+
+
+# CV Analysis Schemas
+class SkillItem(BaseModel):
+    skill: str
+    reason: str
+
+
+class CVAnalysisResponse(BaseModel):
+    portfolio_id: str
+    user_id: str
+    role: str
+    level: str
+    extracted_text: str
+    possessed_skills: List[str]
+    missing_skills: List[str]
+    strengths: List[SkillItem]
+    weaknesses: List[SkillItem]
+    overall_score: int
+    summary: str

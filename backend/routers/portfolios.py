@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from database import get_db
 from models import Portfolio, User
-from schemas import PortfolioCreate, PortfolioResponse
+from schemas import PortfolioCreate, PortfolioResponse, CVAnalysisResponse
+from services.cv_analyzer import analyze_cv_pipeline
 
 router = APIRouter()
 
@@ -74,3 +75,49 @@ def delete_portfolio(portfolio_id: str, db: Session = Depends(get_db)):
     db.delete(db_portfolio)
     db.commit()
     return None
+
+
+@router.post("/{portfolio_id}/analyze", response_model=CVAnalysisResponse)
+def analyze_portfolio_cv(
+    portfolio_id: str,
+    user_id: str,
+    role: Optional[str] = None,
+    level: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Analyze portfolio CV and extract skills, strengths, weaknesses
+
+    Args:
+        portfolio_id: Portfolio ID
+        user_id: User ID
+        role: Optional role override (defaults to user's role)
+        level: Optional level override (defaults to user's level)
+
+    Returns:
+        CV analysis result with skills, strengths, weaknesses, and overall score
+    """
+    try:
+        result = analyze_cv_pipeline(
+            portfolio_id=portfolio_id,
+            user_id=user_id,
+            db=db,
+            role=role,
+            level=level
+        )
+        return result
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except FileNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"CV 분석 중 오류 발생: {str(e)}"
+        )

@@ -24,7 +24,7 @@ PERSONAS = [
         "level": "LEVEL_MID",
         "github_username": "danmin",
         "github_token": None,  # Optional: 사용자별 GitHub token
-        "cv_image": "FE.png"
+        "cv_file": "FE.pdf"
     },
     {
         "name": "이성민",
@@ -34,14 +34,24 @@ PERSONAS = [
         "level": "LEVEL_MID",
         "github_username": "sungmin-lee",
         "github_token": None,  # Optional: 사용자별 GitHub token
-        "cv_image": "BE.png"
+        "cv_file": "BE.pdf"
+    },
+    {
+        "name": "송재헌",
+        "email": "thdwogjs040923@korea.ac.kr",
+        "password": "password123",
+        "role": "ROLE_BE",
+        "level": "LEVEL_MID",
+        "github_username": "thdwogjs",
+        "github_token": "FROM_ENV",  # Will be replaced from .env
+        "cv_file": None  # No CV file
     }
 ]
 
 
-def copy_persona_images():
+def copy_persona_cv_files():
     """
-    local_reference에서 페르소나 CV 이미지를 backend/static/uploads로 복사
+    local_reference에서 페르소나 CV PDF 파일을 backend/static/uploads로 복사
     """
     source_dir = os.path.join(os.path.dirname(__file__), "..", "local_reference")
     target_dir = os.path.join(os.path.dirname(__file__), "static", "uploads")
@@ -52,16 +62,21 @@ def copy_persona_images():
     copied_files = {}
 
     for persona in PERSONAS:
-        cv_image = persona["cv_image"]
-        source_path = os.path.join(source_dir, cv_image)
-        target_path = os.path.join(target_dir, cv_image)
+        cv_file = persona.get("cv_file")
+
+        # cv_file이 없는 경우 스킵
+        if not cv_file:
+            continue
+
+        source_path = os.path.join(source_dir, cv_file)
+        target_path = os.path.join(target_dir, cv_file)
 
         if os.path.exists(source_path):
             shutil.copy2(source_path, target_path)
-            copied_files[cv_image] = f"/static/uploads/{cv_image}"
-            print(f"[OK] Copied {cv_image} -> {target_path}")
+            copied_files[cv_file] = f"/static/uploads/{cv_file}"
+            print(f"[OK] Copied {cv_file} -> {target_path}")
         else:
-            print(f"[WARN] {cv_image} not found at {source_path}")
+            print(f"[WARN] {cv_file} not found at {source_path}")
 
     return copied_files
 
@@ -88,16 +103,24 @@ def init_database():
 def create_personas(db_engine):
     """페르소나 사용자 및 포트폴리오 생성"""
     from sqlalchemy.orm import Session
+    from dotenv import load_dotenv
+
+    load_dotenv()
 
     print("\n" + "=" * 60)
     print("CREATING PERSONAS")
     print("=" * 60)
 
-    # CV 이미지 복사
-    copied_files = copy_persona_images()
+    # CV PDF 파일 복사
+    copied_files = copy_persona_cv_files()
 
     with Session(db_engine) as session:
         for persona in PERSONAS:
+            # GitHub 토큰 처리 (FROM_ENV이면 환경변수에서 가져오기)
+            github_token = persona.get("github_token")
+            if github_token == "FROM_ENV":
+                github_token = os.getenv("GITHUB_TOKEN")
+
             # User 생성
             user = User(
                 id=str(uuid.uuid4()),
@@ -107,7 +130,7 @@ def create_personas(db_engine):
                 role=persona["role"],
                 level=persona["level"],
                 github_username=persona["github_username"],
-                github_token=persona.get("github_token")
+                github_token=github_token
             )
             session.add(user)
             session.flush()  # user.id 생성
@@ -119,14 +142,14 @@ def create_personas(db_engine):
             print(f"     - GitHub Username: {user.github_username}")
             print(f"     - GitHub Token: {'(not set)' if not user.github_token else '***' + user.github_token[-4:]}")
 
-            # Portfolio 생성 (CV 이미지 연결)
-            cv_image = persona["cv_image"]
-            if cv_image in copied_files:
+            # Portfolio 생성 (CV PDF 파일 연결)
+            cv_file = persona.get("cv_file")
+            if cv_file and cv_file in copied_files:
                 portfolio = Portfolio(
                     id=str(uuid.uuid4()),
                     user_id=user.id,
-                    file_url=copied_files[cv_image],
-                    filename=cv_image,
+                    file_url=copied_files[cv_file],
+                    filename=cv_file,
                     parsed_text=None,  # 나중에 CV 분석으로 채움
                     summary=None  # 나중에 CV 분석으로 채움
                 )
@@ -134,9 +157,52 @@ def create_personas(db_engine):
 
                 print(f"     - Portfolio: {portfolio.filename}")
                 print(f"     - File URL: {portfolio.file_url}")
+            else:
+                print(f"     - Portfolio: (not set - GitHub analysis only)")
 
         session.commit()
         print("\n[SUCCESS] All personas created successfully!")
+
+
+def analyze_persona_cvs(db_engine):
+    """페르소나 CV 자동 분석"""
+    from sqlalchemy.orm import Session
+    from services.cv_analyzer import analyze_cv_pipeline
+
+    print("\n" + "=" * 60)
+    print("ANALYZING PERSONA CVs")
+    print("=" * 60)
+
+    with Session(db_engine) as session:
+        users = session.query(User).all()
+
+        for user in users:
+            portfolios = session.query(Portfolio).filter(Portfolio.user_id == user.id).all()
+
+            if not portfolios:
+                print(f"\n[SKIP] {user.name} - No portfolio found")
+                continue
+
+            portfolio = portfolios[0]
+
+            print(f"\n[INFO] Analyzing CV for {user.name}...")
+            print(f"       Portfolio: {portfolio.filename}")
+            print(f"       Role: {user.role}, Level: {user.level}")
+
+            try:
+                result = analyze_cv_pipeline(
+                    portfolio_id=portfolio.id,
+                    user_id=user.id,
+                    db=session
+                )
+
+                print(f"[SUCCESS] CV analyzed!")
+                print(f"          - Score: {result['overall_score']}/100")
+                print(f"          - Possessed skills: {len(result['possessed_skills'])}")
+                print(f"          - Missing skills: {len(result['missing_skills'])}")
+
+            except Exception as e:
+                print(f"[ERROR] Failed to analyze CV: {str(e)}")
 
 
 def main():
@@ -151,12 +217,21 @@ def main():
     # 2. 페르소나 생성
     create_personas(db_engine)
 
+    # 3. CV 자동 분석 (선택사항)
+    print("\n" + "=" * 60)
+    analyze_cv = input("Do you want to analyze CVs automatically? (y/n): ").strip().lower()
+    if analyze_cv == 'y':
+        analyze_persona_cvs(db_engine)
+    else:
+        print("[SKIP] CV analysis skipped")
+
     print("\n" + "=" * 60)
     print("INITIALIZATION COMPLETE")
     print("=" * 60)
     print("\nYou can now:")
-    print("1. Run CV analysis on personas to populate portfolio data")
-    print("2. Start the FastAPI server: uvicorn main:app --reload")
+    print("1. Start the FastAPI server: uvicorn main:app --reload")
+    if analyze_cv != 'y':
+        print("2. Run CV analysis: POST /api/portfolios/{portfolio_id}/analyze")
     print("\nPersona Credentials:")
     for persona in PERSONAS:
         print(f"  - {persona['name']}: {persona['email']} / {persona['password']}")
