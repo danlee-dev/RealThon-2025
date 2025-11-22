@@ -113,7 +113,7 @@ export default function Home() {
                       내 정보 관리
                     </Button>
                   </Link>
-                  <Link href={user?.jobTitle ? '/interview' : '/onboarding'}>
+                  <Link href="/interview">
                     <Button variant="primary" size="lg" className="shadow-lg shadow-primary/20">
                       면접 시작하기
                     </Button>

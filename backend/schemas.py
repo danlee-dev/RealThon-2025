@@ -366,3 +366,21 @@ class CapabilityEvaluationResponse(BaseModel):
     """프론트엔드 스파이더 차트용 API 응답"""
     capabilities: List[CapabilityData]
     improvement_suggestions: List[ImprovementSuggestionData]
+
+
+# Interview Answer Schemas
+class InterviewAnswerCreate(BaseModel):
+    question_id: str
+    text: str
+    audio_url: Optional[str] = None
+
+
+class InterviewAnswerResponse(BaseModel):
+    id: str
+    question_id: str
+    text: str
+    audio_url: Optional[str] = None
+    created_at: str
+
+    class Config:
+        from_attributes = True
