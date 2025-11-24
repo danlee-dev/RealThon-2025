@@ -1,0 +1,83 @@
+{
+  "name": "이백엔드",
+  "position": "Backend Developer",
+  "experience_years": 4,
+  "skills": [
+    "Python",
+    "FastAPI",
+    "Django",
+    "PostgreSQL",
+    "Redis",
+    "Docker",
+    "AWS",
+    "Git",
+    "REST API"
+  ],
+  "projects": [
+    {
+      "name": "소셜 미디어 플랫폼 API 개발",
+      "duration": "8개월",
+      "role": "Backend Lead",
+      "contribution_rate": 75,
+      "technologies": ["FastAPI", "PostgreSQL", "Redis", "Celery", "Docker"],
+      "achievements": [
+        "일 50만 요청 처리 가능한 API 설계",
+        "Redis 캐싱으로 응답 속도 60% 개선",
+        "백그라운드 작업 큐 구현으로 사용자 경험 향상",
+        "API 문서 자동화 (Swagger)"
+      ]
+    },
+    {
+      "name": "결제 시스템 마이그레이션",
+      "duration": "5개월",
+      "role": "Backend Developer",
+      "contribution_rate": 50,
+      "technologies": ["Django", "PostgreSQL", "AWS Lambda", "SQS"],
+      "achievements": [
+        "레거시 결제 시스템을 MSA로 전환",
+        "트랜잭션 처리 안정성 99.9% 달성",
+        "결제 실패율 15% 감소"
+      ]
+    },
+    {
+      "name": "개인 프로젝트 - 블로그 플랫폼",
+      "duration": "3개월",
+      "role": "Full-stack",
+      "contribution_rate": 100,
+      "technologies": ["FastAPI", "MongoDB", "JWT", "Docker"],
+      "achievements": [
+        "JWT 기반 인증 시스템 구현",
+        "Markdown 에디터 및 파싱",
+        "태그 기반 검색 기능"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "학사",
+      "major": "소프트웨어학과",
+      "university": "XX대학교",
+      "graduation_year": 2020
+    }
+  ],
+  "certifications": [
+    {
+      "name": "AWS Certified Solutions Architect - Associate",
+      "year": 2023
+    }
+  ],
+  "activities": [
+    {
+      "type": "컨퍼런스",
+      "name": "PyCon Korea 2023 참여",
+      "duration": "2일",
+      "description": "Python 관련 최신 트렌드 및 기술 습득"
+    },
+    {
+      "type": "오픈소스",
+      "name": "FastAPI 한국어 문서 번역 기여",
+      "duration": "진행 중",
+      "description": "FastAPI 공식 문서 한국어 번역 프로젝트 참여"
+    }
+  ]
+}

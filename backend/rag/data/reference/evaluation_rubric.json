@@ -1,0 +1,510 @@
+{
+  "metadata": {
+    "version": "1.0.0",
+    "last_updated": "2025-11-22",
+    "description": "면접 답변 평가 기준 루브릭 - 역량별 평가 기준 및 점수 체계",
+    "usage": "면접관이 지원자 답변을 객관적으로 평가할 수 있도록 구조화된 기준 제공"
+  },
+  "overall_evaluation_framework": {
+    "rating_scale": {
+      "5": {
+        "label": "탁월함 (Exceptional)",
+        "description": "기대 수준을 크게 초과하며, 해당 레벨보다 한 단계 높은 역량 보유"
+      },
+      "4": {
+        "label": "우수함 (Strong)",
+        "description": "기대 수준을 충족하고 일부 영역에서 초과"
+      },
+      "3": {
+        "label": "적합함 (Competent)",
+        "description": "기대 수준을 충족하며 무난한 수준"
+      },
+      "2": {
+        "label": "보통 (Fair)",
+        "description": "기대 수준에 다소 미달하나 교육 가능"
+      },
+      "1": {
+        "label": "부족함 (Poor)",
+        "description": "기대 수준에 크게 미달하며 해당 레벨 부적합"
+      }
+    },
+    "evaluation_categories": {
+      "technical_knowledge": {
+        "weight": 40,
+        "description": "기술적 지식 및 이해도"
+      },
+      "problem_solving": {
+        "weight": 25,
+        "description": "문제 해결 능력"
+      },
+      "communication": {
+        "weight": 15,
+        "description": "커뮤니케이션 능력"
+      },
+      "experience": {
+        "weight": 15,
+        "description": "실무 경험 및 프로젝트 수행 능력"
+      },
+      "potential": {
+        "weight": 5,
+        "description": "성장 가능성 및 학습 의지"
+      }
+    }
+  },
+  "competency_based_rubrics": {
+    "FE_JUNIOR": {
+      "technical_knowledge": {
+        "JavaScript_fundamentals": {
+          "competency_id": "FE_JR_TECH_002",
+          "evaluation_criteria": {
+            "5": "호이스팅, 클로저, 이벤트 루프를 정확히 설명하고 실무 예시까지 제시",
+            "4": "주요 개념을 정확히 설명하고 코드 예시 제공",
+            "3": "기본 개념은 이해하고 있으나 깊이는 부족",
+            "2": "개념은 알고 있으나 설명이 부정확",
+            "1": "기본 개념을 이해하지 못함"
+          },
+          "red_flags": [
+            "var, let, const 차이를 모름",
+            "비동기 처리를 전혀 이해하지 못함",
+            "기본 문법 오류"
+          ],
+          "green_flags": [
+            "Promise와 async/await를 적절히 비교",
+            "실제 프로젝트에서 겪은 문제와 연결",
+            "ES6+ 최신 문법 숙지"
+          ]
+        },
+        "React_basics": {
+          "competency_id": "FE_JR_TECH_003",
+          "evaluation_criteria": {
+            "5": "훅의 내부 동작 원리까지 이해하고 최적화 기법 설명",
+            "4": "useState, useEffect를 정확히 이해하고 의존성 배열 설명 가능",
+            "3": "기본 훅 사용법은 알고 있음",
+            "2": "훅 사용 경험은 있으나 개념 이해 부족",
+            "1": "React 기본 개념을 이해하지 못함"
+          },
+          "red_flags": [
+            "컴포넌트와 엘리먼트 차이를 모름",
+            "props와 state 차이를 모름",
+            "생명주기 전혀 이해 못함"
+          ],
+          "green_flags": [
+            "컴포넌트 분리 기준 명확",
+            "리렌더링 최적화 고려",
+            "Custom Hook 작성 경험"
+          ]
+        }
+      },
+      "problem_solving": {
+        "debugging": {
+          "evaluation_criteria": {
+            "5": "체계적인 디버깅 프로세스 보유, 도구 활용 능숙",
+            "4": "논리적으로 문제를 좁혀가며 해결",
+            "3": "기본적인 디버깅 능력 보유",
+            "2": "시행착오 방식으로만 접근",
+            "1": "문제 해결 접근법 부재"
+          },
+          "assessment_questions": [
+            "버그를 발견했을 때 어떻게 접근하나요?",
+            "가장 오래 걸렸던 버그 해결 경험은?"
+          ]
+        },
+        "code_implementation": {
+          "evaluation_criteria": {
+            "5": "효율적이고 읽기 쉬운 코드 작성, 에지 케이스 고려",
+            "4": "요구사항을 정확히 구현, 코드 품질 양호",
+            "3": "기본 기능 구현 가능",
+            "2": "도움 받으면 구현 가능",
+            "1": "기본 구현도 어려움"
+          },
+          "code_review_points": [
+            "변수명과 함수명의 명확성",
+            "코드 구조화",
+            "에러 처리",
+            "주석 사용"
+          ]
+        }
+      },
+      "communication": {
+        "technical_explanation": {
+          "evaluation_criteria": {
+            "5": "복잡한 개념을 쉽게 설명, 예시와 비유 적절",
+            "4": "논리적이고 구조화된 설명",
+            "3": "기본적인 설명 가능",
+            "2": "설명이 산만하거나 불명확",
+            "1": "설명 능력 부족"
+          }
+        },
+        "question_asking": {
+          "evaluation_criteria": {
+            "5": "핵심을 짚는 질문, 깊이 있는 탐구",
+            "4": "적절한 질문",
+            "3": "기본적인 질문",
+            "2": "질문이 부적절하거나 없음",
+            "1": "질문 능력 부재"
+          }
+        }
+      },
+      "experience": {
+        "project_complexity": {
+          "evaluation_criteria": {
+            "5": "복잡한 프로젝트 주도적으로 완성",
+            "4": "중간 수준 프로젝트 독립적으로 완성",
+            "3": "간단한 프로젝트 완성",
+            "2": "미완성 또는 매우 간단한 프로젝트만",
+            "1": "실질적인 프로젝트 경험 부족"
+          }
+        },
+        "technology_breadth": {
+          "evaluation_criteria": {
+            "5": "풀스택 경험 또는 다양한 FE 기술 활용",
+            "4": "FE 핵심 기술 + α",
+            "3": "FE 기본 기술 스택",
+            "2": "제한적인 기술 경험",
+            "1": "기술 경험 매우 부족"
+          }
+        }
+      }
+    },
+    "FE_MID": {
+      "technical_knowledge": {
+        "framework_internals": {
+          "competency_id": "FE_MID_TECH_001",
+          "evaluation_criteria": {
+            "5": "프레임워크 내부 구현을 설명하고 최적화 전략까지 제시",
+            "4": "Virtual DOM, Reconciliation, Fiber를 정확히 설명",
+            "3": "기본 동작 원리 이해",
+            "2": "표면적 이해만 있음",
+            "1": "내부 동작 원리 이해 부족"
+          },
+          "depth_check_questions": [
+            "React Fiber가 도입된 이유는?",
+            "Reconciliation 과정을 단계별로 설명해주세요",
+            "렌더링 최적화를 어떻게 하나요?"
+          ]
+        },
+        "performance_optimization": {
+          "competency_id": "FE_MID_TECH_005",
+          "evaluation_criteria": {
+            "5": "다양한 최적화 기법 숙지, 측정 기반 개선, 비즈니스 임팩트 창출",
+            "4": "주요 최적화 기법 적용 경험, 성과 측정",
+            "3": "기본 최적화 기법 이해 및 적용",
+            "2": "최적화 개념만 알고 경험 부족",
+            "1": "성능 최적화 이해 부족"
+          },
+          "must_know": [
+            "Code Splitting",
+            "Lazy Loading",
+            "Memoization",
+            "Bundle 분석"
+          ],
+          "advanced_topics": [
+            "Tree Shaking",
+            "Preloading/Prefetching",
+            "Image Optimization",
+            "Web Workers"
+          ]
+        },
+        "state_management_architecture": {
+          "competency_id": "FE_MID_TECH_003",
+          "evaluation_criteria": {
+            "5": "대규모 애플리케이션 상태 관리 아키텍처 설계 및 최적화",
+            "4": "복잡한 상태 관리 시스템 구축 경험",
+            "3": "상태 관리 라이브러리 적절히 사용",
+            "2": "상태 관리 라이브러리 사용 경험만 있음",
+            "1": "상태 관리 개념 이해 부족"
+          },
+          "architecture_considerations": [
+            "전역 상태 vs 로컬 상태 구분",
+            "상태 정규화",
+            "파생 상태 관리",
+            "서버 상태 vs 클라이언트 상태"
+          ]
+        }
+      },
+      "problem_solving": {
+        "system_design": {
+          "evaluation_criteria": {
+            "5": "확장 가능하고 유지보수 쉬운 아키텍처 설계, 트레이드오프 명확히 설명",
+            "4": "합리적인 아키텍처 제안, 주요 고려사항 언급",
+            "3": "기본적인 설계 능력",
+            "2": "설계 경험 부족",
+            "1": "설계 능력 부재"
+          },
+          "key_considerations": [
+            "컴포넌트 구조",
+            "데이터 플로우",
+            "상태 관리",
+            "성능",
+            "확장성",
+            "유지보수성"
+          ]
+        },
+        "refactoring": {
+          "evaluation_criteria": {
+            "5": "전략적 리팩토링 계획, 위험 관리, 단계적 실행",
+            "4": "효과적인 리팩토링 수행",
+            "3": "기본적인 리팩토링 능력",
+            "2": "리팩토링 경험 제한적",
+            "1": "리팩토링 이해 부족"
+          }
+        }
+      },
+      "leadership": {
+        "mentoring": {
+          "competency_id": "FE_MID_SOFT_001",
+          "evaluation_criteria": {
+            "5": "체계적 멘토링 시스템 구축, 주니어 성장 실적",
+            "4": "효과적인 멘토링 경험",
+            "3": "기본적인 멘토링 경험",
+            "2": "멘토링 경험 제한적",
+            "1": "멘토링 경험 없음"
+          }
+        },
+        "technical_leadership": {
+          "evaluation_criteria": {
+            "5": "기술 의사결정 주도, 팀 기술 방향성 제시",
+            "4": "기술 의사결정 참여, 영향력 발휘",
+            "3": "기술 의견 제시",
+            "2": "기술 의사결정 참여 제한적",
+            "1": "기술 리더십 부재"
+          }
+        }
+      }
+    },
+    "BE_JUNIOR": {
+      "technical_knowledge": {
+        "API_design": {
+          "competency_id": "BE_JR_TECH_005",
+          "evaluation_criteria": {
+            "5": "RESTful 원칙 정확히 이해, API 버전 관리 등 고급 개념 숙지",
+            "4": "REST 원칙 이해하고 적절히 적용",
+            "3": "기본적인 REST API 설계 가능",
+            "2": "REST API 개념만 알고 설계 경험 부족",
+            "1": "REST API 이해 부족"
+          },
+          "must_know": [
+            "HTTP 메서드 (GET, POST, PUT, DELETE, PATCH)",
+            "상태 코드 (2xx, 4xx, 5xx)",
+            "리소스 기반 URL 설계",
+            "무상태성"
+          ]
+        },
+        "database_basics": {
+          "competency_id": "BE_JR_TECH_003",
+          "evaluation_criteria": {
+            "5": "복잡한 쿼리 작성, JOIN 최적화, 인덱스 이해",
+            "4": "JOIN 쿼리 능숙, 기본 최적화 이해",
+            "3": "기본 SQL 작성 가능",
+            "2": "간단한 쿼리만 작성 가능",
+            "1": "SQL 기초 부족"
+          },
+          "must_know": [
+            "SELECT, INSERT, UPDATE, DELETE",
+            "WHERE, ORDER BY, GROUP BY",
+            "INNER JOIN, LEFT JOIN",
+            "기본 집계 함수"
+          ]
+        }
+      },
+      "problem_solving": {
+        "debugging_backend": {
+          "evaluation_criteria": {
+            "5": "로그 분석, 디버거 활용, 체계적 문제 해결",
+            "4": "효과적인 디버깅 수행",
+            "3": "기본 디버깅 가능",
+            "2": "디버깅 능력 제한적",
+            "1": "디버깅 능력 부족"
+          }
+        }
+      }
+    },
+    "BE_MID": {
+      "technical_knowledge": {
+        "database_optimization": {
+          "competency_id": "BE_MID_TECH_003",
+          "evaluation_criteria": {
+            "5": "실행 계획 분석 능숙, 복잡한 쿼리 최적화, 인덱스 전략 수립",
+            "4": "쿼리 최적화 경험, 성과 측정",
+            "3": "기본 최적화 이해 및 적용",
+            "2": "최적화 개념만 알고 경험 부족",
+            "1": "최적화 이해 부족"
+          },
+          "advanced_topics": [
+            "실행 계획 분석 (EXPLAIN)",
+            "인덱스 전략 (B-Tree, Hash, Covering Index)",
+            "쿼리 튜닝",
+            "통계 정보 활용"
+          ]
+        },
+        "distributed_systems": {
+          "competency_id": "BE_MID_NICE_001",
+          "evaluation_criteria": {
+            "5": "MSA 설계 및 운영, 분산 트랜잭션 처리 경험",
+            "4": "MSA 경험, 주요 개념 이해",
+            "3": "MSA 개념 이해",
+            "2": "MSA 이론만 알고 경험 없음",
+            "1": "분산 시스템 이해 부족"
+          }
+        },
+        "caching_strategy": {
+          "competency_id": "BE_MID_TECH_006",
+          "evaluation_criteria": {
+            "5": "다양한 캐싱 패턴 적용, 캐시 무효화 전략 수립, 성과 측정",
+            "4": "캐싱 전략 수립 및 적용",
+            "3": "기본 캐싱 구현",
+            "2": "캐싱 개념만 알고 경험 부족",
+            "1": "캐싱 이해 부족"
+          },
+          "patterns": [
+            "Cache-Aside",
+            "Read-Through",
+            "Write-Through",
+            "Write-Behind"
+          ]
+        }
+      },
+      "system_design": {
+        "scalability": {
+          "evaluation_criteria": {
+            "5": "대규모 시스템 설계 경험, 확장 전략 구체적",
+            "4": "확장성 고려한 설계 경험",
+            "3": "확장성 개념 이해",
+            "2": "확장성 고려 부족",
+            "1": "확장성 이해 부족"
+          },
+          "considerations": [
+            "수평 확장 vs 수직 확장",
+            "로드 밸런싱",
+            "데이터베이스 샤딩",
+            "캐싱 전략",
+            "비동기 처리"
+          ]
+        },
+        "reliability": {
+          "evaluation_criteria": {
+            "5": "고가용성 시스템 설계, 장애 복구 전략 수립",
+            "4": "안정성 고려한 설계",
+            "3": "기본 에러 처리",
+            "2": "안정성 고려 부족",
+            "1": "안정성 이해 부족"
+          }
+        }
+      },
+      "operational_excellence": {
+        "incident_response": {
+          "competency_id": "BE_MID_EXP_006",
+          "evaluation_criteria": {
+            "5": "장애 대응 프로세스 정립, 포스트모텀 문화 구축",
+            "4": "효과적인 장애 대응 및 개선",
+            "3": "장애 대응 경험",
+            "2": "장애 대응 경험 제한적",
+            "1": "장애 대응 경험 없음"
+          }
+        }
+      }
+    }
+  },
+  "overall_hiring_decision_framework": {
+    "FE_JUNIOR": {
+      "strong_hire": {
+        "criteria": [
+          "필수 역량 90% 이상",
+          "문제 해결 능력 우수",
+          "성장 가능성 높음",
+          "커뮤니케이션 원활"
+        ],
+        "typical_profile": "React 기본 완벽 숙지, 2-3개 완성도 높은 프로젝트, 학습 의지 강함"
+      },
+      "hire": {
+        "criteria": [
+          "필수 역량 80% 이상",
+          "기본 프로젝트 수행 능력",
+          "교육 가능성"
+        ],
+        "typical_profile": "기본기 갖춤, 프로젝트 경험 있음, 성장 가능성 보임"
+      },
+      "maybe": {
+        "criteria": [
+          "필수 역량 70% 이상",
+          "일부 영역 보완 필요"
+        ],
+        "action": "추가 면접 또는 과제 부여"
+      },
+      "no_hire": {
+        "criteria": [
+          "필수 역량 70% 미만",
+          "기본기 부족",
+          "성장 가능성 낮음"
+        ]
+      }
+    },
+    "FE_MID": {
+      "strong_hire": {
+        "criteria": [
+          "필수 역량 90% 이상",
+          "리더십 경험",
+          "비즈니스 임팩트 창출",
+          "기술 깊이"
+        ],
+        "typical_profile": "성능 최적화 경험, 아키텍처 설계 능력, 멘토링 경험, 기술 블로그 운영"
+      },
+      "hire": {
+        "criteria": [
+          "필수 역량 80% 이상",
+          "프로젝트 리딩 경험",
+          "기술 성장 곡선"
+        ],
+        "typical_profile": "복잡한 프로젝트 수행, 기술 의사결정 참여, 주니어 멘토링"
+      },
+      "maybe": {
+        "criteria": [
+          "필수 역량 충족하나 깊이 부족",
+          "경험 부족"
+        ],
+        "action": "시니어와 추가 면접"
+      },
+      "no_hire": {
+        "criteria": [
+          "필수 역량 미달",
+          "미드 레벨 부적합"
+        ]
+      }
+    },
+    "BE_JUNIOR": {
+      "strong_hire": {
+        "criteria": [
+          "필수 역량 90% 이상",
+          "DB 설계 능력",
+          "API 설계 능력",
+          "문제 해결 능력"
+        ]
+      },
+      "hire": {
+        "criteria": [
+          "필수 역량 80% 이상",
+          "기본 프로젝트 수행",
+          "성장 가능성"
+        ]
+      }
+    },
+    "BE_MID": {
+      "strong_hire": {
+        "criteria": [
+          "필수 역량 90% 이상",
+          "시스템 설계 능력",
+          "성능 최적화 경험",
+          "장애 대응 경험",
+          "리더십"
+        ]
+      },
+      "hire": {
+        "criteria": [
+          "필수 역량 80% 이상",
+          "확장성 고려 경험",
+          "기술 깊이"
+        ]
+      }
+    }
+  }
+}

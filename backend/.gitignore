@@ -21,6 +21,7 @@ wheels/
 *.egg
 
 # Virtual Environment
+bevenv/
 venv/
 env/
 ENV/
@@ -49,3 +50,23 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Video Analysis Artifacts
+artifacts/
+uploads/
+video/
+MediaPipe/
+
+# Temporary files
+*.wav
+*.tmp
+
+# Static files
+static/uploads/
+
+# Test outputs
+tests/*.txt
+extracted_text*.txt
+
+# Third-party model repositories
+third_party/

@@ -1,0 +1,386 @@
+from pydantic import BaseModel, EmailStr, ConfigDict, field_validator
+from typing import Optional, List, Any, Dict
+import json
+from datetime import datetime
+
+
+# User Schemas
+class UserBase(BaseModel):
+    email: EmailStr
+    name: str
+
+
+class UserCreate(UserBase):
+    password: str
+    role: Optional[str] = None
+    level: Optional[str] = None
+    github_username: Optional[str] = None
+
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    role: Optional[str] = None
+    level: Optional[str] = None
+    github_username: Optional[str] = None
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    user_id: Optional[str] = None
+    email: Optional[str] = None
+
+
+class UserResponse(UserBase):
+    id: str
+    role: Optional[str] = None
+    level: Optional[str] = None
+    github_username: Optional[str] = None
+    created_at: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Portfolio Schemas
+class PortfolioBase(BaseModel):
+    filename: str
+    file_url: str
+
+
+class PortfolioCreate(PortfolioBase):
+    parsed_text: Optional[str] = None
+    summary: Optional[str] = None
+
+
+class PortfolioResponse(PortfolioBase):
+    id: str
+    user_id: str
+    parsed_text: Optional[str] = None
+    summary: Optional[str] = None
+    created_at: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# JobPosting Schemas
+class JobPostingBase(BaseModel):
+    company_name: str
+    title: str
+    raw_text: str
+    source_url: Optional[str] = None
+
+
+class JobPostingCreate(JobPostingBase):
+    parsed_skills: Optional[str] = None
+
+
+class JobPostingResponse(JobPostingBase):
+    id: str
+    user_id: str
+    parsed_skills: Optional[Dict[str, Any]] = None
+    created_at: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_validator('parsed_skills', mode='before')
+    @classmethod
+    def parse_parsed_skills(cls, v):
+        if isinstance(v, str):
+            try:
+                return json.loads(v)
+            except json.JSONDecodeError:
+                return None
+        return v
+
+
+# InterviewSession Schemas
+class InterviewSessionBase(BaseModel):
+    title: Optional[str] = None
+    portfolio_id: Optional[str] = None
+    job_posting_id: Optional[str] = None
+
+
+class InterviewSessionCreate(InterviewSessionBase):
+    job_posting_id: str  # Required for session creation
+    status: str = "in_progress"
+
+
+class InterviewSessionResponse(InterviewSessionBase):
+    id: str
+    user_id: str
+    status: str
+    created_at: str
+    completed_at: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# InterviewQuestion Schemas
+class InterviewQuestionBase(BaseModel):
+    text: str
+    type: str
+    source: str
+    parent_question_id: Optional[str] = None
+
+
+class InterviewQuestionCreate(InterviewQuestionBase):
+    order: int
+
+
+class InterviewQuestionResponse(InterviewQuestionBase):
+    id: str
+    session_id: str
+    order: int
+    created_at: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# InterviewVideo Schemas
+class InterviewVideoBase(BaseModel):
+    video_url: str
+    audio_url: Optional[str] = None
+    duration_sec: Optional[float] = None
+
+
+class InterviewVideoCreate(InterviewVideoBase):
+    question_id: str
+
+
+class InterviewVideoResponse(InterviewVideoBase):
+    id: str
+    user_id: str
+    session_id: str
+    question_id: str
+    created_at: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# InterviewTranscript Schemas
+class InterviewTranscriptBase(BaseModel):
+    text: str
+    language: Optional[str] = None
+
+
+class InterviewTranscriptCreate(InterviewTranscriptBase):
+    pass
+
+
+class InterviewTranscriptResponse(InterviewTranscriptBase):
+    id: str
+    video_id: str
+    created_at: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# NonverbalMetrics Schemas
+class ThresholdConfig(BaseModel):
+    """Threshold configuration with formula and actual value"""
+    type: Optional[str] = None  # e.g., "adaptive", "fixed"
+    formula: Optional[str] = None  # e.g., "mean + 0.5*std"
+    value: Optional[float] = None  # actual computed value
+
+
+class GazeConfig(BaseModel):
+    """Gaze detection configuration"""
+    method: str  # e.g., "mediapipe_center + iris_yaw_check"
+    center_range_deg: Optional[list] = None  # e.g., [-15, 15]
+
+
+class PoseOutlierThresholds(BaseModel):
+    """Head pose outlier detection thresholds"""
+    yaw: float
+    pitch: float
+    roll: float
+
+
+class ThresholdsMetadata(BaseModel):
+    """All thresholds used for metric computation"""
+    smile_threshold: ThresholdConfig
+    gaze: GazeConfig
+    nod_pitch_delta_threshold: float
+    # nod_min_interval_sec removed - not implemented yet
+    pose_outlier_thresholds: PoseOutlierThresholds
+
+
+class ModelConfig(BaseModel):
+    """Model configuration with versions"""
+    vision_model: str
+    vision_version: Optional[str] = None
+    vision_config: dict
+    emotion_model: str
+    emotion_version: Optional[str] = None
+    stt_model: str
+    stt_version: str
+
+
+class ConfidenceMetrics(BaseModel):
+    """Confidence and quality metrics"""
+    valid_frame_ratio: float
+    face_presence_mean: Optional[float] = None
+    face_presence_std: Optional[float] = None
+    gaze_confidence_mean: Optional[float] = None
+    gaze_confidence_std: Optional[float] = None
+    emotion_confidence_mean: Optional[float] = None
+    emotion_confidence_std: Optional[float] = None
+
+
+class OutlierFlags(BaseModel):
+    """Outlier detection results"""
+    pose_outlier_ratio: float
+    pose_outlier_rule: str
+
+
+class MetricsMetadata(BaseModel):
+    """Computation metadata for reproducibility and debugging"""
+    # Frame analysis info
+    fps_analyzed: float
+    duration_sec: float
+    frame_count_total: int  # actual frames extracted
+    frame_count_valid: int  # frames with successful analysis
+    frame_count_expected: int  # expected frames (duration * fps)
+    
+    # Computation thresholds and rules
+    thresholds: ThresholdsMetadata
+    
+    # Models and versions
+    models: ModelConfig
+    
+    # Confidence and quality metrics
+    confidence: ConfidenceMetrics
+    
+    # Outlier detection
+    outlier_flags: OutlierFlags
+
+
+class NonverbalMetricsBase(BaseModel):
+    center_gaze_ratio: Optional[float] = None
+    smile_ratio: Optional[float] = None
+    nod_count: Optional[int] = None
+    nod_rate_per_min: Optional[float] = None  # NEW: normalized nod rate
+    wpm: Optional[float] = None
+    filler_count: Optional[int] = None
+    primary_emotion: Optional[str] = None
+
+
+class NonverbalMetricsCreate(NonverbalMetricsBase):
+    metadata_json: Optional[str] = None  # JSON string of MetricsMetadata
+
+
+class NonverbalMetricsResponse(NonverbalMetricsBase):
+    id: str
+    video_id: str
+    created_at: str
+    metadata: Optional[MetricsMetadata] = None  # Parsed from metadata_json
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# NonverbalTimeline Schemas
+class NonverbalTimelineBase(BaseModel):
+    timeline_json: str
+
+
+class NonverbalTimelineCreate(NonverbalTimelineBase):
+    pass
+
+
+class NonverbalTimelineResponse(NonverbalTimelineBase):
+    id: str
+    video_id: str
+    created_at: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# Feedback Schemas
+class FeedbackBase(BaseModel):
+    level: str
+    title: str
+    message: str
+    severity: str
+    start_sec: Optional[float] = None
+    end_sec: Optional[float] = None
+
+
+class FeedbackCreate(FeedbackBase):
+    pass
+
+
+class FeedbackResponse(FeedbackBase):
+    id: str
+    video_id: str
+    created_at: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# CV Analysis Schemas
+class SkillItem(BaseModel):
+    skill: str
+    reason: str
+
+
+class CVAnalysisResponse(BaseModel):
+    portfolio_id: str
+    user_id: str
+    role: str
+    level: str
+    extracted_text: str
+    possessed_skills: List[str]
+    missing_skills: List[str]
+    strengths: List[SkillItem]
+    weaknesses: List[SkillItem]
+    overall_score: int
+    summary: str
+
+
+# Capability Evaluation Schemas (프론트엔드용)
+class CapabilityData(BaseModel):
+    skill: str  # category.name_en
+    value: float  # score (0-100)
+    skill_ko: Optional[str] = None  # category.name_ko
+
+
+class ImprovementSuggestionData(BaseModel):
+    id: str
+    capability: str  # category.name_en
+    capability_ko: str  # category.name_ko
+    currentScore: float
+    title: str
+    description: str
+    actionItems: List[str]
+
+
+class CapabilityEvaluationResponse(BaseModel):
+    """프론트엔드 스파이더 차트용 API 응답"""
+    capabilities: List[CapabilityData]
+    improvement_suggestions: List[ImprovementSuggestionData]
+
+
+# Interview Answer Schemas
+class InterviewAnswerCreate(BaseModel):
+    question_id: str
+    text: str
+    audio_url: Optional[str] = None
+
+
+class InterviewAnswerResponse(BaseModel):
+    id: str
+    question_id: str
+    text: str
+    audio_url: Optional[str] = None
+    created_at: str
+
+    class Config:
+        from_attributes = True
